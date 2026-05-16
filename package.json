@@ -15,6 +15,7 @@
     "ci": "bun run lint && bun run typecheck && bun run test && bun run build"
   },
   "dependencies": {
+    "@vercel/analytics": "^2.0.1",
     "next": "^15",
     "react": "^19",
     "react-dom": "^19"
