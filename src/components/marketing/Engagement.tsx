@@ -1,0 +1,101 @@
+import React from "react";
+import { ENGAGEMENT_PHASES } from "@/lib/constants";
+
+export function Engagement() {
+  return (
+    <section
+      id="engagement"
+      data-testid="engagement"
+      style={{
+        padding: "120px 0 140px",
+        borderTop: "1px solid rgba(255,255,255,.06)",
+        background: "var(--panel)",
+      }}
+    >
+      <div className="page">
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "180px 1fr",
+            gap: 40,
+            marginBottom: 64,
+          }}
+        >
+          <div className="num" data-reveal>
+            § 03 — ENGAGEMENT
+          </div>
+          <div data-reveal>
+            <h2
+              className="h-section"
+              style={{ margin: 0, maxWidth: "22ch" }}
+            >
+              Four phases.
+              <br />
+              <span style={{ color: "rgba(236,230,214,.35)" }}>
+                One advocate.
+              </span>
+            </h2>
+            <p className="small-copy" style={{ marginTop: 20 }}>
+              From the first private call to the final independent clearance —
+              one person, one file, no subcontracted judgment.
+            </p>
+          </div>
+        </div>
+
+        <div
+          data-reveal
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: 0,
+            borderTop: "1px solid rgba(255,255,255,.08)",
+            borderBottom: "1px solid rgba(255,255,255,.08)",
+          }}
+        >
+          {ENGAGEMENT_PHASES.map((phase, i) => (
+            <div
+              key={phase.numeral}
+              style={{
+                padding: "40px 28px",
+                borderRight:
+                  i < 3
+                    ? "1px solid rgba(255,255,255,.08)"
+                    : "none",
+              }}
+            >
+              <div
+                className="display"
+                style={{
+                  fontSize: 32,
+                  letterSpacing: ".06em",
+                  color: "rgba(236,230,214,.2)",
+                  marginBottom: 20,
+                  lineHeight: 1,
+                }}
+              >
+                {phase.numeral}
+              </div>
+              <div
+                className="mono"
+                style={{
+                  marginBottom: 14,
+                  fontSize: 11,
+                  color: "var(--fg)",
+                  letterSpacing: ".22em",
+                }}
+              >
+                {phase.title.toUpperCase()}
+              </div>
+              <p
+                className="small-copy"
+                style={{ fontSize: 13, margin: 0 }}
+              >
+                {phase.description}
+              </p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+}
