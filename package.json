@@ -15,6 +15,7 @@
     "ci": "bun run lint && bun run typecheck && bun run test && bun run build"
   },
   "dependencies": {
+    "@vercel/speed-insights": "^2.0.0",
     "next": "^15",
     "react": "^19",
     "react-dom": "^19"
