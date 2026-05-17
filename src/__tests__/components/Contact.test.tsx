@@ -16,12 +16,12 @@ describe("Contact", () => {
 
   it("renders phone number", () => {
     render(<Contact />);
-    expect(screen.getByText("+1 (310) 555-0100")).toBeInTheDocument();
+    expect(screen.getByText("+1 (310) 430-2500")).toBeInTheDocument();
   });
 
   it("renders email", () => {
     render(<Contact />);
-    expect(screen.getByText("private@jamesroman.la")).toBeInTheDocument();
+    expect(screen.getByText("roman@jamesroman.la")).toBeInTheDocument();
   });
 
   it("renders CTA button", () => {

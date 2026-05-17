@@ -7,8 +7,8 @@ export const FIRM_DESCRIPTION =
   "Independent, client-side advisory for hazardous-material remediation oversight and property-integrity matters in luxury homes across the Westside.";
 
 /* ─── Contact ─── */
-export const CONTACT_PHONE = "+1 (310) 555-0100";
-export const CONTACT_EMAIL = "private@jamesroman.la";
+export const CONTACT_PHONE = "+1 (310) 430-2500";
+export const CONTACT_EMAIL = "roman@jamesroman.la";
 export const CONTACT_LOCATION = "Malibu, California · By appointment.";
 
 /* ─── Service areas ─── */

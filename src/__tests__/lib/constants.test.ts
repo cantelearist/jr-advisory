@@ -140,7 +140,7 @@ describe("constants", () => {
 
   it("contact info uses placeholder values", () => {
     // These should be updated before production deployment
-    expect(CONTACT_PHONE).toBe("+1 (310) 555-0100");
-    expect(CONTACT_EMAIL).toBe("private@jamesroman.la");
+    expect(CONTACT_PHONE).toBe("+1 (310) 430-2500");
+    expect(CONTACT_EMAIL).toBe("roman@jamesroman.la");
   });
 });
