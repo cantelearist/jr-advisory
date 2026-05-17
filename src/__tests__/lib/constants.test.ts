@@ -9,6 +9,7 @@ import {
   ENGAGEMENT_PHASES,
   DISCRETION_PRINCIPLES,
   MATTERS,
+  FOUNDERS,
   FOOTER_COLUMNS,
   CONTACT_PHONE,
   CONTACT_EMAIL,
@@ -33,13 +34,14 @@ describe("constants", () => {
     expect(SERVICE_AREAS).toContain("Santa Monica");
   });
 
-  it("has 5 navigation items", () => {
-    expect(NAV_ITEMS).toHaveLength(5);
+  it("has 6 navigation items", () => {
+    expect(NAV_ITEMS).toHaveLength(6);
     expect(NAV_ITEMS.map((n) => n.label)).toEqual([
       "The Practice",
       "Counsel",
       "Engagement",
       "Discretion",
+      "Founders",
       "Contact",
     ]);
   });
@@ -127,6 +129,12 @@ describe("constants", () => {
       expect(m.role).toBeTruthy();
       expect(m.outcome).toBeTruthy();
     });
+  });
+
+  it("has 2 founders", () => {
+    expect(FOUNDERS).toHaveLength(2);
+    expect(FOUNDERS.map((f) => f.name)).toEqual(["Steven", "Roman"]);
+    expect(FOUNDERS.every((f) => f.title === "CO-FOUNDER")).toBe(true);
   });
 
   it("has 3 footer columns", () => {

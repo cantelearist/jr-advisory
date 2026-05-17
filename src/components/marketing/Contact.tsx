@@ -23,7 +23,7 @@ export function Contact() {
             className="mono"
             style={{ opacity: 0.55, marginBottom: 30 }}
           >
-            § 07 — BEGIN
+            § 08 — BEGIN
           </div>
 
           <h2

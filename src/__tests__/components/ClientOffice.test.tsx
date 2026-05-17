@@ -11,7 +11,7 @@ describe("ClientOffice", () => {
   it("renders the section number", () => {
     render(<ClientOffice />);
     expect(
-      screen.getByText("§ 06 — PRIVATE CLIENT OFFICE")
+      screen.getByText("§ 07 — PRIVATE CLIENT OFFICE")
     ).toBeInTheDocument();
   });
 

@@ -11,6 +11,7 @@ import {
   Engagement,
   Discretion,
   Matters,
+  Founders,
   ClientOffice,
   Contact,
   SiteFooter,
@@ -38,6 +39,7 @@ export default function HomePage() {
       <Engagement />
       <Discretion />
       <Matters />
+      <Founders />
       <ClientOffice />
       <Contact />
       <SiteFooter />

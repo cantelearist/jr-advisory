@@ -20,7 +20,7 @@ export function ClientOffice() {
               className="mono"
               style={{ color: "var(--accent)", marginBottom: 22 }}
             >
-              § 06 — PRIVATE CLIENT OFFICE
+              § 07 — PRIVATE CLIENT OFFICE
             </div>
             <h2
               className="h-section"

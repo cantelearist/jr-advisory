@@ -32,6 +32,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "Counsel", href: "#counsel" },
   { label: "Engagement", href: "#engagement" },
   { label: "Discretion", href: "#discretion" },
+  { label: "Founders", href: "#founders" },
   { label: "Contact", href: "#contact" },
 ];
 
@@ -209,6 +210,31 @@ export const MATTERS: Matter[] = [
     role: "Organized reports, reviewed vendor proposals, and translated findings into practical decisions.",
     outcome:
       "A clearer path toward remediation, cleaning, and closeout.",
+  },
+];
+
+/* ─── Founders ─── */
+export interface Founder {
+  name: string;
+  initial: string;
+  title: string;
+  quote: string;
+}
+
+export const FOUNDERS: Founder[] = [
+  {
+    name: "Steven",
+    initial: "S",
+    title: "CO-FOUNDER",
+    quote:
+      "I was born in Malibu. I\u2019ve lost my house to fire twice in my lifetime. I\u2019m not advising from the comfortable other side of the experience\u2009\u2014\u2009I\u2019m in the middle of it. Same as a lot of my neighbors. When somebody walks back onto their property and a stranger in a hard hat hands them a clipboard and a number, they deserve somebody on their side who has actually stood where they\u2019re standing. I have. I still am.",
+  },
+  {
+    name: "Roman",
+    initial: "R",
+    title: "CO-FOUNDER",
+    quote:
+      "I arrived in Santa Monica in 2010 and never really left. Then the fires came, and it all became too personal. Friends lost houses. My daughter\u2019s school was in ashes. You can\u2019t pretend, after that, that you\u2019re doing this work for anyone but the people living it. I oversee construction across LA every day\u2009\u2014\u2009I see how corners get cut and how the homeowner is left with the consequences. It\u2019s why we started this. Not someday. Now.",
   },
 ];
 
