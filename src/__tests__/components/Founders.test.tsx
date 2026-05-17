@@ -21,10 +21,12 @@ describe("Founders", () => {
     expect(titles.length).toBe(2);
   });
 
-  it("renders founder initials", () => {
+  it("renders founder portrait images", () => {
     render(<Founders />);
-    expect(screen.getByText("S")).toBeInTheDocument();
-    expect(screen.getByText("R")).toBeInTheDocument();
+    const imgs = screen.getAllByRole("img");
+    expect(imgs.length).toBe(2);
+    expect(imgs[0]).toHaveAttribute("src", "/founders/steven.png");
+    expect(imgs[1]).toHaveAttribute("src", "/founders/roman.png");
   });
 
   it("renders the section heading", () => {

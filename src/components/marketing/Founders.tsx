@@ -13,8 +13,11 @@ export function Founders() {
           § 06 — THE FOUNDERS
         </div>
 
-        <div data-reveal style={{ marginTop: 40, maxWidth: "52ch" }}>
-          <h2 className="h-section" style={{ margin: "0 0 28px" }}>
+        <div
+          data-reveal
+          style={{ marginTop: 40, maxWidth: "56ch", margin: "40px auto 0", textAlign: "center" }}
+        >
+          <h2 className="h-section" style={{ margin: "0 0 28px", fontSize: "clamp(32px, 3.5vw, 48px)" }}>
             Two locals,{" "}
             <span className="accent-shimmer">one obligation</span>
             <br />
@@ -22,7 +25,7 @@ export function Founders() {
           </h2>
           <p
             className="small-copy"
-            style={{ fontSize: 15, lineHeight: 1.8, opacity: 0.8 }}
+            style={{ fontSize: 17, lineHeight: 1.85, opacity: 0.8 }}
           >
             When the smoke clears and the gates open again, someone has to stand
             on your side of it. We do. Not as a secondary concern — as the
@@ -36,12 +39,21 @@ export function Founders() {
           {FOUNDERS.map((f) => (
             <div key={f.name} className="founder-card" data-reveal>
               <div className="founder-card-inner">
-                <div className="founder-initial display">{f.initial}</div>
-                <div>
+                <div className="founder-portrait-wrap">
+                  <img
+                    src={`/founders/${f.name.toLowerCase()}.png`}
+                    alt={`${f.name} — Co-Founder`}
+                    className="founder-portrait"
+                    width={280}
+                    height={280}
+                    loading="lazy"
+                  />
+                </div>
+                <div style={{ textAlign: "center" }}>
                   <h3
                     className="display"
                     style={{
-                      fontSize: "clamp(22px, 2.2vw, 30px)",
+                      fontSize: "clamp(26px, 2.6vw, 36px)",
                       margin: "0 0 4px",
                       letterSpacing: ".04em",
                     }}
@@ -52,8 +64,9 @@ export function Founders() {
                     className="mono"
                     style={{
                       color: "var(--accent)",
-                      fontSize: 10,
-                      marginBottom: 24,
+                      fontSize: 11,
+                      marginBottom: 28,
+                      letterSpacing: ".12em",
                     }}
                   >
                     {f.title}
@@ -61,13 +74,14 @@ export function Founders() {
                   <p
                     className="small-copy founder-quote"
                     style={{
-                      fontSize: 14,
-                      lineHeight: 1.85,
+                      fontSize: 16,
+                      lineHeight: 1.9,
                       margin: 0,
                       opacity: 0.85,
+                      textAlign: "center",
                     }}
                   >
-                    {f.quote}
+                    &ldquo;{f.quote}&rdquo;
                   </p>
                 </div>
               </div>
@@ -80,18 +94,19 @@ export function Founders() {
         <div data-reveal className="founders-credo">
           <div
             className="mono"
-            style={{ color: "var(--accent)", marginBottom: 20 }}
+            style={{ color: "var(--accent)", marginBottom: 20, textAlign: "center", letterSpacing: ".12em" }}
           >
             OUR POSITION
           </div>
           <p
             className="small-copy"
             style={{
-              fontSize: 15,
-              lineHeight: 1.85,
+              fontSize: 17,
+              lineHeight: 1.9,
               maxWidth: "60ch",
-              margin: 0,
+              margin: "0 auto",
               opacity: 0.85,
+              textAlign: "center",
             }}
           >
             Between us — over twenty years in construction, architecture, and
