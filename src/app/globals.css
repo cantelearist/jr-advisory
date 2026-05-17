@@ -14,7 +14,7 @@
 }
 
 *, *::before, *::after { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+/* scroll-behavior handled by JS for slower, controlled scrolling */
 html, body { margin: 0; padding: 0; }
 body {
   background: var(--bg);
@@ -30,13 +30,13 @@ a { color: inherit; text-decoration: none; }
 .mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 11px; letter-spacing: .16em; text-transform: uppercase; }
 .display { font-family: var(--font-display); font-weight: 200; letter-spacing: var(--display-track); text-transform: uppercase; }
 
-/* ─── Reveal animations (slower, more dramatic) ─── */
+/* ─── Reveal animations (40% slower, cinematic) ─── */
 [data-reveal] {
   opacity: 0;
   transform: translateY(calc(32px * var(--motion)));
   transition:
-    opacity calc(1400ms * var(--motion)) cubic-bezier(.16,.6,.2,1),
-    transform calc(1400ms * var(--motion)) cubic-bezier(.16,.6,.2,1);
+    opacity calc(1960ms * var(--motion)) cubic-bezier(.16,.6,.2,1),
+    transform calc(1960ms * var(--motion)) cubic-bezier(.16,.6,.2,1);
   transition-delay: var(--rd, 0ms);
 }
 [data-reveal].in { opacity: 1; transform: translateY(0); }
@@ -45,23 +45,23 @@ a { color: inherit; text-decoration: none; }
   display: block; opacity: 0;
   transform: translateY(calc(48px * var(--motion)));
   transition:
-    opacity calc(1600ms * var(--motion)) cubic-bezier(.16,.6,.2,1),
-    transform calc(1600ms * var(--motion)) cubic-bezier(.16,.6,.2,1);
+    opacity calc(2240ms * var(--motion)) cubic-bezier(.16,.6,.2,1),
+    transform calc(2240ms * var(--motion)) cubic-bezier(.16,.6,.2,1);
 }
-.stage.in > *:nth-child(1) { opacity: 1; transform: none; transition-delay: calc(200ms * var(--motion)); }
-.stage.in > *:nth-child(2) { opacity: 1; transform: none; transition-delay: calc(450ms * var(--motion)); }
-.stage.in > *:nth-child(3) { opacity: 1; transform: none; transition-delay: calc(700ms * var(--motion)); }
-.stage.in > *:nth-child(4) { opacity: 1; transform: none; transition-delay: calc(950ms * var(--motion)); }
-.stage.in > *:nth-child(5) { opacity: 1; transform: none; transition-delay: calc(1200ms * var(--motion)); }
-.stage.in > *:nth-child(6) { opacity: 1; transform: none; transition-delay: calc(1450ms * var(--motion)); }
+.stage.in > *:nth-child(1) { opacity: 1; transform: none; transition-delay: calc(280ms * var(--motion)); }
+.stage.in > *:nth-child(2) { opacity: 1; transform: none; transition-delay: calc(630ms * var(--motion)); }
+.stage.in > *:nth-child(3) { opacity: 1; transform: none; transition-delay: calc(980ms * var(--motion)); }
+.stage.in > *:nth-child(4) { opacity: 1; transform: none; transition-delay: calc(1330ms * var(--motion)); }
+.stage.in > *:nth-child(5) { opacity: 1; transform: none; transition-delay: calc(1680ms * var(--motion)); }
+.stage.in > *:nth-child(6) { opacity: 1; transform: none; transition-delay: calc(2030ms * var(--motion)); }
 
 .mask-reveal { position: relative; overflow: hidden; }
 .mask-reveal::after {
   content: ''; position: absolute; inset: 0;
   background: var(--bg);
   transform-origin: right; transform: scaleX(1);
-  transition: transform calc(1800ms * var(--motion)) cubic-bezier(.7,.0,.15,1);
-  transition-delay: calc(300ms * var(--motion));
+  transition: transform calc(2520ms * var(--motion)) cubic-bezier(.7,.0,.15,1);
+  transition-delay: calc(420ms * var(--motion));
 }
 .mask-reveal.in::after { transform: scaleX(0); }
 

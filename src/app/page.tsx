@@ -2,6 +2,7 @@
 
 import { useRef } from "react";
 import { useReveal } from "@/hooks/useReveal";
+import { useSmoothScroll } from "@/hooks/useSmoothScroll";
 import {
   Nav,
   Hero,
@@ -19,6 +20,7 @@ import {
 export default function HomePage() {
   const ref = useRef<HTMLDivElement>(null);
   useReveal(ref);
+  useSmoothScroll();
 
   return (
     <div
