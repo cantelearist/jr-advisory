@@ -14,6 +14,7 @@ export function Engagement() {
     >
       <div className="page">
         <div
+          className="section-header"
           style={{
             display: "grid",
             gridTemplateColumns: "180px 1fr",
@@ -43,6 +44,7 @@ export function Engagement() {
         </div>
 
         <div
+          className="engagement-grid"
           data-reveal
           style={{
             display: "grid",
@@ -55,6 +57,7 @@ export function Engagement() {
           {ENGAGEMENT_PHASES.map((phase, i) => (
             <div
               key={phase.numeral}
+              className="engagement-phase"
               style={{
                 padding: "40px 28px",
                 borderRight:

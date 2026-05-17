@@ -13,6 +13,7 @@ export function Discretion() {
     >
       <div className="page">
         <div
+          className="discretion-layout"
           style={{
             display: "grid",
             gridTemplateColumns: "1fr 1.2fr",
@@ -30,7 +31,7 @@ export function Discretion() {
             >
               The first commitment
               <br />
-              <span style={{ color: "var(--accent)" }}>we make.</span>
+              <span className="accent-shimmer">we make.</span>
             </h2>
             <p
               className="small-copy"
@@ -46,6 +47,7 @@ export function Discretion() {
             {DISCRETION_PRINCIPLES.map((principle, i) => (
               <div
                 key={principle.numeral}
+                className="discretion-row"
                 style={{
                   padding: "22px 0",
                   borderTop: "1px solid rgba(255,255,255,.08)",

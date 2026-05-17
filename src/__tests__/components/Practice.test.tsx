@@ -18,10 +18,10 @@ describe("Practice", () => {
     expect(screen.getByText("A small practice,")).toBeInTheDocument();
   });
 
-  it("renders 'privately retained.' in accent", () => {
+  it("renders 'privately retained.' with accent shimmer", () => {
     render(<Practice />);
     const accent = screen.getByText("privately retained.");
-    expect(accent.style.color).toBe("var(--accent)");
+    expect(accent.classList.contains("accent-shimmer")).toBe(true);
   });
 
   it("renders the independence statement", () => {

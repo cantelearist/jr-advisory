@@ -82,7 +82,7 @@ export function Hero() {
             <br />
             <span style={{ color: "rgba(236,230,214,.4)" }}>Not</span>
             <br />
-            <span style={{ color: "var(--accent)" }}>contractors.</span>
+            <span className="accent-shimmer">contractors.</span>
           </h1>
 
           <p
@@ -106,13 +106,12 @@ export function Hero() {
             </a>
             <a
               href="#contact"
-              className="mono"
+              className="mono inquiry-link"
               style={{
                 opacity: 0.65,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
-                transition: "opacity .3s, color .3s",
               }}
             >
               Private Inquiry <span className="arr">→</span>
@@ -126,9 +125,9 @@ export function Hero() {
         style={{ position: "relative", zIndex: 1, padding: "20px 0 28px" }}
         data-reveal
       >
-        <div className="hr" style={{ marginBottom: 20 }} />
+        <div className="hr gold-line" style={{ marginBottom: 20 }} />
         <div
-          className="page"
+          className="page location-strip"
           style={{ display: "flex", justifyContent: "center", gap: 0 }}
         >
           {SERVICE_AREAS.map((area, i) => (

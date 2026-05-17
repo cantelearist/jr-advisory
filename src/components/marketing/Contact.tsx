@@ -36,7 +36,7 @@ export function Contact() {
           >
             Begin a private
             <br />
-            <span style={{ color: "var(--accent)" }}>consultation.</span>
+            <span className="accent-shimmer">consultation.</span>
           </h2>
 
           <p
@@ -48,6 +48,7 @@ export function Contact() {
           </p>
 
           <div
+            className="contact-actions"
             style={{
               marginTop: 40,
               display: "flex",
@@ -56,7 +57,7 @@ export function Contact() {
               alignItems: "start",
             }}
           >
-            <a href="#" className="btn primary">
+            <a href="#" className="btn primary cta-pulse">
               Request a Private Consultation <span className="arr">→</span>
             </a>
             <div

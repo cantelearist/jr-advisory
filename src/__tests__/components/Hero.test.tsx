@@ -21,11 +21,11 @@ describe("Hero", () => {
     expect(notSpan.style.color).toMatch(/rgba\(236,\s*230,\s*214/);
   });
 
-  it("renders 'contractors.' in accent color", () => {
+  it("renders 'contractors.' with accent shimmer", () => {
     render(<Hero />);
     const accent = screen.getByText("contractors.");
     expect(accent).toBeInTheDocument();
-    expect(accent.style.color).toBe("var(--accent)");
+    expect(accent.classList.contains("accent-shimmer")).toBe(true);
   });
 
   it("renders the firm description", () => {

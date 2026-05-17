@@ -6,7 +6,7 @@ export function ClientOffice() {
       <div className="page">
         <div
           data-reveal
-          className="gate"
+          className="gate client-office-layout"
           style={{
             padding: "60px 56px",
             display: "grid",
@@ -31,7 +31,7 @@ export function ClientOffice() {
             >
               By invitation
               <br />
-              <span style={{ color: "var(--accent)" }}>only.</span>
+              <span className="accent-shimmer">only.</span>
             </h2>
             <p className="small-copy" style={{ margin: 0 }}>
               Each accepted client receives a dedicated, two-factor-secured
@@ -41,6 +41,7 @@ export function ClientOffice() {
           </div>
 
           <div
+            className="client-office-access"
             style={{
               borderLeft: "1px solid rgba(201,181,138,.25)",
               paddingLeft: 32,

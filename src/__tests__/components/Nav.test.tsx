@@ -12,7 +12,9 @@ describe("Nav", () => {
   it("renders all navigation links", () => {
     render(<Nav />);
     NAV_ITEMS.forEach(({ label }) => {
-      expect(screen.getByText(label)).toBeInTheDocument();
+      // Desktop + mobile nav both render links
+      const links = screen.getAllByText(label);
+      expect(links.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -28,19 +30,32 @@ describe("Nav", () => {
 
   it("renders the Private Inquiry CTA", () => {
     render(<Nav />);
-    expect(screen.getByText("Private Inquiry")).toBeInTheDocument();
+    // Desktop shows text "Private Inquiry" with arrow span
+    const links = screen.getAllByText("Private Inquiry");
+    expect(links.length).toBeGreaterThanOrEqual(1);
   });
 
   it("nav links point to correct anchor sections", () => {
     render(<Nav />);
     NAV_ITEMS.forEach(({ label, href }) => {
-      const link = screen.getByText(label);
-      expect(link.closest("a")).toHaveAttribute("href", href);
+      const links = screen.getAllByText(label);
+      // At least one link points to the correct href
+      const hasCorrectHref = links.some(
+        (link) => link.closest("a")?.getAttribute("href") === href
+      );
+      expect(hasCorrectHref).toBe(true);
     });
   });
 
-  it("has accessible navigation landmark", () => {
+  it("has accessible navigation landmarks", () => {
     render(<Nav />);
-    expect(screen.getByRole("navigation")).toBeInTheDocument();
+    // Desktop nav + mobile nav
+    const navs = screen.getAllByRole("navigation");
+    expect(navs.length).toBeGreaterThanOrEqual(1);
+  });
+
+  it("renders hamburger menu button for mobile", () => {
+    render(<Nav />);
+    expect(screen.getByLabelText("Toggle menu")).toBeInTheDocument();
   });
 });

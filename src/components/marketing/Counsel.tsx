@@ -13,6 +13,7 @@ export function Counsel() {
     >
       <div className="page">
         <div
+          className="section-header"
           style={{
             display: "grid",
             gridTemplateColumns: "180px 1fr",
@@ -30,7 +31,7 @@ export function Counsel() {
             >
               Where we are
               <br />
-              <span style={{ color: "var(--accent)" }}>
+              <span className="accent-shimmer">
                 most often retained.
               </span>
             </h2>

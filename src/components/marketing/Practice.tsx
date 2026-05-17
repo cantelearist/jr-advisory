@@ -6,6 +6,7 @@ export function Practice() {
     <section id="practice" data-testid="practice" style={{ padding: "160px 0 140px" }}>
       <div className="page">
         <div
+          className="practice-layout"
           style={{
             display: "grid",
             gridTemplateColumns: "180px 1fr 280px",
@@ -13,7 +14,7 @@ export function Practice() {
             alignItems: "start",
           }}
         >
-          <div className="num" data-reveal>
+          <div className="num section-num" data-reveal>
             § 01 — THE PRACTICE
           </div>
 
@@ -21,7 +22,7 @@ export function Practice() {
             <h2 className="h-section" style={{ margin: 0 }}>
               A small practice,
               <br />
-              <span style={{ color: "var(--accent)" }}>privately retained.</span>
+              <span className="accent-shimmer">privately retained.</span>
             </h2>
             <p
               className="small-copy"
@@ -41,7 +42,7 @@ export function Practice() {
             </p>
           </div>
 
-          <div data-reveal style={{ textAlign: "right" }}>
+          <div className="practice-stats" data-reveal style={{ textAlign: "right" }}>
             <div style={{ display: "grid", gap: 24 }}>
               {PRACTICE_STATS.map((stat, i) => (
                 <React.Fragment key={stat.label}>

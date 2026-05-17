@@ -13,6 +13,7 @@ export function Matters() {
     >
       <div className="page">
         <div
+          className="matters-header"
           style={{
             display: "grid",
             gridTemplateColumns: "180px 1fr 220px",
@@ -37,7 +38,7 @@ export function Matters() {
             </h2>
           </div>
           <p
-            className="small-copy"
+            className="small-copy matters-privacy"
             data-reveal
             style={{
               fontSize: 12,
@@ -52,6 +53,7 @@ export function Matters() {
           </p>
         </div>
 
+        {/* Desktop table */}
         <table className="ledger" data-reveal>
           <thead>
             <tr>
@@ -82,6 +84,40 @@ export function Matters() {
             ))}
           </tbody>
         </table>
+
+        {/* Mobile cards */}
+        <div data-reveal>
+          {MATTERS.map((matter, i) => (
+            <div
+              key={i}
+              className="matter-card"
+              style={{
+                padding: "28px 0",
+                borderTop: "1px solid rgba(255,255,255,.08)",
+                borderBottom: i === MATTERS.length - 1 ? "1px solid rgba(255,255,255,.08)" : "none",
+              }}
+            >
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 12 }}>
+                <div>
+                  <span className="num" style={{ opacity: 0.5, marginRight: 10 }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span className="area">{matter.area}</span>
+                </div>
+                <span className="concern" style={{ fontSize: 10 }}>{matter.concern}</span>
+              </div>
+              <div className="small-copy" style={{ fontSize: 13, marginBottom: 8 }}>
+                <span style={{ opacity: 0.5 }}>Scale: </span>{matter.scale}
+              </div>
+              <div className="small-copy" style={{ fontSize: 13, marginBottom: 8 }}>
+                <span style={{ opacity: 0.5 }}>Role: </span>{matter.role}
+              </div>
+              <div className="small-copy" style={{ fontSize: 13 }}>
+                <span style={{ opacity: 0.5 }}>Outcome: </span>{matter.outcome}
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     </section>
   );

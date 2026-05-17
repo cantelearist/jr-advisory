@@ -32,14 +32,18 @@ describe("Matters", () => {
   it("renders all 4 anonymized matters", () => {
     render(<Matters />);
     MATTERS.forEach((matter) => {
-      expect(screen.getByText(matter.area)).toBeInTheDocument();
+      // Desktop table + mobile cards both render the area
+      const els = screen.getAllByText(matter.area);
+      expect(els.length).toBeGreaterThanOrEqual(1);
     });
   });
 
   it("renders matter concerns", () => {
     render(<Matters />);
     MATTERS.forEach((matter) => {
-      expect(screen.getByText(matter.concern)).toBeInTheDocument();
+      // Desktop table + mobile cards both render concerns
+      const els = screen.getAllByText(matter.concern);
+      expect(els.length).toBeGreaterThanOrEqual(1);
     });
   });
 
@@ -52,7 +56,10 @@ describe("Matters", () => {
 
   it("renders row numbers", () => {
     render(<Matters />);
-    expect(screen.getByText("01")).toBeInTheDocument();
-    expect(screen.getByText("04")).toBeInTheDocument();
+    // Desktop table + mobile cards both render row numbers
+    const ones = screen.getAllByText("01");
+    expect(ones.length).toBeGreaterThanOrEqual(1);
+    const fours = screen.getAllByText("04");
+    expect(fours.length).toBeGreaterThanOrEqual(1);
   });
 });

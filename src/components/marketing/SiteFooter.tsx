@@ -7,6 +7,7 @@ export function SiteFooter() {
     <footer data-testid="site-footer">
       <div className="page">
         <div
+          className="footer-grid"
           style={{
             display: "grid",
             gridTemplateColumns: "1.4fr 1fr 1fr 1fr",
@@ -14,7 +15,7 @@ export function SiteFooter() {
             marginBottom: 60,
           }}
         >
-          <div>
+          <div className="footer-brand">
             <Logo />
             <p
               className="small-copy"
@@ -50,6 +51,7 @@ export function SiteFooter() {
                   <a
                     key={item.label}
                     href={item.href}
+                    className="footer-link"
                     style={{ fontSize: 13, opacity: 0.8 }}
                   >
                     {item.label}
@@ -63,7 +65,7 @@ export function SiteFooter() {
         <div className="hr" style={{ marginBottom: 24 }} />
 
         <div
-          className="mono"
+          className="mono footer-bottom"
           style={{
             display: "flex",
             justifyContent: "space-between",
