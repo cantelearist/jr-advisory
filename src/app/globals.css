@@ -463,8 +463,8 @@ footer { padding: 64px 0 36px; border-top: 1px solid rgba(255,255,255,.08); marg
   gap: 32px;
 }
 .founder-portrait-wrap {
-  width: 300px;
-  height: 300px;
+  width: 420px;
+  height: 420px;
   border-radius: 50%;
   overflow: hidden;
   border: 2px solid rgba(201,181,138,.2);
@@ -479,6 +479,7 @@ footer { padding: 64px 0 36px; border-top: 1px solid rgba(255,255,255,.08); marg
   width: 100%;
   height: 100%;
   object-fit: cover;
+  object-position: center 20%;
   filter: grayscale(20%) contrast(1.05);
   transition: filter .6s ease, transform .6s ease;
 }
@@ -595,8 +596,8 @@ body::after {
     gap: 56px;
   }
   .founder-portrait-wrap {
-    width: 240px;
-    height: 240px;
+    width: 320px;
+    height: 320px;
   }
   .founders-credo {
     padding: 32px 28px;

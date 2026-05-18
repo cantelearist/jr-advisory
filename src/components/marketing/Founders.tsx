@@ -44,8 +44,8 @@ export function Founders() {
                     src={`/founders/${f.name.toLowerCase()}.png`}
                     alt={`${f.name} — Co-Founder`}
                     className="founder-portrait"
-                    width={300}
-                    height={300}
+                    width={420}
+                    height={420}
                     loading="lazy"
                   />
                 </div>
