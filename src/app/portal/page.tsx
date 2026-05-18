@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
+import { SEED_CLIENTS, getDatabase } from '@/lib/testData';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
@@ -11,15 +12,38 @@ export default function PortalLogin() {
   const [phase, setPhase] = useState<'intro' | 'form' | 'entering'>('intro');
   const [email, setEmail] = useState('');
   const [code, setCode] = useState('');
+  const [showTestPicker, setShowTestPicker] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    // Initialize database on first load
+    getDatabase();
     const timer = setTimeout(() => setPhase('form'), 2200);
     return () => clearTimeout(timer);
   }, []);
 
   const handleEnter = (e: React.FormEvent) => {
     e.preventDefault();
+    // Match email to a test client
+    const client = SEED_CLIENTS.find(c => c.email.toLowerCase() === email.toLowerCase());
+    if (client) {
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('jr_active_client', client.id);
+      }
+    } else if (email) {
+      // Default to first client for demo
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('jr_active_client', SEED_CLIENTS[0].id);
+      }
+    }
+    setPhase('entering');
+    setTimeout(() => router.push('/portal/dashboard'), 1800);
+  };
+
+  const handleTestLogin = (clientId: string) => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('jr_active_client', clientId);
+    }
     setPhase('entering');
     setTimeout(() => router.push('/portal/dashboard'), 1800);
   };
@@ -90,6 +114,31 @@ export default function PortalLogin() {
           <p className="portal-login__notice">
             Access is by invitation only. Contact the firm for credentials.
           </p>
+
+          {/* Test client picker */}
+          <div className="portal-login__test-picker">
+            <button
+              type="button"
+              className="portal-login__test-toggle"
+              onClick={() => setShowTestPicker(!showTestPicker)}
+            >
+              {showTestPicker ? '▼' : '▶'} Test Accounts
+            </button>
+            {showTestPicker && (
+              <div className="portal-login__test-list">
+                {SEED_CLIENTS.filter(c => c.status === 'active').map(client => (
+                  <button
+                    key={client.id}
+                    className="portal-login__test-client"
+                    onClick={() => handleTestLogin(client.id)}
+                  >
+                    <span className="portal-login__test-name">{client.name}</span>
+                    <span className="portal-login__test-area">{client.area}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -346,6 +395,63 @@ export default function PortalLogin() {
             transform: translateY(0);
             filter: blur(0);
           }
+        }
+
+        /* ── Test picker ── */
+        .portal-login__test-picker {
+          margin-top: 32px;
+          border-top: 1px solid rgba(255,255,255,0.06);
+          padding-top: 16px;
+        }
+        .portal-login__test-toggle {
+          background: none;
+          border: none;
+          color: rgba(201,169,110,0.4);
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 9px;
+          letter-spacing: 0.2em;
+          cursor: pointer;
+          padding: 4px 0;
+          text-transform: uppercase;
+        }
+        .portal-login__test-toggle:hover {
+          color: rgba(201,169,110,0.7);
+        }
+        .portal-login__test-list {
+          margin-top: 12px;
+          display: flex;
+          flex-direction: column;
+          gap: 6px;
+        }
+        .portal-login__test-client {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          background: rgba(255,255,255,0.03);
+          border: 1px solid rgba(201,169,110,0.12);
+          border-radius: 6px;
+          padding: 10px 14px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          color: #fff;
+          text-align: left;
+        }
+        .portal-login__test-client:hover {
+          background: rgba(201,169,110,0.08);
+          border-color: rgba(201,169,110,0.3);
+        }
+        .portal-login__test-name {
+          font-family: 'Cormorant Garamond', serif;
+          font-size: 14px;
+          font-weight: 400;
+          color: rgba(255,255,255,0.8);
+        }
+        .portal-login__test-area {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 9px;
+          letter-spacing: 0.15em;
+          color: rgba(201,169,110,0.5);
+          text-transform: uppercase;
         }
 
         @media (max-width: 768px) {

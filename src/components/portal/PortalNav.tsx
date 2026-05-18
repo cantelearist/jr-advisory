@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { getDatabase } from '@/lib/testData';
 
 const NAV_ITEMS = [
   { label: 'Office', href: '/portal/dashboard', icon: '◎' },
@@ -14,6 +15,18 @@ const NAV_ITEMS = [
 export default function PortalNav() {
   const pathname = usePathname();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+  const [clientName, setClientName] = useState('Client');
+  const [clientInitial, setClientInitial] = useState('C');
+
+  useEffect(() => {
+    const db = getDatabase();
+    const clientId = typeof window !== 'undefined' ? localStorage.getItem('jr_active_client') : null;
+    const client = db.clients.find(c => c.id === clientId) || db.clients[0];
+    if (client) {
+      setClientName(client.name);
+      setClientInitial(client.name.charAt(0));
+    }
+  }, []);
 
   return (
     <nav className="portal-nav">
@@ -48,8 +61,10 @@ export default function PortalNav() {
         </div>
 
         <div className="portal-nav__user">
-          <span className="portal-nav__user-name">Mathis Residence</span>
-          <div className="portal-nav__user-avatar">M</div>
+          <Link href="/portal/dashboard" style={{ textDecoration: 'none' }}>
+            <span className="portal-nav__user-name">{clientName}</span>
+          </Link>
+          <div className="portal-nav__user-avatar">{clientInitial}</div>
         </div>
       </div>
 

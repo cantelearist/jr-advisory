@@ -15,9 +15,9 @@ export function Founders() {
 
         <div
           data-reveal
-          style={{ marginTop: 40, maxWidth: "56ch", margin: "40px auto 0", textAlign: "center" }}
+          style={{ marginTop: 44, maxWidth: "58ch", margin: "44px auto 0", textAlign: "center" }}
         >
-          <h2 className="h-section" style={{ margin: "0 0 28px", fontSize: "clamp(32px, 3.5vw, 48px)" }}>
+          <h2 className="h-section" style={{ margin: "0 0 32px", fontSize: "clamp(36px, 4vw, 56px)" }}>
             Two locals,{" "}
             <span className="accent-shimmer">one obligation</span>
             <br />
@@ -25,7 +25,7 @@ export function Founders() {
           </h2>
           <p
             className="small-copy"
-            style={{ fontSize: 17, lineHeight: 1.85, opacity: 0.8 }}
+            style={{ fontSize: 18, lineHeight: 1.85, opacity: 0.82, margin: "0 auto", maxWidth: "54ch" }}
           >
             When the smoke clears and the gates open again, someone has to stand
             on your side of it. We do. Not as a secondary concern — as the
@@ -44,8 +44,8 @@ export function Founders() {
                     src={`/founders/${f.name.toLowerCase()}.png`}
                     alt={`${f.name} — Co-Founder`}
                     className="founder-portrait"
-                    width={280}
-                    height={280}
+                    width={300}
+                    height={300}
                     loading="lazy"
                   />
                 </div>
@@ -53,9 +53,9 @@ export function Founders() {
                   <h3
                     className="display"
                     style={{
-                      fontSize: "clamp(26px, 2.6vw, 36px)",
-                      margin: "0 0 4px",
-                      letterSpacing: ".04em",
+                      fontSize: "clamp(28px, 3vw, 40px)",
+                      margin: "0 0 6px",
+                      letterSpacing: ".03em",
                     }}
                   >
                     {f.name}
@@ -64,7 +64,7 @@ export function Founders() {
                     className="mono"
                     style={{
                       color: "var(--accent)",
-                      fontSize: 11,
+                      fontSize: 12,
                       marginBottom: 28,
                       letterSpacing: ".12em",
                     }}
@@ -74,11 +74,12 @@ export function Founders() {
                   <p
                     className="small-copy founder-quote"
                     style={{
-                      fontSize: 16,
-                      lineHeight: 1.9,
-                      margin: 0,
+                      fontSize: 17,
+                      lineHeight: 1.85,
+                      margin: "0 auto",
                       opacity: 0.85,
                       textAlign: "center",
+                      fontStyle: "italic",
                     }}
                   >
                     &ldquo;{f.quote}&rdquo;
@@ -94,14 +95,14 @@ export function Founders() {
         <div data-reveal className="founders-credo">
           <div
             className="mono"
-            style={{ color: "var(--accent)", marginBottom: 20, textAlign: "center", letterSpacing: ".12em" }}
+            style={{ color: "var(--accent)", marginBottom: 22, textAlign: "center", letterSpacing: ".12em" }}
           >
             OUR POSITION
           </div>
           <p
             className="small-copy"
             style={{
-              fontSize: 17,
+              fontSize: 18,
               lineHeight: 1.9,
               maxWidth: "60ch",
               margin: "0 auto",

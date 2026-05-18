@@ -35,7 +35,7 @@ export function Discretion() {
             </h2>
             <p
               className="small-copy"
-              style={{ marginTop: 24, fontSize: 15 }}
+              style={{ marginTop: 28, fontSize: 17 }}
             >
               An advisor whose name does not return search results next to
               yours. Discretion is not a feature — it is the engagement&apos;s
@@ -49,24 +49,24 @@ export function Discretion() {
                 key={principle.numeral}
                 className="discretion-row"
                 style={{
-                  padding: "22px 0",
+                  padding: "24px 0",
                   borderTop: "1px solid rgba(255,255,255,.08)",
                   borderBottom:
                     i === DISCRETION_PRINCIPLES.length - 1
                       ? "1px solid rgba(255,255,255,.08)"
                       : "none",
                   display: "grid",
-                  gridTemplateColumns: "40px 1fr",
-                  gap: 20,
+                  gridTemplateColumns: "44px 1fr",
+                  gap: 22,
                   alignItems: "baseline",
                 }}
               >
                 <div
                   className="display"
                   style={{
-                    fontSize: 14,
-                    letterSpacing: ".1em",
-                    color: "rgba(236,230,214,.25)",
+                    fontSize: 16,
+                    letterSpacing: ".08em",
+                    color: "rgba(236,230,214,.28)",
                   }}
                 >
                   {principle.numeral}
@@ -75,17 +75,17 @@ export function Discretion() {
                   <div
                     className="display"
                     style={{
-                      fontSize: 14,
-                      letterSpacing: ".12em",
-                      marginBottom: 6,
-                      fontWeight: 300,
+                      fontSize: 16,
+                      letterSpacing: ".10em",
+                      marginBottom: 8,
+                      fontWeight: 400,
                     }}
                   >
                     {principle.title.toUpperCase()}
                   </div>
                   <p
                     className="small-copy"
-                    style={{ fontSize: 13, margin: 0 }}
+                    style={{ fontSize: 15, margin: 0, lineHeight: 1.7 }}
                   >
                     {principle.description}
                   </p>

@@ -1,8 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import PortalNav from '@/components/portal/PortalNav';
+// Test database integration ready — will wire in next iteration
+// import { getDatabase, getClientMessages, saveDatabase } from '@/lib/testData';
+// import type { Message as DBMessage } from '@/lib/testData';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 

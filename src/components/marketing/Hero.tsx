@@ -40,7 +40,7 @@ export function Hero() {
             position: "absolute",
             inset: 0,
             background:
-              "linear-gradient(180deg, rgba(10,11,14,0.55) 0%, rgba(10,11,14,0.2) 35%, rgba(10,11,14,0.85) 100%)",
+              "linear-gradient(180deg, rgba(10,11,14,0.55) 0%, rgba(10,11,14,0.15) 35%, rgba(10,11,14,0.85) 100%)",
           }}
         />
         <div className="corners">
@@ -61,14 +61,14 @@ export function Hero() {
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          padding: "120px 0 60px",
+          padding: "140px 0 60px",
         }}
       >
         <div className="stage" style={{ maxWidth: 1100 }}>
           <div
             className="eyebrow"
             style={{
-              marginBottom: 38,
+              marginBottom: 44,
               display: "flex",
               gap: 18,
               alignItems: "center",
@@ -80,23 +80,23 @@ export function Hero() {
           <h1 className="h-display" style={{ margin: 0 }}>
             Counsel.
             <br />
-            <span style={{ color: "rgba(236,230,214,.4)" }}>Not</span>
+            <span style={{ color: "rgba(236,230,214,.38)" }}>Not</span>
             <br />
             <span className="accent-shimmer">contractors.</span>
           </h1>
 
           <p
             className="small-copy"
-            style={{ marginTop: 36, maxWidth: "48ch", fontSize: 15 }}
+            style={{ marginTop: 40, maxWidth: "48ch", fontSize: 18, lineHeight: 1.8 }}
           >
             {FIRM_DESCRIPTION}
           </p>
 
           <div
             style={{
-              marginTop: 44,
+              marginTop: 48,
               display: "flex",
-              gap: 28,
+              gap: 32,
               flexWrap: "wrap",
               alignItems: "center",
             }}
@@ -108,7 +108,7 @@ export function Hero() {
               href="#contact"
               className="mono inquiry-link"
               style={{
-                opacity: 0.65,
+                opacity: 0.7,
                 display: "inline-flex",
                 alignItems: "center",
                 gap: 8,
@@ -120,41 +120,25 @@ export function Hero() {
         </div>
       </div>
 
-      {/* Location strip */}
+      {/* Location strip — animated marquee */}
       <div
         style={{ position: "relative", zIndex: 1, padding: "20px 0 28px" }}
         data-reveal
       >
         <div className="hr gold-line" style={{ marginBottom: 20 }} />
-        <div
-          className="page location-strip"
-          style={{ display: "flex", justifyContent: "center", gap: 0 }}
-        >
-          {SERVICE_AREAS.map((area, i) => (
-            <span
-              key={area}
-              className="mono"
-              style={{
-                fontSize: 11,
-                letterSpacing: ".28em",
-                opacity: 0.5,
-                padding: "0 clamp(8px, 1.2vw, 20px)",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {i > 0 && (
-                <span
-                  style={{
-                    opacity: 0.4,
-                    marginRight: "clamp(8px, 1.2vw, 20px)",
-                  }}
-                >
-                  /
-                </span>
-              )}
-              {area.toUpperCase()}
-            </span>
-          ))}
+        <div className="cities-marquee-wrap">
+          <div className="cities-marquee">
+            {/* Duplicate the list for seamless loop */}
+            {[...SERVICE_AREAS, ...SERVICE_AREAS].map((area, i) => (
+              <span
+                key={`${area}-${i}`}
+                className="mono cities-marquee-item"
+              >
+                <span className="cities-sep">/</span>
+                {area.toUpperCase()}
+              </span>
+            ))}
+          </div>
         </div>
       </div>
     </section>

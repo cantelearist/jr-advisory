@@ -35,7 +35,7 @@ export function Counsel() {
                 most often retained.
               </span>
             </h2>
-            <p className="small-copy" style={{ marginTop: 20 }}>
+            <p className="small-copy" style={{ marginTop: 24, fontSize: 17 }}>
               The questions our clients most often bring to us — pre-purchase,
               mid-renovation, or after an event no one expected.
             </p>
@@ -47,17 +47,17 @@ export function Counsel() {
             <div key={area.numeral} className="practice-cell">
               <div
                 className="mono"
-                style={{ color: "var(--accent)", marginBottom: 14 }}
+                style={{ color: "var(--accent)", marginBottom: 16 }}
               >
                 {area.numeral}
               </div>
               <div
                 className="display"
                 style={{
-                  fontSize: 19,
-                  letterSpacing: ".04em",
-                  marginBottom: 14,
-                  fontWeight: 300,
+                  fontSize: 22,
+                  letterSpacing: ".03em",
+                  marginBottom: 16,
+                  fontWeight: 400,
                   lineHeight: 1.2,
                 }}
               >
@@ -65,7 +65,7 @@ export function Counsel() {
               </div>
               <p
                 className="small-copy"
-                style={{ fontSize: 13, margin: 0 }}
+                style={{ fontSize: 15, margin: 0, lineHeight: 1.7 }}
               >
                 {area.description}
               </p>

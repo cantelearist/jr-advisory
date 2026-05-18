@@ -1,47 +1,37 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import PortalNav from '@/components/portal/PortalNav';
+import { getDatabase, getClientDocuments, getClientMessages, resetDatabase } from '@/lib/testData';
+import type { Client, Engagement } from '@/lib/testData';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
-/* ── Mock data ── */
-const ENGAGEMENT = {
-  property: '1247 Pacific Coast Highway',
-  type: 'Mold & Water Intrusion',
-  phase: 3,
-  phaseLabel: 'Scope & Vendor Curation',
-  startDate: 'March 14, 2026',
-  nextMilestone: 'Vendor shortlist presentation — May 22',
-};
-
-const PHASES = [
-  { num: 'I', label: 'Confidential Consultation', status: 'complete' },
-  { num: 'II', label: 'Independent Assessment', status: 'complete' },
-  { num: 'III', label: 'Scope & Vendor Curation', status: 'active' },
-  { num: 'IV', label: 'Oversight & Clearance', status: 'upcoming' },
-];
-
-const RECENT_ACTIVITY = [
-  { date: 'May 15', action: 'Lab results uploaded', type: 'document', detail: 'IEP Assessment — Final Report.pdf' },
-  { date: 'May 12', action: 'New message from the firm', type: 'message', detail: 'Regarding vendor proposal comparison' },
-  { date: 'May 8', action: 'Phase III commenced', type: 'phase', detail: 'Scope & Vendor Curation' },
-  { date: 'May 3', action: 'Clearance assessment complete', type: 'document', detail: 'Phase II closeout documentation' },
-  { date: 'Apr 28', action: 'Site visit completed', type: 'phase', detail: 'Final walkthrough — independent inspection' },
-];
-
-const STATS = [
-  { label: 'Documents', value: '24', sub: 'in vault' },
-  { label: 'Messages', value: '8', sub: 'unread: 2' },
-  { label: 'Days Active', value: '64', sub: 'since engagement' },
+const PHASE_LABELS = [
+  { num: 'I', label: 'Confidential Consultation' },
+  { num: 'II', label: 'Independent Assessment' },
+  { num: 'III', label: 'Scope & Vendor Curation' },
+  { num: 'IV', label: 'Oversight & Clearance' },
 ];
 
 export default function PortalDashboard() {
+  const router = useRouter();
   const [loaded, setLoaded] = useState(false);
   const [time, setTime] = useState('');
+  const [activeClient, setActiveClient] = useState<Client | null>(null);
+  const [engagement, setEngagement] = useState<Engagement | null>(null);
+  const [showReset, setShowReset] = useState(false);
 
   useEffect(() => {
+    // Load active client from localStorage
+    const db = getDatabase();
+    const clientId = typeof window !== 'undefined' ? localStorage.getItem('jr_active_client') : null;
+    const client = db.clients.find(c => c.id === clientId) || db.clients[0];
+    setActiveClient(client);
+    const eng = db.engagements.find(e => e.clientId === client.id) || null;
+    setEngagement(eng);
     setLoaded(true);
     const updateTime = () => {
       const now = new Date();
@@ -59,6 +49,50 @@ export default function PortalDashboard() {
     return 'Good evening';
   };
 
+  // Derived data from test database
+  const docs = activeClient ? getClientDocuments(activeClient.id) : [];
+  const msgs = activeClient ? getClientMessages(activeClient.id) : [];
+  // Timeline data available: getEngagementTimeline(engagement.id)
+  const unreadMsgs = msgs.filter(m => !m.read).length;
+  const daysSince = engagement ? Math.floor((Date.now() - new Date(engagement.startDate.replace(/(\w+)\s(\d+),\s(\d+)/, '$1 $2, $3')).getTime()) / 86400000) : 0;
+
+  const phases = PHASE_LABELS.map((p, i) => ({
+    ...p,
+    status: engagement
+      ? i + 1 < engagement.phase ? 'complete'
+        : i + 1 === engagement.phase ? 'active'
+        : 'upcoming'
+      : 'upcoming',
+  }));
+
+  const recentActivity = [
+    ...docs.slice(-3).reverse().map(d => ({
+      date: new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      action: `Document: ${d.status === 'final' ? 'uploaded' : d.status === 'draft' ? 'draft saved' : 'pending review'}`,
+      type: 'document',
+      detail: d.name,
+    })),
+    ...msgs.slice(-2).reverse().map(m => ({
+      date: new Date(m.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+      action: `Message from ${m.sender}`,
+      type: 'message',
+      detail: m.subject,
+    })),
+  ].sort((a, b) => 0).slice(0, 5);
+
+  const stats = [
+    { label: 'Documents', value: String(docs.length), sub: 'in vault' },
+    { label: 'Messages', value: String(msgs.length), sub: `unread: ${unreadMsgs}` },
+    { label: 'Days Active', value: String(Math.max(daysSince, 1)), sub: 'since engagement' },
+  ];
+
+  const handleReset = () => {
+    resetDatabase();
+    window.location.reload();
+  };
+
+  if (!activeClient || !engagement) return null;
+
   return (
     <div className="dash">
       <Scene3D variant="dashboard" />
@@ -71,10 +105,10 @@ export default function PortalDashboard() {
           <span className="dash__time">{time} PT</span>
           <h1 className="dash__greeting">
             <span className="dash__greeting-line">{getGreeting()},</span>
-            <span className="dash__greeting-name">Mathis Residence.</span>
+            <span className="dash__greeting-name">{activeClient.name.split(' ')[0]}.</span>
           </h1>
           <p className="dash__engagement-label">
-            Current engagement — <span className="dash__gold">{ENGAGEMENT.type}</span>
+            Current engagement — <span className="dash__gold">{engagement.type}</span>
           </p>
         </section>
 
@@ -82,17 +116,17 @@ export default function PortalDashboard() {
         <section className="dash__phases" style={{ animationDelay: '0.4s' }}>
           <div className="dash__section-header">
             <span className="dash__section-label">ENGAGEMENT PHASE</span>
-            <span className="dash__section-sub">Started {ENGAGEMENT.startDate}</span>
+            <span className="dash__section-sub">Started {engagement.startDate}</span>
           </div>
           <div className="dash__phase-track">
-            {PHASES.map((phase, i) => (
+            {phases.map((phase, i) => (
               <div key={i} className={`dash__phase dash__phase--${phase.status}`}>
                 <div className="dash__phase-num">{phase.num}</div>
                 <div className="dash__phase-label">{phase.label}</div>
                 {phase.status === 'active' && (
                   <div className="dash__phase-pulse" />
                 )}
-                {i < PHASES.length - 1 && (
+                {i < phases.length - 1 && (
                   <div className={`dash__phase-connector ${
                     phase.status === 'complete' ? 'dash__phase-connector--done' : ''
                   }`} />
@@ -102,7 +136,7 @@ export default function PortalDashboard() {
           </div>
           <div className="dash__milestone">
             <span className="dash__milestone-icon">◈</span>
-            <span>Next: {ENGAGEMENT.nextMilestone}</span>
+            <span>Next: {engagement.nextMilestone}</span>
           </div>
         </section>
 
@@ -110,12 +144,12 @@ export default function PortalDashboard() {
         <div className="dash__grid">
           {/* Stats */}
           <section className="dash__stats" style={{ animationDelay: '0.6s' }}>
-            {STATS.map((stat, i) => (
-              <div key={i} className="dash__stat">
+            {stats.map((stat, i) => (
+              <a key={i} className="dash__stat" href={i === 0 ? '/portal/documents' : i === 1 ? '/portal/messages' : '#'} style={{ textDecoration: 'none', color: 'inherit', cursor: 'pointer' }}>
                 <div className="dash__stat-value">{stat.value}</div>
                 <div className="dash__stat-label">{stat.label}</div>
                 <div className="dash__stat-sub">{stat.sub}</div>
-              </div>
+              </a>
             ))}
           </section>
 
@@ -125,15 +159,15 @@ export default function PortalDashboard() {
               <span className="dash__section-label">RECENT ACTIVITY</span>
             </div>
             <div className="dash__activity-list">
-              {RECENT_ACTIVITY.map((item, i) => (
-                <div key={i} className="dash__activity-item">
+              {recentActivity.map((item, i) => (
+                <a key={i} className="dash__activity-item" href={item.type === 'document' ? '/portal/documents' : '/portal/messages'} style={{ textDecoration: 'none', color: 'inherit' }}>
                   <div className="dash__activity-dot" data-type={item.type} />
                   <div className="dash__activity-content">
                     <span className="dash__activity-action">{item.action}</span>
                     <span className="dash__activity-detail">{item.detail}</span>
                   </div>
                   <span className="dash__activity-date">{item.date}</span>
-                </div>
+                </a>
               ))}
             </div>
           </section>
@@ -143,10 +177,24 @@ export default function PortalDashboard() {
         <section className="dash__property" style={{ animationDelay: '1s' }}>
           <div className="dash__property-inner">
             <span className="dash__property-label">ENGAGEMENT PROPERTY</span>
-            <h2 className="dash__property-address">{ENGAGEMENT.property}</h2>
-            <span className="dash__property-area">Malibu, California</span>
+            <h2 className="dash__property-address">{engagement.property}</h2>
+            <span className="dash__property-area">{activeClient.area}, California</span>
           </div>
         </section>
+
+        {/* Admin: Reset database */}
+        <div className="dash__admin" style={{ animationDelay: '1.2s' }}>
+          <button className="dash__admin-toggle" onClick={() => setShowReset(!showReset)}>
+            ⚙ Admin
+          </button>
+          {showReset && (
+            <div className="dash__admin-panel">
+              <p className="dash__admin-info">Test database last reset: {getDatabase().lastReset.split('T')[0]}</p>
+              <button className="dash__admin-reset" onClick={handleReset}>↻ Reset Test Database</button>
+              <button className="dash__admin-logout" onClick={() => { localStorage.removeItem('jr_active_client'); router.push('/portal'); }}>← Sign Out</button>
+            </div>
+          )}
+        </div>
       </main>
 
       <style jsx>{`
@@ -452,6 +500,61 @@ export default function PortalDashboard() {
           font-size: 12px;
           color: rgba(255,255,255,0.2);
           letter-spacing: 0.15em;
+        }
+
+        /* ── Admin panel ── */
+        .dash__admin {
+          margin-top: 48px;
+          border-top: 1px solid rgba(255,255,255,0.04);
+          padding-top: 16px;
+          opacity: 0;
+          transform: translateY(30px);
+          animation: dashReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .dash__admin-toggle {
+          background: none;
+          border: none;
+          color: rgba(255,255,255,0.15);
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          letter-spacing: 0.2em;
+          cursor: pointer;
+          padding: 6px 0;
+        }
+        .dash__admin-toggle:hover { color: rgba(201,169,110,0.5); }
+        .dash__admin-panel {
+          margin-top: 12px;
+          padding: 16px;
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(201,169,110,0.1);
+          border-radius: 8px;
+          display: flex;
+          gap: 16px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .dash__admin-info {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          color: rgba(255,255,255,0.3);
+          margin: 0;
+          flex: 1;
+        }
+        .dash__admin-reset, .dash__admin-logout {
+          background: rgba(201,169,110,0.08);
+          border: 1px solid rgba(201,169,110,0.2);
+          color: #c9a96e;
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          letter-spacing: 0.1em;
+          padding: 8px 16px;
+          border-radius: 4px;
+          cursor: pointer;
+          transition: all 0.2s ease;
+        }
+        .dash__admin-reset:hover, .dash__admin-logout:hover {
+          background: rgba(201,169,110,0.15);
+          border-color: rgba(201,169,110,0.4);
         }
 
         @keyframes dashReveal {

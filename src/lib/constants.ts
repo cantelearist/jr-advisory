@@ -258,18 +258,18 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     heading: "Engagement",
     items: [
       { label: "Request a Consultation", href: "#contact" },
-      { label: "Client Office", href: "#" },
-      { label: "For Estate Managers", href: "#" },
-      { label: "For Counsel + Advisors", href: "#" },
+      { label: "Client Office", href: "/portal" },
+      { label: "For Estate Managers", href: "#contact" },
+      { label: "For Counsel + Advisors", href: "#contact" },
     ],
   },
   {
     heading: "Firm",
     items: [
-      { label: "Privacy", href: "#" },
-      { label: "Terms", href: "#" },
-      { label: "Disclaimer", href: "#" },
-      { label: "Accessibility", href: "#" },
+      { label: "Privacy", href: "/privacy" },
+      { label: "Terms", href: "/terms" },
+      { label: "Disclaimer", href: "/disclaimer" },
+      { label: "Accessibility", href: "/accessibility" },
     ],
   },
 ];

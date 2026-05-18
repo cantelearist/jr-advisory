@@ -1,28 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import PortalNav from '@/components/portal/PortalNav';
+import { getDatabase, getClientDocuments } from '@/lib/testData';
+import type { DocRecord } from '@/lib/testData';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
-/* ── Mock documents ── */
-const CATEGORIES = ['All', 'NDA', 'Lab Results', 'Proposals', 'Clearance', 'Invoices'];
+const CATEGORIES = ['All', 'NDA', 'Lab Results', 'Proposals', 'Clearance', 'Invoices', 'Reports'];
 
-const DOCUMENTS = [
-  { id: 1, name: 'Mutual Non-Disclosure Agreement', category: 'NDA', date: 'Mar 14, 2026', size: '245 KB', status: 'signed' },
-  { id: 2, name: 'IEP Assessment — Initial Survey', category: 'Lab Results', date: 'Mar 28, 2026', size: '1.8 MB', status: 'final' },
-  { id: 3, name: 'Moisture Mapping Report — Zone A-C', category: 'Lab Results', date: 'Apr 5, 2026', size: '3.2 MB', status: 'final' },
-  { id: 4, name: 'Air Quality Sampling Results', category: 'Lab Results', date: 'Apr 12, 2026', size: '2.1 MB', status: 'final' },
-  { id: 5, name: 'Phase II Closeout Summary', category: 'Clearance', date: 'May 3, 2026', size: '890 KB', status: 'final' },
-  { id: 6, name: 'Vendor Proposal — Pacific Remediation', category: 'Proposals', date: 'May 10, 2026', size: '1.4 MB', status: 'review' },
-  { id: 7, name: 'Vendor Proposal — Westside Environmental', category: 'Proposals', date: 'May 11, 2026', size: '1.2 MB', status: 'review' },
-  { id: 8, name: 'Vendor Proposal — Coastal Restoration', category: 'Proposals', date: 'May 13, 2026', size: '1.6 MB', status: 'review' },
-  { id: 9, name: 'IEP Assessment — Final Report', category: 'Lab Results', date: 'May 15, 2026', size: '4.5 MB', status: 'new' },
-  { id: 10, name: 'Engagement Retainer Invoice — Q2', category: 'Invoices', date: 'Apr 1, 2026', size: '124 KB', status: 'paid' },
-  { id: 11, name: 'Site Visit Invoice — April', category: 'Invoices', date: 'Apr 30, 2026', size: '98 KB', status: 'paid' },
-  { id: 12, name: 'Scope Comparison Matrix', category: 'Proposals', date: 'May 16, 2026', size: '340 KB', status: 'new' },
-];
+const CATEGORY_MAP: Record<string, string> = {
+  'nda': 'NDA',
+  'lab-results': 'Lab Results',
+  'proposals': 'Proposals',
+  'clearance': 'Clearance',
+  'invoices': 'Invoices',
+  'reports': 'Reports',
+};
+
+const STATUS_MAP: Record<string, string> = {
+  'final': 'final',
+  'draft': 'review',
+  'pending-review': 'new',
+};
 
 const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }> = {
   signed: { bg: 'rgba(201,169,110,0.1)', color: '#c9a96e', label: 'SIGNED' },
@@ -35,6 +36,25 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
 export default function PortalDocuments() {
   const [activeCategory, setActiveCategory] = useState('All');
   const [hoveredDoc, setHoveredDoc] = useState<number | null>(null);
+  const [clientDocs, setClientDocs] = useState<DocRecord[]>([]);
+
+  useEffect(() => {
+    const db = getDatabase();
+    const clientId = typeof window !== 'undefined' ? localStorage.getItem('jr_active_client') : null;
+    const client = db.clients.find(c => c.id === clientId) || db.clients[0];
+    if (client) {
+      setClientDocs(getClientDocuments(client.id));
+    }
+  }, []);
+
+  const DOCUMENTS = clientDocs.map((d, i) => ({
+    id: i + 1,
+    name: d.name,
+    category: CATEGORY_MAP[d.category] || d.category,
+    date: new Date(d.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    size: d.size,
+    status: STATUS_MAP[d.status] || d.status,
+  }));
 
   const filtered = activeCategory === 'All'
     ? DOCUMENTS

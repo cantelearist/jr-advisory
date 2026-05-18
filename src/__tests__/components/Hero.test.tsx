@@ -35,10 +35,12 @@ describe("Hero", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders all service area locations", () => {
+  it("renders all service area locations in marquee", () => {
     render(<Hero />);
     SERVICE_AREAS.forEach((area) => {
-      expect(screen.getByText(area.toUpperCase())).toBeInTheDocument();
+      // Duplicated for seamless marquee loop
+      const matches = screen.getAllByText(area.toUpperCase());
+      expect(matches.length).toBeGreaterThanOrEqual(2);
     });
   });
 

@@ -22,7 +22,8 @@ export function SiteFooter() {
               style={{
                 marginTop: 24,
                 maxWidth: "34ch",
-                fontSize: 12,
+                fontSize: 14,
+                lineHeight: 1.7,
               }}
             >
               Private advisory for hazardous-material remediation oversight and
@@ -36,7 +37,7 @@ export function SiteFooter() {
             <div key={col.heading}>
               <div
                 className="mono"
-                style={{ opacity: 0.55, marginBottom: 16 }}
+                style={{ opacity: 0.6, marginBottom: 18 }}
               >
                 {col.heading}
               </div>
@@ -44,7 +45,7 @@ export function SiteFooter() {
                 style={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: 10,
+                  gap: 12,
                 }}
               >
                 {col.items.map((item) => (
@@ -52,7 +53,7 @@ export function SiteFooter() {
                     key={item.label}
                     href={item.href}
                     className="footer-link"
-                    style={{ fontSize: 13, opacity: 0.8 }}
+                    style={{ fontSize: 14, opacity: 0.82 }}
                   >
                     {item.label}
                   </a>
@@ -70,7 +71,7 @@ export function SiteFooter() {
             display: "flex",
             justifyContent: "space-between",
             opacity: 0.5,
-            fontSize: 10,
+            fontSize: 11,
             flexWrap: "wrap",
             gap: 12,
           }}

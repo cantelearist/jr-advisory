@@ -21,7 +21,7 @@ export function Contact() {
         <div data-reveal>
           <div
             className="mono"
-            style={{ opacity: 0.55, marginBottom: 30 }}
+            style={{ opacity: 0.6, marginBottom: 34 }}
           >
             § 08 — BEGIN
           </div>
@@ -29,7 +29,7 @@ export function Contact() {
           <h2
             className="h-display"
             style={{
-              fontSize: "clamp(40px, 5.2vw, 78px)",
+              fontSize: "clamp(44px, 5.5vw, 84px)",
               margin: 0,
               maxWidth: "16ch",
             }}
@@ -41,7 +41,7 @@ export function Contact() {
 
           <p
             className="small-copy"
-            style={{ marginTop: 28, maxWidth: "50ch", fontSize: 15 }}
+            style={{ marginTop: 32, maxWidth: "50ch", fontSize: 18, lineHeight: 1.8 }}
           >
             Tell us as much or as little as you would like. A response within
             twenty-four hours, from James personally, under standing NDA.
@@ -50,51 +50,51 @@ export function Contact() {
           <div
             className="contact-actions"
             style={{
-              marginTop: 40,
+              marginTop: 44,
               display: "flex",
-              gap: 40,
+              gap: 44,
               flexWrap: "wrap",
               alignItems: "start",
             }}
           >
-            <a href="#" className="btn primary cta-pulse">
+            <a href="mailto:roman@jamesroman.la" className="btn primary cta-pulse">
               Request a Private Consultation <span className="arr">→</span>
             </a>
             <div
               style={{
                 display: "flex",
                 flexDirection: "column",
-                gap: 16,
+                gap: 18,
               }}
             >
               <div>
                 <div
                   className="mono"
-                  style={{ opacity: 0.45, marginBottom: 4 }}
+                  style={{ opacity: 0.5, marginBottom: 6 }}
                 >
                   Direct
                 </div>
-                <div style={{ fontSize: 14, opacity: 0.8 }}>
+                <a href="tel:+13104302500" style={{ fontSize: 16, opacity: 0.85, color: 'inherit', textDecoration: 'none' }}>
                   {CONTACT_PHONE}
-                </div>
+                </a>
               </div>
               <div>
                 <div
                   className="mono"
-                  style={{ opacity: 0.45, marginBottom: 4 }}
+                  style={{ opacity: 0.5, marginBottom: 6 }}
                 >
                   Confidential Email
                 </div>
-                <div style={{ fontSize: 14, opacity: 0.8 }}>
+                <a href="mailto:roman@jamesroman.la" style={{ fontSize: 16, opacity: 0.85, color: 'inherit', textDecoration: 'none' }}>
                   {CONTACT_EMAIL}
-                </div>
+                </a>
               </div>
             </div>
           </div>
 
           <div
             className="mono"
-            style={{ opacity: 0.4, marginTop: 30, fontSize: 10 }}
+            style={{ opacity: 0.45, marginTop: 34, fontSize: 11 }}
           >
             Submission does not create an advisory relationship.{" "}
             {CONTACT_LOCATION}

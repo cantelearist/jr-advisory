@@ -8,9 +8,9 @@ export function ClientOffice() {
           data-reveal
           className="gate client-office-layout"
           style={{
-            padding: "60px 56px",
+            padding: "64px 60px",
             display: "grid",
-            gridTemplateColumns: "1fr 280px",
+            gridTemplateColumns: "1fr 300px",
             gap: 56,
             alignItems: "center",
           }}
@@ -18,22 +18,22 @@ export function ClientOffice() {
           <div>
             <div
               className="mono"
-              style={{ color: "var(--accent)", marginBottom: 22 }}
+              style={{ color: "var(--accent)", marginBottom: 24 }}
             >
               § 07 — PRIVATE CLIENT OFFICE
             </div>
             <h2
               className="h-section"
               style={{
-                margin: "0 0 22px",
-                fontSize: "clamp(28px, 2.8vw, 40px)",
+                margin: "0 0 24px",
+                fontSize: "clamp(30px, 3vw, 44px)",
               }}
             >
               By invitation
               <br />
               <span className="accent-shimmer">only.</span>
             </h2>
-            <p className="small-copy" style={{ margin: 0 }}>
+            <p className="small-copy" style={{ margin: 0, fontSize: 16, lineHeight: 1.75 }}>
               Each accepted client receives a dedicated, two-factor-secured
               project space — documents, status, and a controlled communication
               channel. The portal feels like a private office, not a public app.
@@ -44,22 +44,22 @@ export function ClientOffice() {
             className="client-office-access"
             style={{
               borderLeft: "1px solid rgba(201,181,138,.25)",
-              paddingLeft: 32,
+              paddingLeft: 36,
             }}
           >
             <div
               className="display"
               style={{
-                fontSize: 13,
-                letterSpacing: ".18em",
-                marginBottom: 18,
-                opacity: 0.7,
+                fontSize: 14,
+                letterSpacing: ".16em",
+                marginBottom: 20,
+                opacity: 0.75,
               }}
             >
               CLIENT ACCESS
             </div>
             <a
-              href="#"
+              href="/portal"
               className="btn ghost"
               style={{
                 width: "100%",
@@ -70,7 +70,7 @@ export function ClientOffice() {
             </a>
             <div
               className="mono"
-              style={{ marginTop: 16, opacity: 0.5, fontSize: 10 }}
+              style={{ marginTop: 18, opacity: 0.55, fontSize: 11 }}
             >
               BY INVITATION ONLY · 2FA REQUIRED
             </div>

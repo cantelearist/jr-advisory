@@ -1,8 +1,8 @@
-import type { Metadata } from 'next';
+import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: 'Your Office — James Roman Advisory',
-  description: 'Private client portal for James Roman Advisory engagements.',
+  title: "Client Office — James Roman Advisory",
+  description: "Private client portal for engagement management.",
 };
 
 export default function PortalLayout({
@@ -10,16 +10,5 @@ export default function PortalLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return (
-    <div
-      style={{
-        minHeight: '100vh',
-        background: '#000000',
-        color: '#ffffff',
-        overflow: 'hidden',
-      }}
-    >
-      {children}
-    </div>
-  );
+  return <>{children}</>;
 }
