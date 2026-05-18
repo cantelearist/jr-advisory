@@ -1,7 +1,7 @@
 /* ── Data Layer ── */
 /* Unified data access: uses Supabase when configured, falls back to localStorage */
 
-import { supabase, isSupabaseConfigured } from './supabase';
+import { getSupabase, isSupabaseConfigured } from './supabase';
 import {
   getDatabase,
   getClientDocuments,
@@ -79,16 +79,16 @@ export async function fetchClient(clientId: string): Promise<Client | null> {
     const tc = db.clients.find(c => c.id === clientId);
     return tc ? toClient(tc) : null;
   }
-  const { data } = await supabase.from('clients').select('*').eq('id', clientId).single();
-  return data;
+  const { data } = await getSupabase().from('clients').select('*').eq('id', clientId).single();
+  return (data as Client) || null;
 }
 
 export async function fetchAllClients(): Promise<Client[]> {
   if (!isSupabaseConfigured()) {
     return getDatabase().clients.map(toClient);
   }
-  const { data } = await supabase.from('clients').select('*').order('created_at', { ascending: false });
-  return data || [];
+  const { data } = await getSupabase().from('clients').select('*').order('created_at', { ascending: false });
+  return (data as Client[]) || [];
 }
 
 export async function fetchEngagement(clientId: string): Promise<Engagement | null> {
@@ -97,57 +97,56 @@ export async function fetchEngagement(clientId: string): Promise<Engagement | nu
     const te = db.engagements.find(e => e.clientId === clientId);
     return te ? toEngagement(te) : null;
   }
-  const { data } = await supabase.from('engagements').select('*').eq('client_id', clientId).order('created_at', { ascending: false }).limit(1).single();
-  return data;
+  const { data } = await getSupabase().from('engagements').select('*').eq('client_id', clientId).order('created_at', { ascending: false }).limit(1).single();
+  return (data as Engagement) || null;
 }
 
 export async function fetchAllEngagements(): Promise<Engagement[]> {
   if (!isSupabaseConfigured()) {
     return getDatabase().engagements.map(toEngagement);
   }
-  const { data } = await supabase.from('engagements').select('*').order('created_at', { ascending: false });
-  return data || [];
+  const { data } = await getSupabase().from('engagements').select('*').order('created_at', { ascending: false });
+  return (data as Engagement[]) || [];
 }
 
 export async function fetchDocuments(clientId: string): Promise<Document[]> {
   if (!isSupabaseConfigured()) {
     return getClientDocuments(clientId).map(toDocument);
   }
-  const { data } = await supabase.from('documents').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
-  return data || [];
+  const { data } = await getSupabase().from('documents').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+  return (data as Document[]) || [];
 }
 
 export async function fetchMessages(clientId: string): Promise<Message[]> {
   if (!isSupabaseConfigured()) {
     return getClientMessages(clientId).map(toMessage);
   }
-  const { data } = await supabase.from('messages').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
-  return data || [];
+  const { data } = await getSupabase().from('messages').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+  return (data as Message[]) || [];
 }
 
 export async function fetchTimeline(engagementId: string): Promise<TimelineEvent[]> {
   if (!isSupabaseConfigured()) {
     return getEngagementTimeline(engagementId).map(toTimelineEvent);
   }
-  const { data } = await supabase.from('timeline_events').select('*').eq('engagement_id', engagementId).order('event_date', { ascending: true });
-  return data || [];
+  const { data } = await getSupabase().from('timeline_events').select('*').eq('engagement_id', engagementId).order('event_date', { ascending: true });
+  return (data as TimelineEvent[]) || [];
 }
 
 export async function fetchInvoices(clientId: string): Promise<Invoice[]> {
   if (!isSupabaseConfigured()) {
-    // No invoices in test data yet — return seed invoices
     return DEMO_INVOICES.filter(i => i.client_id === clientId);
   }
-  const { data } = await supabase.from('invoices').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
-  return data || [];
+  const { data } = await getSupabase().from('invoices').select('*').eq('client_id', clientId).order('created_at', { ascending: false });
+  return (data as Invoice[]) || [];
 }
 
 export async function fetchAllInvoices(): Promise<Invoice[]> {
   if (!isSupabaseConfigured()) {
     return DEMO_INVOICES;
   }
-  const { data } = await supabase.from('invoices').select('*').order('created_at', { ascending: false });
-  return data || [];
+  const { data } = await getSupabase().from('invoices').select('*').order('created_at', { ascending: false });
+  return (data as Invoice[]) || [];
 }
 
 /* ── Mutations ── */
@@ -180,8 +179,8 @@ export async function sendMessage(msg: {
     saveDatabase(db);
     return toMessage(newMsg);
   }
-  const { data } = await supabase.from('messages').insert(msg).select().single();
-  return data;
+  const { data } = await getSupabase().from('messages').insert(msg as Record<string, unknown>).select().single();
+  return (data as Message) || null;
 }
 
 export async function markMessageRead(messageId: string): Promise<void> {
@@ -195,7 +194,7 @@ export async function markMessageRead(messageId: string): Promise<void> {
     }
     return;
   }
-  await supabase.from('messages').update({ read: true }).eq('id', messageId);
+  await getSupabase().from('messages').update({ read: true } as Record<string, unknown>).eq('id', messageId);
 }
 
 export async function updateEngagementPhase(
@@ -214,7 +213,7 @@ export async function updateEngagementPhase(
     }
     return;
   }
-  await supabase.from('engagements').update({ phase, phase_label: phaseLabel }).eq('id', engagementId);
+  await getSupabase().from('engagements').update({ phase, phase_label: phaseLabel } as Record<string, unknown>).eq('id', engagementId);
 }
 
 /* ── Demo Invoices ── */

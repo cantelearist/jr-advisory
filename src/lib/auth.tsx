@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
-import { supabase, isSupabaseConfigured } from './supabase';
+import { getSupabase, isSupabaseConfigured } from './supabase';
 import { getDatabase, SEED_CLIENTS } from './testData';
 import type { Profile, Client } from './database.types';
 import type { Client as TestClient } from './testData';
@@ -78,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Real Supabase auth
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    getSupabase().auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         loadProfile(session.user, session);
       } else {
@@ -86,7 +86,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+    const { data: { subscription } } = getSupabase().auth.onAuthStateChange(
       async (_event, session) => {
         if (session?.user) {
           await loadProfile(session.user, session);
@@ -103,25 +103,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   async function loadProfile(user: User, session: Session) {
-    const { data: profile } = await supabase
+    const { data: profileData } = await getSupabase()
       .from('profiles')
       .select('*')
       .eq('id', user.id)
       .single();
 
+    const profile = profileData as Profile | null;
+
     let client: Client | null = null;
     if (profile && profile.role === 'client') {
-      const { data } = await supabase
+      const { data } = await getSupabase()
         .from('clients')
         .select('*')
         .eq('profile_id', user.id)
         .single();
-      client = data;
+      client = data as Client | null;
     }
 
     setState({
       user,
-      profile: profile || null,
+      profile,
       client,
       session,
       isAdmin: profile?.role === 'admin',
@@ -143,7 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: 'No matching test account' };
     }
 
-    const { error } = await supabase.auth.signInWithOtp({
+    const { error } = await getSupabase().auth.signInWithOtp({
       email,
       options: {
         emailRedirectTo: `${window.location.origin}/portal/dashboard`,
@@ -162,7 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }));
       return;
     }
-    await supabase.auth.signOut();
+    await getSupabase().auth.signOut();
   }, [state.isDemo]);
 
   /* ── Demo login (test accounts) ── */

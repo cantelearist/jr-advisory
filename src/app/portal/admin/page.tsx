@@ -49,6 +49,7 @@ export default function AdminPanel() {
   const activeClients = clients.filter(c => c.status === 'active').length;
   const totalRevenue = invoices.reduce((s, i) => s + Number(i.amount), 0);
   const paidRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.amount), 0);
+  const outstanding = invoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((s, i) => s + Number(i.amount), 0);
 
   const formatCurrency = (n: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
