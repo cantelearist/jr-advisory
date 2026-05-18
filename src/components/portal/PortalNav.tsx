@@ -10,9 +10,10 @@ const NAV_ITEMS = [
   { label: "Documents", href: "/portal/documents", icon: "▤" },
   { label: "Timeline", href: "/portal/timeline", icon: "◈" },
   { label: "Messages", href: "/portal/messages", icon: "▣" },
+  { label: "Invoices", href: "/portal/invoices", icon: "▦" },
 ];
 
-export default function PortalNav() {
+export default function PortalNav({ active }: { active?: string } = {}) {
   const pathname = usePathname();
   const router = useRouter();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
@@ -104,6 +105,20 @@ export default function PortalNav() {
                 onClick={() => setShowUserMenu(false)}
               >
                 ◎ Dashboard
+              </Link>
+              <Link
+                href="/portal/invoices"
+                className="portal-nav__dropdown-item"
+                onClick={() => setShowUserMenu(false)}
+              >
+                ▦ Invoices
+              </Link>
+              <Link
+                href="/portal/admin"
+                className="portal-nav__dropdown-item"
+                onClick={() => setShowUserMenu(false)}
+              >
+                ⚙ Admin Panel
               </Link>
               <Link
                 href="/"
