@@ -417,6 +417,22 @@ footer { padding: 64px 0 36px; border-top: 1px solid rgba(255,255,255,.08); marg
   100% { transform: translateX(100%); }
 }
 
+/* ─── Counsel area cells — clickable ─── */
+.counsel-area-cell {
+  transition: background .45s ease, border-color .45s ease;
+}
+.counsel-area-cell:hover {
+  background: rgba(201,181,138,.04);
+}
+.counsel-expand-icon {
+  display: none;
+}
+@media (max-width: 900px) {
+  .counsel-expand-icon {
+    display: block !important;
+  }
+}
+
 /* ─── Matters mobile cards ─── */
 .matter-card {
   display: none;

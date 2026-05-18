@@ -21,7 +21,7 @@ describe("constants", () => {
   });
 
   it("has the correct tagline", () => {
-    expect(FIRM_TAGLINE).toBe("Counsel. Not Contractors.");
+    expect(FIRM_TAGLINE).toBe("Respond. Protect. Restore.");
   });
 
   it("has 6 service areas on the Westside", () => {

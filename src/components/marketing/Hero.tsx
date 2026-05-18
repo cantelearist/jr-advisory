@@ -78,11 +78,11 @@ export function Hero() {
           </div>
 
           <h1 className="h-display" style={{ margin: 0 }}>
-            Counsel.
+            Respond.
             <br />
-            <span style={{ color: "rgba(236,230,214,.38)" }}>Not</span>
+            <span className="accent-shimmer">Protect.</span>
             <br />
-            <span className="accent-shimmer">contractors.</span>
+            Restore.
           </h1>
 
           <p

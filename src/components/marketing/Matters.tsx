@@ -1,7 +1,21 @@
-import React from "react";
+"use client";
+
+import React, { useState, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { MATTERS } from "@/lib/constants";
 
 export function Matters() {
+  const router = useRouter();
+  const [expandedIdx, setExpandedIdx] = useState<number | null>(null);
+
+  const handleClick = useCallback((idx: number, id: string) => {
+    if (typeof window !== "undefined" && window.innerWidth <= 900) {
+      setExpandedIdx(expandedIdx === idx ? null : idx);
+    } else {
+      router.push(`/engagements/${id}`);
+    }
+  }, [expandedIdx, router]);
+
   return (
     <section
       data-testid="matters"
@@ -67,7 +81,14 @@ export function Matters() {
           </thead>
           <tbody>
             {MATTERS.map((matter, i) => (
-              <tr key={i}>
+              <tr
+                key={i}
+                onClick={() => handleClick(i, matter.id)}
+                style={{ cursor: "pointer" }}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter") handleClick(i, matter.id); }}
+              >
                 <td>
                   <span
                     className="num"
@@ -86,35 +107,82 @@ export function Matters() {
           </tbody>
         </table>
 
-        {/* Mobile cards */}
+        {/* Mobile cards — with expand */}
         <div data-reveal>
           {MATTERS.map((matter, i) => (
-            <div
-              key={i}
-              className="matter-card"
-              style={{
-                padding: "28px 0",
-                borderTop: "1px solid rgba(255,255,255,.08)",
-                borderBottom: i === MATTERS.length - 1 ? "1px solid rgba(255,255,255,.08)" : "none",
-              }}
-            >
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
-                <div>
-                  <span className="num" style={{ opacity: 0.5, marginRight: 10 }}>
-                    {String(i + 1).padStart(2, "0")}
-                  </span>
-                  <span className="area">{matter.area}</span>
+            <div key={i}>
+              <div
+                className="matter-card"
+                onClick={() => handleClick(i, matter.id)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === "Enter") handleClick(i, matter.id); }}
+                style={{
+                  padding: "28px 0",
+                  borderTop: "1px solid rgba(255,255,255,.08)",
+                  borderBottom: i === MATTERS.length - 1 && expandedIdx !== i ? "1px solid rgba(255,255,255,.08)" : "none",
+                  cursor: "pointer",
+                }}
+              >
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: 14 }}>
+                  <div>
+                    <span className="num" style={{ opacity: 0.5, marginRight: 10 }}>
+                      {String(i + 1).padStart(2, "0")}
+                    </span>
+                    <span className="area">{matter.area}</span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                    <span className="concern" style={{ fontSize: 11 }}>{matter.concern}</span>
+                    <span style={{
+                      fontFamily: "'Archivo', sans-serif",
+                      fontSize: 16,
+                      color: "var(--accent)",
+                      opacity: 0.5,
+                      transition: "transform 0.4s ease",
+                      transform: expandedIdx === i ? "rotate(45deg)" : "rotate(0deg)",
+                    }}>+</span>
+                  </div>
                 </div>
-                <span className="concern" style={{ fontSize: 11 }}>{matter.concern}</span>
+                <div className="small-copy" style={{ fontSize: 15, marginBottom: 10 }}>
+                  <span style={{ opacity: 0.5 }}>Scale: </span>{matter.scale}
+                </div>
+                <div className="small-copy" style={{ fontSize: 15, marginBottom: 10 }}>
+                  <span style={{ opacity: 0.5 }}>Role: </span>{matter.role}
+                </div>
+                <div className="small-copy" style={{ fontSize: 15 }}>
+                  <span style={{ opacity: 0.5 }}>Outcome: </span>{matter.outcome}
+                </div>
               </div>
-              <div className="small-copy" style={{ fontSize: 15, marginBottom: 10 }}>
-                <span style={{ opacity: 0.5 }}>Scale: </span>{matter.scale}
-              </div>
-              <div className="small-copy" style={{ fontSize: 15, marginBottom: 10 }}>
-                <span style={{ opacity: 0.5 }}>Role: </span>{matter.role}
-              </div>
-              <div className="small-copy" style={{ fontSize: 15 }}>
-                <span style={{ opacity: 0.5 }}>Outcome: </span>{matter.outcome}
+
+              {/* Mobile expand detail */}
+              <div style={{
+                maxHeight: expandedIdx === i ? 600 : 0,
+                overflow: "hidden",
+                transition: "max-height 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.4s ease",
+                opacity: expandedIdx === i ? 1 : 0,
+              }}>
+                <div style={{ padding: "8px 0 32px", borderBottom: "1px solid rgba(201,181,138,.15)" }}>
+                  <p className="small-copy" style={{ fontSize: 15, lineHeight: 1.8, margin: "0 0 16px", opacity: 0.85 }}>
+                    {matter.detail.overview}
+                  </p>
+                  <div className="mono" style={{ color: "var(--accent)", marginBottom: 10, fontSize: 10, letterSpacing: ".2em" }}>
+                    CHALLENGES
+                  </div>
+                  <ul style={{ margin: "0 0 16px", padding: "0 0 0 18px", listStyle: "none" }}>
+                    {matter.detail.challenges.map((c, ci) => (
+                      <li key={ci} style={{ fontSize: 14, lineHeight: 1.7, color: "rgba(236,230,214,.7)", padding: "3px 0", position: "relative", paddingLeft: 16 }}>
+                        <span style={{ position: "absolute", left: 0, color: "var(--accent)", opacity: 0.5 }}>·</span>
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="mono" style={{ color: "var(--accent)", marginBottom: 10, fontSize: 10, letterSpacing: ".2em" }}>
+                    RESULT
+                  </div>
+                  <p className="small-copy" style={{ fontSize: 15, lineHeight: 1.75, margin: 0, opacity: 0.85 }}>
+                    {matter.detail.result}
+                  </p>
+                </div>
               </div>
             </div>
           ))}

@@ -9,7 +9,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "James Roman Advisory · Independent Hazardous Material Advisory",
     description:
-      "Counsel. Not Contractors. Independent hazardous-material advisory for the Westside's most private estates.",
+      "Respond. Protect. Restore. Independent hazardous-material advisory for the Westside's most private estates.",
     type: "website",
   },
   themeColor: "#0a0b0e",

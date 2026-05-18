@@ -12,7 +12,6 @@ import {
   Discretion,
   Matters,
   Founders,
-  ClientOffice,
   Contact,
   SiteFooter,
   CookieBanner,
@@ -40,7 +39,6 @@ export default function HomePage() {
       <Discretion />
       <Matters />
       <Founders />
-      <ClientOffice />
       <Contact />
       <SiteFooter />
       <CookieBanner />

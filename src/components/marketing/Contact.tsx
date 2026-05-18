@@ -23,7 +23,7 @@ export function Contact() {
             className="mono"
             style={{ opacity: 0.6, marginBottom: 34 }}
           >
-            § 08 — BEGIN
+            § 07 — BEGIN
           </div>
 
           <h2
@@ -52,14 +52,28 @@ export function Contact() {
             style={{
               marginTop: 44,
               display: "flex",
-              gap: 44,
+              gap: 28,
               flexWrap: "wrap",
-              alignItems: "start",
+              alignItems: "center",
             }}
           >
             <a href="mailto:roman@jamesroman.la" className="btn primary cta-pulse">
               Request a Private Consultation <span className="arr">→</span>
             </a>
+            <a href="/portal" className="btn ghost">
+              Client Office <span className="arr">→</span>
+            </a>
+          </div>
+
+          <div
+            style={{
+              marginTop: 44,
+              display: "flex",
+              gap: 44,
+              flexWrap: "wrap",
+              alignItems: "start",
+            }}
+          >
             <div
               style={{
                 display: "flex",
@@ -74,7 +88,7 @@ export function Contact() {
                 >
                   Direct
                 </div>
-                <a href="tel:+13104302500" style={{ fontSize: 16, opacity: 0.85, color: 'inherit', textDecoration: 'none' }}>
+                <a href="tel:+13104302500" style={{ fontSize: 16, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
                   {CONTACT_PHONE}
                 </a>
               </div>
@@ -85,7 +99,7 @@ export function Contact() {
                 >
                   Confidential Email
                 </div>
-                <a href="mailto:roman@jamesroman.la" style={{ fontSize: 16, opacity: 0.85, color: 'inherit', textDecoration: 'none' }}>
+                <a href="mailto:roman@jamesroman.la" style={{ fontSize: 16, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
                   {CONTACT_EMAIL}
                 </a>
               </div>
