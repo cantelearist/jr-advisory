@@ -27,9 +27,8 @@ export function Contact() {
           </div>
 
           <h2
-            className="h-display"
+            className="h-section"
             style={{
-              fontSize: "clamp(44px, 5.5vw, 84px)",
               margin: 0,
               maxWidth: "16ch",
             }}
@@ -41,7 +40,7 @@ export function Contact() {
 
           <p
             className="small-copy"
-            style={{ marginTop: 32, maxWidth: "50ch", fontSize: 22, lineHeight: 1.8 }}
+            style={{ marginTop: 32, maxWidth: "50ch", fontSize: 18, lineHeight: 1.8 }}
           >
             Tell us as much or as little as you would like. A response within
             twenty-four hours, from James personally, under standing NDA.
@@ -88,7 +87,7 @@ export function Contact() {
                 >
                   Direct
                 </div>
-                <a href="tel:+13104302500" style={{ fontSize: 19, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
+                <a href="tel:+13104302500" style={{ fontSize: 17, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
                   {CONTACT_PHONE}
                 </a>
               </div>
@@ -99,7 +98,7 @@ export function Contact() {
                 >
                   Confidential Email
                 </div>
-                <a href="mailto:roman@jamesroman.la" style={{ fontSize: 19, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
+                <a href="mailto:roman@jamesroman.la" style={{ fontSize: 17, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
                   {CONTACT_EMAIL}
                 </a>
               </div>

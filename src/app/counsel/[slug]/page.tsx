@@ -78,14 +78,14 @@ export default async function CounselAreaPage({ params }: Props) {
           </div>
           <h1 style={{
             fontFamily: "var(--font-display)", fontWeight: 300,
-            fontSize: "clamp(42px, 6vw, 80px)", lineHeight: 1.05,
+            fontSize: "clamp(36px, 4.5vw, 64px)", lineHeight: 1.05,
             letterSpacing: ".015em", textTransform: "uppercase" as const,
             margin: "0 0 32px",
           }}>
             {area.title}
           </h1>
           <p style={{
-            fontSize: 22, lineHeight: 1.8, color: "rgba(236,230,214,.82)",
+            fontSize: 18, lineHeight: 1.8, color: "rgba(236,230,214,.82)",
             maxWidth: "60ch", margin: 0,
           }}>
             {area.description}
@@ -99,7 +99,7 @@ export default async function CounselAreaPage({ params }: Props) {
         {/* Overview — full-width */}
         <section style={{ padding: "64px 0 56px" }}>
           <p style={{
-            fontSize: 20, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
+            fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
             maxWidth: "72ch", margin: 0,
           }}>
             {area.detail.overview}
@@ -141,7 +141,7 @@ export default async function CounselAreaPage({ params }: Props) {
                     {String(i + 1).padStart(2, "0")}
                   </span>
                   <span style={{
-                    fontSize: 18, lineHeight: 1.65, color: "rgba(236,230,214,.78)",
+                    fontSize: 17, lineHeight: 1.65, color: "rgba(236,230,214,.78)",
                   }}>
                     {step}
                   </span>
@@ -170,7 +170,7 @@ export default async function CounselAreaPage({ params }: Props) {
               <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
                 {area.detail.indicators.map((ind, i) => (
                   <li key={i} style={{
-                    fontSize: 18, lineHeight: 1.75, color: "rgba(236,230,214,.72)",
+                    fontSize: 17, lineHeight: 1.75, color: "rgba(236,230,214,.72)",
                     padding: "10px 0", position: "relative", paddingLeft: 24,
                   }}>
                     <span style={{
@@ -197,7 +197,7 @@ export default async function CounselAreaPage({ params }: Props) {
                 TYPICAL TIMELINE
               </div>
               <p style={{
-                fontSize: 19, lineHeight: 1.7, color: "rgba(236,230,214,.75)",
+                fontSize: 17, lineHeight: 1.7, color: "rgba(236,230,214,.75)",
                 margin: 0,
               }}>
                 {area.detail.timeline}

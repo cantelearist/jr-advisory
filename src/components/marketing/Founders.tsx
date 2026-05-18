@@ -25,7 +25,7 @@ export function Founders() {
           </h2>
           <p
             className="small-copy"
-            style={{ fontSize: 22, lineHeight: 1.85, opacity: 0.82, margin: "0 auto", maxWidth: "54ch" }}
+            style={{ fontSize: 18, lineHeight: 1.85, opacity: 0.82, margin: "0 auto", maxWidth: "54ch" }}
           >
             When the smoke clears and the gates open again, someone has to stand
             on your side of it. We do. Not as a secondary concern — as the
@@ -74,7 +74,7 @@ export function Founders() {
                   <p
                     className="small-copy founder-quote"
                     style={{
-                      fontSize: 20,
+                      fontSize: 17,
                       lineHeight: 1.85,
                       margin: "0 auto",
                       opacity: 0.85,
@@ -102,7 +102,7 @@ export function Founders() {
           <p
             className="small-copy"
             style={{
-              fontSize: 22,
+              fontSize: 18,
               lineHeight: 1.9,
               maxWidth: "60ch",
               margin: "0 auto",

@@ -85,7 +85,7 @@ export function Discretion() {
                   </div>
                   <p
                     className="small-copy"
-                    style={{ fontSize: 15, margin: 0, lineHeight: 1.7 }}
+                    style={{ fontSize: 16, margin: 0, lineHeight: 1.7 }}
                   >
                     {principle.description}
                   </p>

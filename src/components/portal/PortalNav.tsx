@@ -201,7 +201,7 @@ export default function PortalNav() {
         }
         .portal-nav__logo-firm {
           font-family: "Cormorant Garamond", Georgia, serif;
-          font-size: 14px;
+          font-size: 17px;
           letter-spacing: 0.22em;
           text-transform: uppercase;
           color: #fff;
@@ -210,7 +210,7 @@ export default function PortalNav() {
         .portal-nav__logo-sub {
           font-family: "JetBrains Mono", monospace;
           margin-top: 5px;
-          font-size: 9px;
+          font-size: 11px;
           letter-spacing: 0.34em;
           text-transform: uppercase;
           color: rgba(255, 255, 255, 0.4);

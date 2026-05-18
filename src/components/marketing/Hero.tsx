@@ -87,7 +87,7 @@ export function Hero() {
 
           <p
             className="small-copy"
-            style={{ marginTop: 40, maxWidth: "48ch", fontSize: 18, lineHeight: 1.8 }}
+            style={{ marginTop: 40, maxWidth: "48ch" }}
           >
             {FIRM_DESCRIPTION}
           </p>

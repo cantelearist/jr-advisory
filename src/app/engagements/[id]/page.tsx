@@ -114,7 +114,7 @@ export default async function EngagementDetailPage({ params }: Props) {
           </div>
           <h1 style={{
             fontFamily: "var(--font-display)", fontWeight: 300,
-            fontSize: "clamp(42px, 6vw, 80px)", lineHeight: 1.0,
+            fontSize: "clamp(36px, 4.5vw, 64px)", lineHeight: 1.0,
             letterSpacing: ".015em", textTransform: "uppercase" as const,
             margin: 0, color: "#fff",
             textShadow: "0 2px 40px rgba(0,0,0,0.5)",
@@ -139,7 +139,7 @@ export default async function EngagementDetailPage({ params }: Props) {
               letterSpacing: ".15em", color: "rgba(236,230,214,.4)",
               display: "block", marginBottom: 6,
             }}>SCALE</span>
-            <span style={{ fontSize: 18, color: "rgba(236,230,214,.85)" }}>{matter.scale}</span>
+            <span style={{ fontSize: 17, color: "rgba(236,230,214,.85)" }}>{matter.scale}</span>
           </div>
           <div>
             <span style={{
@@ -166,7 +166,7 @@ export default async function EngagementDetailPage({ params }: Props) {
           <div>
             <section style={{ marginBottom: 56 }}>
               <p style={{
-                fontSize: 20, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
+                fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
                 margin: 0,
               }}>
                 {matter.detail.overview}
@@ -182,7 +182,7 @@ export default async function EngagementDetailPage({ params }: Props) {
                 OUR APPROACH
               </div>
               <p style={{
-                fontSize: 20, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
+                fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
                 margin: 0,
               }}>
                 {matter.detail.approach}
@@ -208,7 +208,7 @@ export default async function EngagementDetailPage({ params }: Props) {
               <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
                 {matter.detail.challenges.map((c, i) => (
                   <li key={i} style={{
-                    fontSize: 18, lineHeight: 1.75, color: "rgba(236,230,214,.72)",
+                    fontSize: 17, lineHeight: 1.75, color: "rgba(236,230,214,.72)",
                     padding: "10px 0", position: "relative", paddingLeft: 24,
                   }}>
                     <span style={{
@@ -234,7 +234,7 @@ export default async function EngagementDetailPage({ params }: Props) {
                 RESULT
               </div>
               <p style={{
-                fontSize: 20, lineHeight: 1.85, color: "rgba(236,230,214,.85)",
+                fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.85)",
                 margin: 0,
               }}>
                 {matter.detail.result}
@@ -260,7 +260,7 @@ export default async function EngagementDetailPage({ params }: Props) {
           </div>
           <div>
             <p style={{
-              fontSize: 19, lineHeight: 1.75, color: "rgba(236,230,214,.65)",
+              fontSize: 17, lineHeight: 1.75, color: "rgba(236,230,214,.65)",
               margin: "0 0 12px",
             }}>
               {matter.role}

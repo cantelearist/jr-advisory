@@ -143,13 +143,13 @@ export function Matters() {
                     }}>+</span>
                   </div>
                 </div>
-                <div className="small-copy" style={{ fontSize: 18, marginBottom: 10 }}>
+                <div className="small-copy" style={{ fontSize: 17, marginBottom: 10 }}>
                   <span style={{ opacity: 0.5 }}>Scale: </span>{matter.scale}
                 </div>
-                <div className="small-copy" style={{ fontSize: 18, marginBottom: 10 }}>
+                <div className="small-copy" style={{ fontSize: 17, marginBottom: 10 }}>
                   <span style={{ opacity: 0.5 }}>Role: </span>{matter.role}
                 </div>
-                <div className="small-copy" style={{ fontSize: 18 }}>
+                <div className="small-copy" style={{ fontSize: 17 }}>
                   <span style={{ opacity: 0.5 }}>Outcome: </span>{matter.outcome}
                 </div>
               </div>
@@ -162,7 +162,7 @@ export function Matters() {
                 opacity: expandedIdx === i ? 1 : 0,
               }}>
                 <div style={{ padding: "8px 0 32px", borderBottom: "1px solid rgba(201,181,138,.15)" }}>
-                  <p className="small-copy" style={{ fontSize: 18, lineHeight: 1.8, margin: "0 0 16px", opacity: 0.85 }}>
+                  <p className="small-copy" style={{ fontSize: 17, lineHeight: 1.8, margin: "0 0 16px", opacity: 0.85 }}>
                     {matter.detail.overview}
                   </p>
                   <div className="mono" style={{ color: "var(--accent)", marginBottom: 10, fontSize: 12, letterSpacing: ".2em" }}>
@@ -179,7 +179,7 @@ export function Matters() {
                   <div className="mono" style={{ color: "var(--accent)", marginBottom: 10, fontSize: 12, letterSpacing: ".2em" }}>
                     RESULT
                   </div>
-                  <p className="small-copy" style={{ fontSize: 18, lineHeight: 1.75, margin: 0, opacity: 0.85 }}>
+                  <p className="small-copy" style={{ fontSize: 17, lineHeight: 1.75, margin: 0, opacity: 0.85 }}>
                     {matter.detail.result}
                   </p>
                 </div>
