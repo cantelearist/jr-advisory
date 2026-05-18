@@ -5,7 +5,7 @@ export default function TermsPage() {
   return (
     <div style={{ background: "var(--bg)", color: "var(--fg)", minHeight: "100vh", padding: "120px 24px 80px" }}>
       <div className="page" style={{ maxWidth: 720 }}>
-        <Link href="/" className="mono" style={{ color: "var(--accent)", textDecoration: "none", fontSize: 11, letterSpacing: ".2em" }}>
+        <Link href="/" className="mono" style={{ color: "var(--accent)", textDecoration: "none", fontSize: 13, letterSpacing: ".2em" }}>
           ← JAMES ROMAN ADVISORY
         </Link>
         <h1 className="h-display" style={{ margin: "32px 0 48px", fontSize: "clamp(32px, 4vw, 56px)" }}>

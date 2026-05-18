@@ -72,7 +72,7 @@ export function Nav() {
               href="#contact"
               className="mono nav-inquiry-desktop inquiry-link"
               style={{
-                fontSize: 11,
+                fontSize: 13,
                 letterSpacing: ".22em",
                 opacity: 0.7,
                 display: "inline-flex",
@@ -107,7 +107,7 @@ export function Nav() {
         >
           {NAV_ITEMS.map(({ label, href }) => (
             <a key={label} href={href} className="nav-link" onClick={closeMenu}
-              style={{ fontSize: 14, letterSpacing: ".28em" }}
+              style={{ fontSize: 17, letterSpacing: ".28em" }}
             >
               {label}
             </a>

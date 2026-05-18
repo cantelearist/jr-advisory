@@ -44,13 +44,19 @@ export default function PortalNav() {
     <nav className="portal-nav">
       {/* Top bar */}
       <div className="portal-nav__top">
-        <Link href="/portal/dashboard" className="portal-nav__logo">
-          <div className="portal-nav__logo-box">JR</div>
-          <div className="portal-nav__logo-text-wrap">
-            <span className="portal-nav__logo-firm">JAMES ROMAN</span>
-            <span className="portal-nav__logo-sub">Advisory</span>
-          </div>
-        </Link>
+        <div className="portal-nav__brand">
+          <Link href="/" className="portal-nav__home-link" title="Back to main site">
+            <div className="portal-nav__logo-box">JR</div>
+            <div className="portal-nav__logo-text-wrap">
+              <span className="portal-nav__logo-firm">JAMES ROMAN</span>
+              <span className="portal-nav__logo-sub">Advisory</span>
+            </div>
+          </Link>
+          <span className="portal-nav__brand-sep">|</span>
+          <Link href="/portal/dashboard" className="portal-nav__portal-label">
+            Client Office
+          </Link>
+        </div>
 
         <div className="portal-nav__links">
           {NAV_ITEMS.map((item, i) => (
@@ -140,25 +146,52 @@ export default function PortalNav() {
           margin: 0 auto;
         }
 
+        /* Brand group: logo + separator + portal label */
+        .portal-nav__brand {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+        }
+        .portal-nav__brand-sep {
+          color: rgba(201, 169, 110, 0.2);
+          font-size: 20px;
+          font-weight: 200;
+          user-select: none;
+        }
+        .portal-nav__portal-label {
+          font-family: 'JetBrains Mono', monospace;
+          font-size: 10px;
+          letter-spacing: 0.25em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.35);
+          text-decoration: none;
+          transition: color 0.3s ease;
+        }
+        .portal-nav__portal-label:hover {
+          color: rgba(255, 255, 255, 0.6);
+        }
         /* Logo - matches main site */
-        .portal-nav__logo {
+        .portal-nav__home-link {
           display: flex;
           align-items: center;
           gap: 14px;
           text-decoration: none;
           color: inherit;
+          transition: opacity 0.3s ease;
+        }
+        .portal-nav__home-link:hover {
+          opacity: 0.85;
         }
         .portal-nav__logo-box {
           width: 38px;
           height: 38px;
-          border: 1px solid rgba(201, 169, 110, 0.5);
+          border: 1px solid currentColor;
           display: grid;
           place-items: center;
           font-family: "Cormorant Garamond", Georgia, serif;
           font-weight: 300;
           letter-spacing: 0.04em;
           font-size: 13px;
-          color: #c9a96e;
         }
         .portal-nav__logo-text-wrap {
           display: flex;
@@ -335,6 +368,12 @@ export default function PortalNav() {
             display: none;
           }
           .portal-nav__logo-text-wrap {
+            display: none;
+          }
+          .portal-nav__brand-sep {
+            display: none;
+          }
+          .portal-nav__portal-label {
             display: none;
           }
         }

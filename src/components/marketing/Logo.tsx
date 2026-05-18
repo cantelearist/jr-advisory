@@ -31,13 +31,13 @@ export function Logo() {
       >
         <div
           className="display"
-          style={{ fontSize: 14, letterSpacing: ".22em" }}
+          style={{ fontSize: 17, letterSpacing: ".22em" }}
         >
           JAMES ROMAN
         </div>
         <div
           className="mono"
-          style={{ marginTop: 5, fontSize: 9, letterSpacing: ".34em", opacity: 0.55 }}
+          style={{ marginTop: 5, fontSize: 11, letterSpacing: ".34em", opacity: 0.55 }}
         >
           Advisory
         </div>

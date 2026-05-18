@@ -36,7 +36,7 @@ export function Engagement() {
                 One advocate.
               </span>
             </h2>
-            <p className="small-copy" style={{ marginTop: 24, fontSize: 17 }}>
+            <p className="small-copy" style={{ marginTop: 24, fontSize: 20 }}>
               From the first private call to the final independent clearance —
               one person, one file, no subcontracted judgment.
             </p>
@@ -69,7 +69,7 @@ export function Engagement() {
               <div
                 className="display"
                 style={{
-                  fontSize: 38,
+                  fontSize: 46,
                   letterSpacing: ".04em",
                   color: "rgba(236,230,214,.22)",
                   marginBottom: 22,
@@ -82,7 +82,7 @@ export function Engagement() {
                 className="mono"
                 style={{
                   marginBottom: 16,
-                  fontSize: 12,
+                  fontSize: 14,
                   color: "var(--fg)",
                   letterSpacing: ".20em",
                 }}
@@ -91,7 +91,7 @@ export function Engagement() {
               </div>
               <p
                 className="small-copy"
-                style={{ fontSize: 15, margin: 0, lineHeight: 1.7 }}
+                style={{ fontSize: 18, margin: 0, lineHeight: 1.7 }}
               >
                 {phase.description}
               </p>

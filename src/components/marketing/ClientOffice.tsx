@@ -33,7 +33,7 @@ export function ClientOffice() {
               <br />
               <span className="accent-shimmer">only.</span>
             </h2>
-            <p className="small-copy" style={{ margin: 0, fontSize: 16, lineHeight: 1.75 }}>
+            <p className="small-copy" style={{ margin: 0, fontSize: 19, lineHeight: 1.75 }}>
               Each accepted client receives a dedicated, two-factor-secured
               project space — documents, status, and a controlled communication
               channel. The portal feels like a private office, not a public app.
@@ -50,7 +50,7 @@ export function ClientOffice() {
             <div
               className="display"
               style={{
-                fontSize: 14,
+                fontSize: 17,
                 letterSpacing: ".16em",
                 marginBottom: 20,
                 opacity: 0.75,
@@ -70,7 +70,7 @@ export function ClientOffice() {
             </a>
             <div
               className="mono"
-              style={{ marginTop: 18, opacity: 0.55, fontSize: 11 }}
+              style={{ marginTop: 18, opacity: 0.55, fontSize: 13 }}
             >
               BY INVITATION ONLY · 2FA REQUIRED
             </div>

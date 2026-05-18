@@ -37,7 +37,7 @@ export function CookieBanner() {
         className="mono"
         style={{
           marginBottom: 10,
-          fontSize: 10,
+          fontSize: 12,
           letterSpacing: ".22em",
           color: "var(--fg)",
         }}
@@ -46,7 +46,7 @@ export function CookieBanner() {
       </div>
       <p
         className="small-copy"
-        style={{ fontSize: 12, marginBottom: 16 }}
+        style={{ fontSize: 14, marginBottom: 16 }}
       >
         We use a single, essential cookie to remember this preference. No
         analytics, advertising, or third-party trackers are loaded unless you
@@ -65,7 +65,7 @@ export function CookieBanner() {
           className="btn"
           style={{
             padding: "8px 16px",
-            fontSize: 10,
+            fontSize: 12,
             background: "var(--fg)",
             color: "var(--bg)",
             borderColor: "var(--fg)",
@@ -76,7 +76,7 @@ export function CookieBanner() {
         <button
           onClick={() => accept("essential")}
           className="btn"
-          style={{ padding: "8px 16px", fontSize: 10 }}
+          style={{ padding: "8px 16px", fontSize: 12 }}
         >
           Essential Only
         </button>

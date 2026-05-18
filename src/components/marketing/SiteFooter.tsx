@@ -22,7 +22,7 @@ export function SiteFooter() {
               style={{
                 marginTop: 24,
                 maxWidth: "34ch",
-                fontSize: 14,
+                fontSize: 17,
                 lineHeight: 1.7,
               }}
             >
@@ -53,7 +53,7 @@ export function SiteFooter() {
                     key={item.label}
                     href={item.href}
                     className="footer-link"
-                    style={{ fontSize: 14, opacity: 0.82 }}
+                    style={{ fontSize: 17, opacity: 0.82 }}
                   >
                     {item.label}
                   </a>
@@ -71,7 +71,7 @@ export function SiteFooter() {
             display: "flex",
             justifyContent: "space-between",
             opacity: 0.5,
-            fontSize: 11,
+            fontSize: 13,
             flexWrap: "wrap",
             gap: 12,
           }}

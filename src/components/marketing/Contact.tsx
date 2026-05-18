@@ -41,7 +41,7 @@ export function Contact() {
 
           <p
             className="small-copy"
-            style={{ marginTop: 32, maxWidth: "50ch", fontSize: 18, lineHeight: 1.8 }}
+            style={{ marginTop: 32, maxWidth: "50ch", fontSize: 22, lineHeight: 1.8 }}
           >
             Tell us as much or as little as you would like. A response within
             twenty-four hours, from James personally, under standing NDA.
@@ -88,7 +88,7 @@ export function Contact() {
                 >
                   Direct
                 </div>
-                <a href="tel:+13104302500" style={{ fontSize: 16, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
+                <a href="tel:+13104302500" style={{ fontSize: 19, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
                   {CONTACT_PHONE}
                 </a>
               </div>
@@ -99,7 +99,7 @@ export function Contact() {
                 >
                   Confidential Email
                 </div>
-                <a href="mailto:roman@jamesroman.la" style={{ fontSize: 16, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
+                <a href="mailto:roman@jamesroman.la" style={{ fontSize: 19, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
                   {CONTACT_EMAIL}
                 </a>
               </div>
@@ -108,7 +108,7 @@ export function Contact() {
 
           <div
             className="mono"
-            style={{ opacity: 0.45, marginTop: 34, fontSize: 11 }}
+            style={{ opacity: 0.45, marginTop: 34, fontSize: 13 }}
           >
             Submission does not create an advisory relationship.{" "}
             {CONTACT_LOCATION}

@@ -52,7 +52,7 @@ export default async function CounselAreaPage({ params }: Props) {
           }}>JAMES ROMAN</span>
         </Link>
         <Link href="/#counsel" style={{
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
           letterSpacing: ".2em", textTransform: "uppercase" as const,
           color: "var(--accent)", textDecoration: "none",
           opacity: 0.7, transition: "opacity 0.3s ease",
@@ -61,131 +61,158 @@ export default async function CounselAreaPage({ params }: Props) {
         </Link>
       </nav>
 
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: "120px 40px 100px" }}>
-        {/* Header */}
-        <div style={{ marginBottom: 64 }}>
+      {/* Full-width header section */}
+      <header style={{
+        paddingTop: 120,
+        paddingBottom: 64,
+        borderBottom: "1px solid rgba(201,181,138,.1)",
+        background: "linear-gradient(180deg, rgba(16,18,24,0.6) 0%, var(--bg) 100%)",
+      }}>
+        <div style={{ maxWidth: 1440, margin: "0 auto", padding: "0 40px" }}>
           <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 14,
             letterSpacing: ".18em", color: "rgba(236,230,214,.45)",
-            marginBottom: 20,
+            marginBottom: 24,
           }}>
             § 02 · {area.numeral.toUpperCase()} — COUNSEL AREA
           </div>
           <h1 style={{
             fontFamily: "var(--font-display)", fontWeight: 300,
-            fontSize: "clamp(36px, 5vw, 64px)", lineHeight: 1.05,
+            fontSize: "clamp(42px, 6vw, 80px)", lineHeight: 1.05,
             letterSpacing: ".015em", textTransform: "uppercase" as const,
-            margin: "0 0 28px",
+            margin: "0 0 32px",
           }}>
             {area.title}
           </h1>
           <p style={{
-            fontSize: 18, lineHeight: 1.8, color: "rgba(236,230,214,.82)",
-            maxWidth: "54ch", margin: 0,
+            fontSize: 22, lineHeight: 1.8, color: "rgba(236,230,214,.82)",
+            maxWidth: "60ch", margin: 0,
           }}>
             {area.description}
           </p>
         </div>
+      </header>
 
-        <div style={{ height: 1, background: "rgba(201,181,138,.15)", margin: "0 0 56px" }} />
+      {/* Main content — full-width portal-style */}
+      <main style={{ maxWidth: 1440, margin: "0 auto", padding: "0 40px 100px" }}>
 
-        {/* Overview */}
-        <section style={{ marginBottom: 56 }}>
+        {/* Overview — full-width */}
+        <section style={{ padding: "64px 0 56px" }}>
           <p style={{
-            fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
-            margin: 0,
+            fontSize: 20, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
+            maxWidth: "72ch", margin: 0,
           }}>
             {area.detail.overview}
           </p>
         </section>
 
-        {/* Process */}
-        <section style={{ marginBottom: 56 }}>
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-            letterSpacing: ".25em", color: "var(--accent)",
-            marginBottom: 28, textTransform: "uppercase" as const,
+        {/* Two-column layout: Process + Indicators */}
+        <div className="counsel-detail-grid" style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 48,
+        }}>
+          {/* Process — left panel */}
+          <section style={{
+            padding: "44px 48px",
+            background: "rgba(16,18,24,0.8)",
+            border: "1px solid rgba(255,255,255,.06)",
+            backdropFilter: "blur(12px)",
           }}>
-            OUR PROCESS
-          </div>
-          <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
-            {area.detail.process.map((step, i) => (
-              <div key={i} style={{
-                display: "flex", gap: 20, padding: "18px 0",
-                borderTop: "1px solid rgba(255,255,255,.05)",
-                alignItems: "flex-start",
+            <div style={{
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
+              letterSpacing: ".25em", color: "var(--accent)",
+              marginBottom: 32, textTransform: "uppercase" as const,
+            }}>
+              OUR PROCESS
+            </div>
+            <div style={{ display: "flex", flexDirection: "column", gap: 0 }}>
+              {area.detail.process.map((step, i) => (
+                <div key={i} style={{
+                  display: "flex", gap: 20, padding: "20px 0",
+                  borderTop: "1px solid rgba(255,255,255,.05)",
+                  alignItems: "flex-start",
+                }}>
+                  <span style={{
+                    fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+                    color: "var(--accent)", opacity: 0.6, minWidth: 28,
+                    paddingTop: 3,
+                  }}>
+                    {String(i + 1).padStart(2, "0")}
+                  </span>
+                  <span style={{
+                    fontSize: 18, lineHeight: 1.65, color: "rgba(236,230,214,.78)",
+                  }}>
+                    {step}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Right column: Indicators + Timeline stacked */}
+          <div style={{ display: "flex", flexDirection: "column", gap: 48 }}>
+            {/* Indicators panel */}
+            <section style={{
+              padding: "44px 48px",
+              background: "rgba(16,18,24,0.8)",
+              border: "1px solid rgba(201,181,138,.08)",
+              backdropFilter: "blur(12px)",
+              flex: 1,
+            }}>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
+                letterSpacing: ".25em", color: "var(--accent)",
+                marginBottom: 28, textTransform: "uppercase" as const,
               }}>
-                <span style={{
-                  fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-                  color: "var(--accent)", opacity: 0.6, minWidth: 24,
-                  paddingTop: 2,
-                }}>
-                  {String(i + 1).padStart(2, "0")}
-                </span>
-                <span style={{
-                  fontSize: 16, lineHeight: 1.65, color: "rgba(236,230,214,.78)",
-                }}>
-                  {step}
-                </span>
+                WHEN CLIENTS CALL US
               </div>
-            ))}
-          </div>
-        </section>
+              <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                {area.detail.indicators.map((ind, i) => (
+                  <li key={i} style={{
+                    fontSize: 18, lineHeight: 1.75, color: "rgba(236,230,214,.72)",
+                    padding: "10px 0", position: "relative", paddingLeft: 24,
+                  }}>
+                    <span style={{
+                      position: "absolute", left: 0, color: "var(--accent)", fontSize: 10,
+                      top: 16,
+                    }}>◈</span>
+                    {ind}
+                  </li>
+                ))}
+              </ul>
+            </section>
 
-        {/* Indicators */}
-        <section style={{
-          marginBottom: 56, padding: "40px 44px",
-          background: "var(--panel)", border: "1px solid rgba(201,181,138,.08)",
-        }}>
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-            letterSpacing: ".25em", color: "var(--accent)",
-            marginBottom: 24, textTransform: "uppercase" as const,
-          }}>
-            WHEN CLIENTS CALL US
-          </div>
-          <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-            {area.detail.indicators.map((ind, i) => (
-              <li key={i} style={{
-                fontSize: 15, lineHeight: 1.75, color: "rgba(236,230,214,.72)",
-                padding: "8px 0", position: "relative", paddingLeft: 20,
+            {/* Timeline panel */}
+            <section style={{
+              padding: "32px 48px",
+              border: "1px solid rgba(201,181,138,.12)",
+              background: "rgba(201,181,138,.03)",
+            }}>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+                letterSpacing: ".2em", color: "var(--accent)",
+                marginBottom: 14, textTransform: "uppercase" as const,
               }}>
-                <span style={{
-                  position: "absolute", left: 0, color: "var(--accent)", fontSize: 8,
-                  top: 14,
-                }}>◈</span>
-                {ind}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        {/* Timeline */}
-        <section style={{
-          padding: "28px 36px", border: "1px solid rgba(255,255,255,.06)",
-        }}>
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-            letterSpacing: ".2em", color: "rgba(236,230,214,.45)",
-            marginBottom: 10,
-          }}>
-            TYPICAL TIMELINE
+                TYPICAL TIMELINE
+              </div>
+              <p style={{
+                fontSize: 19, lineHeight: 1.7, color: "rgba(236,230,214,.75)",
+                margin: 0,
+              }}>
+                {area.detail.timeline}
+              </p>
+            </section>
           </div>
-          <p style={{
-            fontSize: 16, lineHeight: 1.7, color: "rgba(236,230,214,.75)",
-            margin: 0,
-          }}>
-            {area.detail.timeline}
-          </p>
-        </section>
+        </div>
 
         {/* CTA */}
-        <div style={{ marginTop: 64, textAlign: "center" }}>
+        <div style={{ marginTop: 72, textAlign: "center" }}>
           <Link href="/#contact" style={{
             display: "inline-flex", alignItems: "center", gap: 12,
-            fontFamily: "var(--font-body)", fontSize: 13,
+            fontFamily: "var(--font-body)", fontSize: 15,
             letterSpacing: ".16em", textTransform: "uppercase" as const,
-            padding: "16px 28px", border: "1px solid var(--accent)",
+            padding: "18px 32px", border: "1px solid var(--accent)",
             color: "var(--accent)", background: "transparent",
             textDecoration: "none", transition: "all 0.4s ease",
           }}>
@@ -193,6 +220,16 @@ export default async function CounselAreaPage({ params }: Props) {
           </Link>
         </div>
       </main>
+
+      {/* Responsive */}
+      <style>{`
+        @media (max-width: 900px) {
+          .counsel-detail-grid {
+            grid-template-columns: 1fr !important;
+            gap: 32px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }
