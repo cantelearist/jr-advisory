@@ -27,9 +27,8 @@ export function Contact() {
           </div>
 
           <h2
-            className="h-display"
+            className="h-section"
             style={{
-              fontSize: "clamp(44px, 5.5vw, 84px)",
               margin: 0,
               maxWidth: "16ch",
             }}
@@ -88,7 +87,7 @@ export function Contact() {
                 >
                   Direct
                 </div>
-                <a href="tel:+13104302500" style={{ fontSize: 16, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
+                <a href="tel:+13104302500" style={{ fontSize: 17, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
                   {CONTACT_PHONE}
                 </a>
               </div>
@@ -99,7 +98,7 @@ export function Contact() {
                 >
                   Confidential Email
                 </div>
-                <a href="mailto:roman@jamesroman.la" style={{ fontSize: 16, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
+                <a href="mailto:roman@jamesroman.la" style={{ fontSize: 17, opacity: 0.85, color: "inherit", textDecoration: "none" }}>
                   {CONTACT_EMAIL}
                 </a>
               </div>
@@ -108,7 +107,7 @@ export function Contact() {
 
           <div
             className="mono"
-            style={{ opacity: 0.45, marginTop: 34, fontSize: 11 }}
+            style={{ opacity: 0.45, marginTop: 34, fontSize: 13 }}
           >
             Submission does not create an advisory relationship.{" "}
             {CONTACT_LOCATION}

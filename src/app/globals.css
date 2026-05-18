@@ -27,7 +27,7 @@ body {
 ::selection { background: var(--accent); color: #0b0d12; }
 a { color: inherit; text-decoration: none; }
 
-.mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 12px; letter-spacing: .14em; text-transform: uppercase; }
+.mono { font-family: 'JetBrains Mono', ui-monospace, Menlo, monospace; font-size: 14px; letter-spacing: .14em; text-transform: uppercase; }
 .display { font-family: var(--font-display); font-weight: 300; letter-spacing: var(--display-track); text-transform: uppercase; }
 
 /* ─── Reveal animations (40% slower, cinematic) ─── */
@@ -73,7 +73,7 @@ a { color: inherit; text-decoration: none; }
 /* ─── Buttons (posh hover effects — larger) ─── */
 .btn {
   display: inline-flex; align-items: center; gap: 12px;
-  font-family: var(--font-body); font-size: 13px;
+  font-family: var(--font-body); font-size: 15px;
   letter-spacing: .16em; text-transform: uppercase;
   padding: 16px 28px; border: 1px solid currentColor; border-radius: 0;
   color: var(--fg); background: transparent; cursor: pointer;
@@ -136,7 +136,7 @@ a { color: inherit; text-decoration: none; }
 .plate .plate-label { position: absolute; left: 16px; bottom: 14px; font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: .18em; text-transform: uppercase; color: rgba(236,230,214,.55); }
 .plate .plate-tag   { position: absolute; left: 16px; top: 14px; font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: .22em; text-transform: uppercase; color: rgba(236,230,214,.4); border: 1px solid rgba(236,230,214,.18); padding: 4px 8px; }
 
-.chip-dot { display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: .20em; text-transform: uppercase; color: rgba(236,230,214,.75); }
+.chip-dot { display: inline-flex; align-items: center; gap: 8px; font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: .20em; text-transform: uppercase; color: rgba(236,230,214,.75); }
 .chip-dot::before {
   content: ''; display: block; width: 7px; height: 7px;
   background: var(--accent); border-radius: 50%;
@@ -185,7 +185,7 @@ a { color: inherit; text-decoration: none; }
 .h-display {
   font-family: var(--font-display);
   font-weight: 300;
-  font-size: clamp(56px, 7vw, 110px);
+  font-size: clamp(42px, 5.5vw, 78px);
   line-height: .96;
   letter-spacing: .02em;
   text-transform: uppercase;
@@ -204,7 +204,7 @@ a { color: inherit; text-decoration: none; }
 
 .eyebrow {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: .24em;
   text-transform: uppercase;
   color: rgba(236,230,214,.6);
@@ -219,7 +219,7 @@ a { color: inherit; text-decoration: none; }
 
 .num {
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
+  font-size: 14px;
   letter-spacing: .18em;
   color: rgba(236,230,214,.45);
 }
@@ -236,15 +236,15 @@ a { color: inherit; text-decoration: none; }
 }
 
 .ledger { width: 100%; border-collapse: collapse; font-family: var(--font-body); }
-.ledger thead th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 11px; letter-spacing: .20em; text-transform: uppercase; color: rgba(236,230,214,.55); padding: 20px 18px 20px 0; border-bottom: 1px solid rgba(255,255,255,.08); font-weight: 400; }
+.ledger thead th { text-align: left; font-family: 'JetBrains Mono', monospace; font-size: 13px; letter-spacing: .20em; text-transform: uppercase; color: rgba(236,230,214,.55); padding: 20px 18px 20px 0; border-bottom: 1px solid rgba(255,255,255,.08); font-weight: 400; }
 .ledger tbody td { padding: 28px 18px 28px 0; border-bottom: 1px solid rgba(255,255,255,.06); vertical-align: top; }
 .ledger tbody tr { transition: background .45s ease; }
 .ledger tbody tr:hover { background: rgba(201,181,138,.05); }
-.ledger .area { font-family: var(--font-display); font-weight: 400; letter-spacing: .06em; text-transform: uppercase; font-size: 16px; }
-.ledger .scale { font-size: 15px; opacity: .82; }
-.ledger .concern { font-family: 'JetBrains Mono', monospace; font-size: 12px; letter-spacing: .12em; text-transform: uppercase; opacity: .9; }
-.ledger .role { font-size: 15px; opacity: .78; max-width: 320px; }
-.ledger .outcome { font-size: 15px; opacity: .9; max-width: 280px; }
+.ledger .area { font-family: var(--font-display); font-weight: 400; letter-spacing: .06em; text-transform: uppercase; font-size: 19px; }
+.ledger .scale { font-size: 18px; opacity: .82; }
+.ledger .concern { font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: .12em; text-transform: uppercase; opacity: .9; }
+.ledger .role { font-size: 18px; opacity: .78; max-width: 320px; }
+.ledger .outcome { font-size: 18px; opacity: .9; max-width: 280px; }
 
 .gate { border: 1px solid rgba(201,181,138,.4); position: relative; transition: border-color .5s ease, box-shadow .5s ease; }
 .gate:hover { border-color: rgba(201,181,138,.6); box-shadow: 0 0 48px rgba(201,181,138,.06); }
@@ -288,7 +288,7 @@ a { color: inherit; text-decoration: none; }
 
 /* ─── Nav ─── */
 .nav-link {
-  font-family: 'JetBrains Mono', monospace; font-size: 11.5px; letter-spacing: .20em; opacity: .78;
+  font-family: 'JetBrains Mono', monospace; font-size: 14px; letter-spacing: .20em; opacity: .78;
   transition: opacity .4s ease, color .4s ease;
   text-transform: uppercase;
   position: relative;
@@ -650,7 +650,7 @@ body::after {
    ═══════════════════════════════════════════ */
 @media (max-width: 600px) {
   .h-display {
-    font-size: clamp(40px, 11vw, 64px) !important;
+    font-size: clamp(34px, 9vw, 56px) !important;
     word-break: break-word;
   }
   .h-section {

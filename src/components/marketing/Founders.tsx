@@ -64,7 +64,7 @@ export function Founders() {
                     className="mono"
                     style={{
                       color: "var(--accent)",
-                      fontSize: 12,
+                      fontSize: 14,
                       marginBottom: 28,
                       letterSpacing: ".12em",
                     }}

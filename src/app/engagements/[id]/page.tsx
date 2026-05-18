@@ -7,6 +7,14 @@ interface Props {
   params: Promise<{ id: string }>;
 }
 
+/* Hero images — landscape photography of each engagement area */
+const HERO_IMAGES: Record<string, string> = {
+  "malibu-estate": "/images/heroes/malibu.jpg",
+  "pacific-palisades": "/images/heroes/pacific-palisades.jpg",
+  "beverly-hills": "/images/heroes/beverly-hills.jpg",
+  "brentwood": "/images/heroes/brentwood.jpg",
+};
+
 export async function generateStaticParams() {
   return MATTERS.map((m) => ({ id: m.id }));
 }
@@ -26,6 +34,7 @@ export default async function EngagementDetailPage({ params }: Props) {
   const matter = MATTERS.find((m) => m.id === id);
   if (!matter) notFound();
   const idx = MATTERS.indexOf(matter);
+  const heroImage = HERO_IMAGES[matter.id] || HERO_IMAGES["malibu-estate"];
 
   return (
     <div style={{ background: "var(--bg)", color: "var(--fg)", minHeight: "100vh" }}>
@@ -53,7 +62,7 @@ export default async function EngagementDetailPage({ params }: Props) {
           }}>JAMES ROMAN</span>
         </Link>
         <Link href="/#matters" style={{
-          fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+          fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
           letterSpacing: ".2em", textTransform: "uppercase" as const,
           color: "var(--accent)", textDecoration: "none",
           opacity: 0.7, transition: "opacity 0.3s ease",
@@ -62,161 +71,216 @@ export default async function EngagementDetailPage({ params }: Props) {
         </Link>
       </nav>
 
-      <main style={{ maxWidth: 900, margin: "0 auto", padding: "120px 40px 100px" }}>
-        {/* Header */}
-        <div style={{ marginBottom: 56 }}>
+      {/* Hero Image */}
+      <div style={{
+        position: "relative",
+        width: "100%",
+        height: "clamp(320px, 45vh, 560px)",
+        overflow: "hidden",
+        marginTop: 64,
+      }}>
+        <img
+          src={heroImage}
+          alt={`${matter.area} landscape`}
+          style={{
+            width: "100%",
+            height: "100%",
+            objectFit: "cover",
+            objectPosition: "center 40%",
+            filter: "brightness(0.7) contrast(1.1) saturate(0.85)",
+          }}
+        />
+        {/* Gradient overlay */}
+        <div style={{
+          position: "absolute",
+          inset: 0,
+          background: "linear-gradient(180deg, rgba(10,11,14,0.3) 0%, rgba(10,11,14,0.05) 40%, rgba(10,11,14,0.6) 75%, var(--bg) 100%)",
+        }} />
+        {/* Title overlay on hero */}
+        <div style={{
+          position: "absolute",
+          bottom: 0,
+          left: 0, right: 0,
+          padding: "0 40px 48px",
+          maxWidth: 1440,
+          margin: "0 auto",
+        }}>
           <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
-            letterSpacing: ".18em", color: "rgba(236,230,214,.45)",
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 14,
+            letterSpacing: ".18em", color: "rgba(236,230,214,.6)",
             marginBottom: 20,
           }}>
             § 05 · {String(idx + 1).padStart(2, "0")} — REPRESENTATIVE ENGAGEMENT
           </div>
-
           <h1 style={{
             fontFamily: "var(--font-display)", fontWeight: 300,
-            fontSize: "clamp(36px, 5vw, 64px)", lineHeight: 1.05,
+            fontSize: "clamp(36px, 4.5vw, 64px)", lineHeight: 1.0,
             letterSpacing: ".015em", textTransform: "uppercase" as const,
-            margin: "0 0 20px",
+            margin: 0, color: "#fff",
+            textShadow: "0 2px 40px rgba(0,0,0,0.5)",
           }}>
             {matter.area}
           </h1>
+        </div>
+      </div>
 
-          {/* Meta */}
-          <div style={{
-            display: "flex", gap: 32, flexWrap: "wrap",
-            marginBottom: 8,
-          }}>
-            <div>
-              <span style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-                letterSpacing: ".15em", color: "rgba(236,230,214,.4)",
-                display: "block", marginBottom: 4,
-              }}>SCALE</span>
-              <span style={{ fontSize: 15, color: "rgba(236,230,214,.75)" }}>{matter.scale}</span>
-            </div>
-            <div>
-              <span style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 10,
-                letterSpacing: ".15em", color: "rgba(236,230,214,.4)",
-                display: "block", marginBottom: 4,
-              }}>CONCERN</span>
-              <span style={{
-                fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
-                letterSpacing: ".12em", textTransform: "uppercase" as const,
-                color: "rgba(236,230,214,.85)",
-              }}>{matter.concern}</span>
-            </div>
+      {/* Content — full-width portal-style layout */}
+      <main style={{ maxWidth: 1440, margin: "0 auto", padding: "0 40px 100px" }}>
+
+        {/* Meta chips */}
+        <div style={{
+          display: "flex", gap: 40, flexWrap: "wrap",
+          padding: "40px 0 48px",
+          borderBottom: "1px solid rgba(201,181,138,.15)",
+        }}>
+          <div>
+            <span style={{
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+              letterSpacing: ".15em", color: "rgba(236,230,214,.4)",
+              display: "block", marginBottom: 6,
+            }}>SCALE</span>
+            <span style={{ fontSize: 17, color: "rgba(236,230,214,.85)" }}>{matter.scale}</span>
+          </div>
+          <div>
+            <span style={{
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 12,
+              letterSpacing: ".15em", color: "rgba(236,230,214,.4)",
+              display: "block", marginBottom: 6,
+            }}>CONCERN</span>
+            <span style={{
+              fontFamily: "'JetBrains Mono', monospace", fontSize: 14,
+              letterSpacing: ".12em", textTransform: "uppercase" as const,
+              color: "rgba(236,230,214,.9)",
+            }}>{matter.concern}</span>
           </div>
         </div>
 
-        <div style={{ height: 1, background: "rgba(201,181,138,.15)", margin: "0 0 48px" }} />
-
-        {/* Overview */}
-        <section style={{ marginBottom: 48 }}>
-          <p style={{
-            fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
-            margin: 0,
-          }}>
-            {matter.detail.overview}
-          </p>
-        </section>
-
-        {/* Challenges */}
-        <section style={{
-          marginBottom: 48, padding: "36px 40px",
-          background: "var(--panel)", border: "1px solid rgba(255,255,255,.06)",
+        {/* Two-column layout */}
+        <div style={{
+          display: "grid",
+          gridTemplateColumns: "1fr 1fr",
+          gap: 64,
+          paddingTop: 56,
         }}>
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-            letterSpacing: ".25em", color: "var(--accent)",
-            marginBottom: 24, textTransform: "uppercase" as const,
-          }}>
-            CHALLENGES
-          </div>
-          <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
-            {matter.detail.challenges.map((c, i) => (
-              <li key={i} style={{
-                fontSize: 15, lineHeight: 1.75, color: "rgba(236,230,214,.72)",
-                padding: "8px 0", position: "relative", paddingLeft: 20,
+          {/* Left: Overview + Approach */}
+          <div>
+            <section style={{ marginBottom: 56 }}>
+              <p style={{
+                fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
+                margin: 0,
               }}>
-                <span style={{
-                  position: "absolute", left: 0, color: "var(--accent)", fontSize: 8, top: 14,
-                }}>◈</span>
-                {c}
-              </li>
-            ))}
-          </ul>
-        </section>
+                {matter.detail.overview}
+              </p>
+            </section>
 
-        {/* Approach */}
-        <section style={{ marginBottom: 48 }}>
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-            letterSpacing: ".25em", color: "var(--accent)",
-            marginBottom: 20, textTransform: "uppercase" as const,
-          }}>
-            OUR APPROACH
+            <section>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
+                letterSpacing: ".25em", color: "var(--accent)",
+                marginBottom: 24, textTransform: "uppercase" as const,
+              }}>
+                OUR APPROACH
+              </div>
+              <p style={{
+                fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
+                margin: 0,
+              }}>
+                {matter.detail.approach}
+              </p>
+            </section>
           </div>
-          <p style={{
-            fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.82)",
-            margin: 0,
-          }}>
-            {matter.detail.approach}
-          </p>
-        </section>
 
-        {/* Result */}
+          {/* Right: Challenges + Result panels */}
+          <div>
+            {/* Challenges panel */}
+            <section style={{
+              marginBottom: 40, padding: "40px 44px",
+              background: "rgba(16,18,24,0.8)", border: "1px solid rgba(255,255,255,.06)",
+              backdropFilter: "blur(12px)",
+            }}>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
+                letterSpacing: ".25em", color: "var(--accent)",
+                marginBottom: 24, textTransform: "uppercase" as const,
+              }}>
+                CHALLENGES
+              </div>
+              <ul style={{ margin: 0, padding: 0, listStyle: "none" }}>
+                {matter.detail.challenges.map((c, i) => (
+                  <li key={i} style={{
+                    fontSize: 17, lineHeight: 1.75, color: "rgba(236,230,214,.72)",
+                    padding: "10px 0", position: "relative", paddingLeft: 24,
+                  }}>
+                    <span style={{
+                      position: "absolute", left: 0, color: "var(--accent)", fontSize: 10, top: 16,
+                    }}>◈</span>
+                    {c}
+                  </li>
+                ))}
+              </ul>
+            </section>
+
+            {/* Result panel */}
+            <section style={{
+              padding: "40px 44px",
+              border: "1px solid rgba(201,181,138,.12)",
+              background: "rgba(201,181,138,.03)",
+            }}>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
+                letterSpacing: ".25em", color: "var(--accent)",
+                marginBottom: 20, textTransform: "uppercase" as const,
+              }}>
+                RESULT
+              </div>
+              <p style={{
+                fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.85)",
+                margin: 0,
+              }}>
+                {matter.detail.result}
+              </p>
+            </section>
+          </div>
+        </div>
+
+        {/* Advisory Role — full-width footer */}
         <section style={{
-          padding: "36px 40px",
-          border: "1px solid rgba(201,181,138,.12)",
-          background: "rgba(201,181,138,.02)",
+          marginTop: 64, paddingTop: 40,
+          borderTop: "1px solid rgba(255,255,255,.06)",
+          display: "grid",
+          gridTemplateColumns: "200px 1fr",
+          gap: 40,
         }}>
           <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
-            letterSpacing: ".25em", color: "var(--accent)",
-            marginBottom: 16, textTransform: "uppercase" as const,
-          }}>
-            RESULT
-          </div>
-          <p style={{
-            fontSize: 17, lineHeight: 1.85, color: "rgba(236,230,214,.85)",
-            margin: 0,
-          }}>
-            {matter.detail.result}
-          </p>
-        </section>
-
-        {/* Advisory Role note */}
-        <section style={{ marginTop: 48, paddingTop: 36, borderTop: "1px solid rgba(255,255,255,.06)" }}>
-          <div style={{
-            fontFamily: "'JetBrains Mono', monospace", fontSize: 11,
+            fontFamily: "'JetBrains Mono', monospace", fontSize: 13,
             letterSpacing: ".25em", color: "rgba(236,230,214,.4)",
-            marginBottom: 12, textTransform: "uppercase" as const,
+            textTransform: "uppercase" as const,
           }}>
             ADVISORY ROLE
           </div>
-          <p style={{
-            fontSize: 16, lineHeight: 1.75, color: "rgba(236,230,214,.65)",
-            margin: "0 0 8px",
-          }}>
-            {matter.role}
-          </p>
-          <p style={{
-            fontSize: 13, lineHeight: 1.6, color: "rgba(236,230,214,.4)",
-            margin: 0, fontStyle: "italic",
-          }}>
-            Details have been intentionally limited to preserve client privacy.
-          </p>
+          <div>
+            <p style={{
+              fontSize: 17, lineHeight: 1.75, color: "rgba(236,230,214,.65)",
+              margin: "0 0 12px",
+            }}>
+              {matter.role}
+            </p>
+            <p style={{
+              fontSize: 15, lineHeight: 1.6, color: "rgba(236,230,214,.4)",
+              margin: 0, fontStyle: "italic",
+            }}>
+              Details have been intentionally limited to preserve client privacy.
+            </p>
+          </div>
         </section>
 
         {/* CTA */}
-        <div style={{ marginTop: 64, textAlign: "center" }}>
+        <div style={{ marginTop: 72, textAlign: "center" }}>
           <Link href="/#contact" style={{
             display: "inline-flex", alignItems: "center", gap: 12,
-            fontFamily: "var(--font-body)", fontSize: 13,
+            fontFamily: "var(--font-body)", fontSize: 15,
             letterSpacing: ".16em", textTransform: "uppercase" as const,
-            padding: "16px 28px", border: "1px solid var(--accent)",
+            padding: "18px 32px", border: "1px solid var(--accent)",
             color: "var(--accent)", background: "transparent",
             textDecoration: "none", transition: "all 0.4s ease",
           }}>
@@ -224,6 +288,20 @@ export default async function EngagementDetailPage({ params }: Props) {
           </Link>
         </div>
       </main>
+
+      {/* Responsive styles */}
+      <style>{`
+        @media (max-width: 900px) {
+          main > div[style*="grid-template-columns: 1fr 1fr"] {
+            grid-template-columns: 1fr !important;
+            gap: 40px !important;
+          }
+          section[style*="grid-template-columns: 200px 1fr"] {
+            grid-template-columns: 1fr !important;
+            gap: 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

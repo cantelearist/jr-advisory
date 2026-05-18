@@ -69,7 +69,7 @@ export function Engagement() {
               <div
                 className="display"
                 style={{
-                  fontSize: 38,
+                  fontSize: 42,
                   letterSpacing: ".04em",
                   color: "rgba(236,230,214,.22)",
                   marginBottom: 22,
@@ -82,7 +82,7 @@ export function Engagement() {
                 className="mono"
                 style={{
                   marginBottom: 16,
-                  fontSize: 12,
+                  fontSize: 14,
                   color: "var(--fg)",
                   letterSpacing: ".20em",
                 }}
@@ -91,7 +91,7 @@ export function Engagement() {
               </div>
               <p
                 className="small-copy"
-                style={{ fontSize: 15, margin: 0, lineHeight: 1.7 }}
+                style={{ fontSize: 16, margin: 0, lineHeight: 1.7 }}
               >
                 {phase.description}
               </p>

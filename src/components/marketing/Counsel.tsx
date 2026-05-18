@@ -76,7 +76,7 @@ export function Counsel() {
                   </div>
                   <span className="counsel-expand-icon" style={{
                     fontFamily: "'Archivo', sans-serif",
-                    fontSize: 18,
+                    fontSize: 22,
                     color: "var(--accent)",
                     opacity: 0.5,
                     transition: "transform 0.4s ease, opacity 0.3s ease",
@@ -86,7 +86,7 @@ export function Counsel() {
                 <div
                   className="display"
                   style={{
-                    fontSize: 22,
+                    fontSize: 24,
                     letterSpacing: ".03em",
                     marginBottom: 16,
                     fontWeight: 400,
@@ -97,7 +97,7 @@ export function Counsel() {
                 </div>
                 <p
                   className="small-copy"
-                  style={{ fontSize: 15, margin: 0, lineHeight: 1.7 }}
+                  style={{ fontSize: 16, margin: 0, lineHeight: 1.7 }}
                 >
                   {area.description}
                 </p>
@@ -115,16 +115,16 @@ export function Counsel() {
                 }}
               >
                 <div style={{ padding: "24px 0 32px" }}>
-                  <p className="small-copy" style={{ fontSize: 15, lineHeight: 1.8, margin: "0 0 20px", opacity: 0.85 }}>
+                  <p className="small-copy" style={{ fontSize: 18, lineHeight: 1.8, margin: "0 0 20px", opacity: 0.85 }}>
                     {area.detail.overview}
                   </p>
-                  <div className="mono" style={{ color: "var(--accent)", marginBottom: 12, fontSize: 10, letterSpacing: ".2em" }}>
+                  <div className="mono" style={{ color: "var(--accent)", marginBottom: 12, fontSize: 12, letterSpacing: ".2em" }}>
                     OUR PROCESS
                   </div>
                   <ul style={{ margin: 0, padding: "0 0 0 18px", listStyle: "none" }}>
                     {area.detail.process.map((step, si) => (
                       <li key={si} style={{
-                        fontSize: 14,
+                        fontSize: 17,
                         lineHeight: 1.75,
                         color: "rgba(236,230,214,.72)",
                         padding: "4px 0",
@@ -136,7 +136,7 @@ export function Counsel() {
                       </li>
                     ))}
                   </ul>
-                  <div className="mono" style={{ marginTop: 20, fontSize: 11, opacity: 0.5 }}>
+                  <div className="mono" style={{ marginTop: 20, fontSize: 13, opacity: 0.5 }}>
                     {area.detail.timeline}
                   </div>
                 </div>
