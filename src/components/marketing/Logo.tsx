@@ -1,11 +1,12 @@
 import React from "react";
+import Link from "next/link";
 
 export function Logo({ height = 38 }: { height?: number }) {
   const aspectRatio = 739 / 305; // original logo dimensions
   const width = Math.round(height * aspectRatio);
 
   return (
-    <a
+    <Link
       href="/"
       style={{ display: "inline-flex", alignItems: "center" }}
     >
@@ -20,6 +21,6 @@ export function Logo({ height = 38 }: { height?: number }) {
           objectFit: "contain",
         }}
       />
-    </a>
+    </Link>
   );
 }
