@@ -75,7 +75,7 @@ export function Counsel() {
                     {area.numeral}
                   </div>
                   <span className="counsel-expand-icon" style={{
-                    fontFamily: "'Archivo', sans-serif",
+                    fontFamily: "'Inter', sans-serif",
                     fontSize: 22,
                     color: "var(--accent)",
                     opacity: 0.5,

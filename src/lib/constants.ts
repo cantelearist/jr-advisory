@@ -412,7 +412,7 @@ export interface Founder {
 
 export const FOUNDERS: Founder[] = [
   {
-    name: "Steven",
+    name: "Stephen",
     initial: "S",
     title: "CO-FOUNDER",
     quote:
@@ -453,11 +453,11 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     ],
   },
   {
-    heading: "Firm",
+    heading: "Legal",
     items: [
-      { label: "Privacy", href: "/privacy" },
-      { label: "Terms", href: "/terms" },
-      { label: "Disclaimer", href: "/disclaimer" },
+      { label: "Privacy Notice", href: "/privacy" },
+      { label: "Cookie Policy", href: "/cookies" },
+      { label: "NDA Sample", href: "/nda" },
       { label: "Accessibility", href: "/accessibility" },
     ],
   },

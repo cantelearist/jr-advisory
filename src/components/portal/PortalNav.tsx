@@ -47,11 +47,11 @@ export default function PortalNav({ active }: { active?: string } = {}) {
       <div className="portal-nav__top">
         <div className="portal-nav__brand">
           <Link href="/" className="portal-nav__home-link" title="Back to main site">
-            <div className="portal-nav__logo-box">JR</div>
-            <div className="portal-nav__logo-text-wrap">
-              <span className="portal-nav__logo-firm">JAMES ROMAN</span>
-              <span className="portal-nav__logo-sub">Advisory</span>
-            </div>
+            <img
+              src="/images/logo.png"
+              alt="James Roman Advisory"
+              className="portal-nav__logo-img"
+            />
           </Link>
           <span className="portal-nav__brand-sep">|</span>
           <Link href="/portal/dashboard" className="portal-nav__portal-label">
@@ -189,7 +189,6 @@ export default function PortalNav({ active }: { active?: string } = {}) {
         .portal-nav__home-link {
           display: flex;
           align-items: center;
-          gap: 14px;
           text-decoration: none;
           color: inherit;
           transition: opacity 0.3s ease;
@@ -197,38 +196,10 @@ export default function PortalNav({ active }: { active?: string } = {}) {
         .portal-nav__home-link:hover {
           opacity: 0.85;
         }
-        .portal-nav__logo-box {
-          width: 38px;
-          height: 38px;
-          border: 1px solid currentColor;
-          display: grid;
-          place-items: center;
-          font-family: "Cormorant Garamond", Georgia, serif;
-          font-weight: 300;
-          letter-spacing: 0.04em;
-          font-size: 13px;
-        }
-        .portal-nav__logo-text-wrap {
-          display: flex;
-          flex-direction: column;
-          justify-content: center;
-          line-height: 1;
-        }
-        .portal-nav__logo-firm {
-          font-family: "Cormorant Garamond", Georgia, serif;
-          font-size: 17px;
-          letter-spacing: 0.22em;
-          text-transform: uppercase;
-          color: #fff;
-          font-weight: 300;
-        }
-        .portal-nav__logo-sub {
-          font-family: "JetBrains Mono", monospace;
-          margin-top: 5px;
-          font-size: 11px;
-          letter-spacing: 0.34em;
-          text-transform: uppercase;
-          color: rgba(255, 255, 255, 0.4);
+        .portal-nav__logo-img {
+          height: 34px;
+          width: auto;
+          object-fit: contain;
         }
 
         .portal-nav__links {
@@ -251,7 +222,7 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           transition: color 0.4s ease;
         }
         .portal-nav__link-label {
-          font-family: "Archivo", "Inter", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 12px;
           font-weight: 400;
           color: rgba(255, 255, 255, 0.5);
@@ -296,7 +267,7 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           opacity: 0.85;
         }
         .portal-nav__user-name {
-          font-family: "Archivo", "Inter", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 11px;
           color: rgba(255, 255, 255, 0.4);
           letter-spacing: 0.08em;
@@ -343,7 +314,7 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           width: 100%;
           text-align: left;
           padding: 10px 16px;
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 12px;
           color: rgba(255, 255, 255, 0.5);
           letter-spacing: 0.05em;

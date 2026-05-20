@@ -144,7 +144,7 @@ export default function PortalTimeline() {
           animation: tlReveal 1s ease 0.2s forwards;
         }
         .tl__label {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 10px;
           letter-spacing: 0.4em;
           color: rgba(201, 169, 110, 0.5);
@@ -158,7 +158,7 @@ export default function PortalTimeline() {
           line-height: 1;
         }
         .tl__sub {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 12px;
           color: rgba(255,255,255,0.2);
           letter-spacing: 0.1em;
@@ -233,14 +233,14 @@ export default function PortalTimeline() {
         }
         .tl__phase--upcoming .tl__phase-title { color: rgba(255,255,255,0.5); }
         .tl__phase-date {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 11px;
           color: rgba(255,255,255,0.2);
           letter-spacing: 0.08em;
         }
 
         .tl__phase-badge {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 9px;
           letter-spacing: 0.2em;
           padding: 6px 14px;
@@ -286,7 +286,7 @@ export default function PortalTimeline() {
         .tl__phase--complete .tl__event-dot { background: rgba(201, 169, 110, 0.4); }
         .tl__phase--active .tl__event-dot { background: #c9a96e; }
         .tl__event-date {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 10px;
           color: rgba(255,255,255,0.2);
           letter-spacing: 0.1em;
@@ -300,7 +300,7 @@ export default function PortalTimeline() {
         }
         .tl__phase--active .tl__event-icon { color: rgba(201, 169, 110, 0.5); }
         .tl__event-text {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 13px;
           color: rgba(255,255,255,0.5);
           letter-spacing: 0.01em;

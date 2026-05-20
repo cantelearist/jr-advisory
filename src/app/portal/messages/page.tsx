@@ -190,7 +190,7 @@ export default function PortalMessages() {
           animation: msgReveal 1s ease 0.2s forwards;
         }
         .msg__label {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 10px;
           letter-spacing: 0.4em;
           color: rgba(201, 169, 110, 0.5);
@@ -204,7 +204,7 @@ export default function PortalMessages() {
           line-height: 1;
         }
         .msg__sub {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 12px;
           color: rgba(255,255,255,0.2);
           letter-spacing: 0.1em;
@@ -252,19 +252,19 @@ export default function PortalMessages() {
           margin-bottom: 6px;
         }
         .msg__thread-sender {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 11px;
           color: rgba(255,255,255,0.4);
           letter-spacing: 0.05em;
         }
         .msg__thread--unread .msg__thread-sender { color: rgba(255,255,255,0.8); }
         .msg__thread-date {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 10px;
           color: rgba(255,255,255,0.15);
         }
         .msg__thread-subject {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 13px;
           color: rgba(255,255,255,0.35);
           line-height: 1.4;
@@ -298,14 +298,14 @@ export default function PortalMessages() {
           margin-bottom: 12px;
         }
         .msg__detail-sender {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 11px;
           color: rgba(255,255,255,0.35);
           letter-spacing: 0.1em;
           text-transform: uppercase;
         }
         .msg__detail-date {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 11px;
           color: rgba(255,255,255,0.15);
         }
@@ -323,7 +323,7 @@ export default function PortalMessages() {
           overflow-y: auto;
         }
         .msg__detail-body p {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 14px;
           color: rgba(255,255,255,0.55);
           line-height: 1.75;
@@ -345,7 +345,7 @@ export default function PortalMessages() {
           background: rgba(255,255,255,0.02);
           border: 1px solid rgba(255,255,255,0.06);
           padding: 16px;
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 13px;
           color: #fff;
           resize: none;
@@ -364,7 +364,7 @@ export default function PortalMessages() {
           margin-top: 12px;
         }
         .msg__reply-encrypt {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 10px;
           color: rgba(110, 201, 160, 0.4);
           letter-spacing: 0.1em;
@@ -374,7 +374,7 @@ export default function PortalMessages() {
           background: transparent;
           border: 1px solid rgba(201, 169, 110, 0.3);
           color: #c9a96e;
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 11px;
           letter-spacing: 0.15em;
           cursor: pointer;

@@ -11,7 +11,7 @@ describe("Founders", () => {
 
   it("renders both founder names", () => {
     render(<Founders />);
-    expect(screen.getByText("Steven")).toBeInTheDocument();
+    expect(screen.getByText("Stephen")).toBeInTheDocument();
     expect(screen.getByText("Roman")).toBeInTheDocument();
   });
 
@@ -42,7 +42,7 @@ describe("Founders", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders Steven's quote", () => {
+  it("renders Stephen's quote", () => {
     render(<Founders />);
     expect(
       screen.getByText(/I was born in Malibu/i)

@@ -193,7 +193,7 @@ export default function PortalLogin() {
           background: rgba(201, 169, 110, 0.3);
         }
         .portal-login__firm-name {
-          font-family: 'Archivo', 'Inter', sans-serif;
+          font-family: 'Inter', 'Inter', sans-serif;
           font-size: 10px;
           font-weight: 400;
           letter-spacing: 0.4em;
@@ -232,7 +232,7 @@ export default function PortalLogin() {
 
         /* ── Subtitle ── */
         .portal-login__subtitle {
-          font-family: 'Archivo', 'Inter', sans-serif;
+          font-family: 'Inter', 'Inter', sans-serif;
           font-size: 12px;
           font-weight: 300;
           letter-spacing: 0.2em;
@@ -273,7 +273,7 @@ export default function PortalLogin() {
         }
         .portal-login__label {
           display: block;
-          font-family: 'Archivo', 'Inter', sans-serif;
+          font-family: 'Inter', 'Inter', sans-serif;
           font-size: 10px;
           font-weight: 400;
           letter-spacing: 0.25em;
@@ -287,7 +287,7 @@ export default function PortalLogin() {
           border: 1px solid rgba(255, 255, 255, 0.08);
           border-radius: 0;
           padding: 16px 20px;
-          font-family: 'Archivo', 'Inter', sans-serif;
+          font-family: 'Inter', 'Inter', sans-serif;
           font-size: 15px;
           font-weight: 300;
           color: #fff;
@@ -336,7 +336,7 @@ export default function PortalLogin() {
           box-shadow: 0 10px 40px rgba(201, 169, 110, 0.1);
         }
         .portal-login__button-text {
-          font-family: 'Archivo', 'Inter', sans-serif;
+          font-family: 'Inter', 'Inter', sans-serif;
           font-size: 11px;
           font-weight: 400;
           letter-spacing: 0.3em;
@@ -356,7 +356,7 @@ export default function PortalLogin() {
           transform: translateX(4px);
         }
         .portal-login__notice {
-          font-family: 'Archivo', 'Inter', sans-serif;
+          font-family: 'Inter', 'Inter', sans-serif;
           font-size: 10px;
           color: rgba(255, 255, 255, 0.15);
           letter-spacing: 0.1em;

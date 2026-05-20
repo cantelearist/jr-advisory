@@ -133,7 +133,7 @@ describe("constants", () => {
 
   it("has 2 founders", () => {
     expect(FOUNDERS).toHaveLength(2);
-    expect(FOUNDERS.map((f) => f.name)).toEqual(["Steven", "Roman"]);
+    expect(FOUNDERS.map((f) => f.name)).toEqual(["Stephen", "Roman"]);
     expect(FOUNDERS.every((f) => f.title === "CO-FOUNDER")).toBe(true);
   });
 
@@ -142,7 +142,7 @@ describe("constants", () => {
     expect(FOOTER_COLUMNS.map((c) => c.heading)).toEqual([
       "Practice",
       "Engagement",
-      "Firm",
+      "Legal",
     ]);
   });
 

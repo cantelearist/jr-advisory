@@ -16,7 +16,7 @@ describe("SiteFooter", () => {
   it("renders footer column headings", () => {
     render(<SiteFooter />);
     expect(screen.getByText("Practice")).toBeInTheDocument();
-    expect(screen.getByText("Firm")).toBeInTheDocument();
+    expect(screen.getByText("Legal")).toBeInTheDocument();
   });
 
   it("renders the independence statement", () => {

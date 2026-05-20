@@ -134,7 +134,7 @@ export function Matters() {
                   <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                     <span className="concern" style={{ fontSize: 13 }}>{matter.concern}</span>
                     <span style={{
-                      fontFamily: "'Archivo', sans-serif",
+                      fontFamily: "'Inter', sans-serif",
                       fontSize: 19,
                       color: "var(--accent)",
                       opacity: 0.5,

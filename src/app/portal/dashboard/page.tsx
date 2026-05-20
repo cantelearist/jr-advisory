@@ -231,7 +231,7 @@ export default function PortalDashboard() {
           animation-delay: 0.2s !important;
         }
         .dash__time {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 11px;
           letter-spacing: 0.3em;
           color: rgba(255,255,255,0.2);
@@ -259,7 +259,7 @@ export default function PortalDashboard() {
           margin-top: 4px;
         }
         .dash__engagement-label {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 13px;
           color: rgba(255,255,255,0.3);
           letter-spacing: 0.08em;
@@ -280,14 +280,14 @@ export default function PortalDashboard() {
           margin-bottom: 32px;
         }
         .dash__section-label {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 10px;
           font-weight: 400;
           letter-spacing: 0.35em;
           color: rgba(255,255,255,0.3);
         }
         .dash__section-sub {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 11px;
           color: rgba(255,255,255,0.15);
           letter-spacing: 0.05em;
@@ -314,7 +314,7 @@ export default function PortalDashboard() {
         .dash__phase--complete .dash__phase-num { color: rgba(201, 169, 110, 0.6); }
         .dash__phase--active .dash__phase-num { color: #c9a96e; font-weight: 400; }
         .dash__phase-label {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 11px;
           letter-spacing: 0.1em;
           color: rgba(255,255,255,0.2);
@@ -350,7 +350,7 @@ export default function PortalDashboard() {
           margin-top: 28px;
           padding-top: 20px;
           border-top: 1px solid rgba(255,255,255,0.04);
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 12px;
           color: rgba(255,255,255,0.35);
           letter-spacing: 0.05em;
@@ -392,14 +392,14 @@ export default function PortalDashboard() {
           margin-bottom: 8px;
         }
         .dash__stat-label {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 11px;
           letter-spacing: 0.2em;
           text-transform: uppercase;
           color: rgba(255,255,255,0.4);
         }
         .dash__stat-sub {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 10px;
           color: rgba(255,255,255,0.15);
           margin-top: 4px;
@@ -446,19 +446,19 @@ export default function PortalDashboard() {
           flex: 1;
         }
         .dash__activity-action {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 13px;
           color: rgba(255,255,255,0.7);
           letter-spacing: 0.02em;
         }
         .dash__activity-detail {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 11px;
           color: rgba(255,255,255,0.25);
           letter-spacing: 0.02em;
         }
         .dash__activity-date {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 10px;
           color: rgba(255,255,255,0.15);
           letter-spacing: 0.1em;
@@ -480,7 +480,7 @@ export default function PortalDashboard() {
           text-align: center;
         }
         .dash__property-label {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 10px;
           letter-spacing: 0.35em;
           color: rgba(201, 169, 110, 0.5);
@@ -496,7 +496,7 @@ export default function PortalDashboard() {
           letter-spacing: 0.02em;
         }
         .dash__property-area {
-          font-family: 'Archivo', sans-serif;
+          font-family: 'Inter', sans-serif;
           font-size: 12px;
           color: rgba(255,255,255,0.2);
           letter-spacing: 0.15em;

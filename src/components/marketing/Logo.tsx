@@ -1,47 +1,25 @@
 import React from "react";
 
-export function Logo() {
+export function Logo({ height = 38 }: { height?: number }) {
+  const aspectRatio = 739 / 305; // original logo dimensions
+  const width = Math.round(height * aspectRatio);
+
   return (
     <a
-      href="#"
-      style={{ display: "inline-flex", alignItems: "stretch", gap: 14 }}
+      href="/"
+      style={{ display: "inline-flex", alignItems: "center" }}
     >
-      <div
+      <img
+        src="/images/logo.png"
+        alt="James Roman Advisory"
+        width={width}
+        height={height}
         style={{
-          width: 38,
-          height: 38,
-          border: "1px solid currentColor",
-          display: "grid",
-          placeItems: "center",
-          fontFamily: "var(--font-display)",
-          fontWeight: 300,
-          letterSpacing: ".04em",
-          fontSize: 13,
+          height,
+          width: "auto",
+          objectFit: "contain",
         }}
-      >
-        JR
-      </div>
-      <div
-        style={{
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          lineHeight: 1,
-        }}
-      >
-        <div
-          className="display"
-          style={{ fontSize: 17, letterSpacing: ".22em" }}
-        >
-          JAMES ROMAN
-        </div>
-        <div
-          className="mono"
-          style={{ marginTop: 5, fontSize: 11, letterSpacing: ".34em", opacity: 0.55 }}
-        >
-          Advisory
-        </div>
-      </div>
+      />
     </a>
   );
 }

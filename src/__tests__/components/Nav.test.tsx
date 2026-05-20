@@ -18,14 +18,9 @@ describe("Nav", () => {
     });
   });
 
-  it("renders the JR logo mark", () => {
+  it("renders the logo image", () => {
     render(<Nav />);
-    expect(screen.getByText("JR")).toBeInTheDocument();
-  });
-
-  it("renders JAMES ROMAN brand name", () => {
-    render(<Nav />);
-    expect(screen.getByText("JAMES ROMAN")).toBeInTheDocument();
+    expect(screen.getByAltText("James Roman Advisory")).toBeInTheDocument();
   });
 
   it("renders the Private Inquiry CTA", () => {

@@ -472,7 +472,7 @@ export default function PortalDocuments() {
           animation: vaultReveal 1s ease 0.2s forwards;
         }
         .vault__label {
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 10px;
           letter-spacing: 0.4em;
           color: rgba(201, 169, 110, 0.5);
@@ -487,7 +487,7 @@ export default function PortalDocuments() {
           line-height: 1;
         }
         .vault__sub {
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 12px;
           color: rgba(255, 255, 255, 0.2);
           letter-spacing: 0.1em;
@@ -509,7 +509,7 @@ export default function PortalDocuments() {
           background: rgba(255, 255, 255, 0.02);
           border: 1px solid rgba(255, 255, 255, 0.06);
           color: rgba(255, 255, 255, 0.35);
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 11px;
           letter-spacing: 0.1em;
           cursor: pointer;
@@ -565,7 +565,7 @@ export default function PortalDocuments() {
           min-width: 0;
         }
         .vault__doc-name {
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 14px;
           color: rgba(255, 255, 255, 0.75);
           letter-spacing: 0.01em;
@@ -578,7 +578,7 @@ export default function PortalDocuments() {
           color: #fff;
         }
         .vault__doc-meta {
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 10px;
           color: rgba(255, 255, 255, 0.2);
           letter-spacing: 0.08em;
@@ -586,14 +586,14 @@ export default function PortalDocuments() {
         .vault__doc-status {
           flex-shrink: 0;
           padding: 4px 12px;
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 9px;
           letter-spacing: 0.15em;
           text-transform: uppercase;
         }
         .vault__doc-date {
           flex-shrink: 0;
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 11px;
           color: rgba(255, 255, 255, 0.15);
           letter-spacing: 0.05em;
@@ -650,7 +650,7 @@ export default function PortalDocuments() {
           border-bottom: 1px solid rgba(255, 255, 255, 0.04);
         }
         .viewer__label {
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 10px;
           letter-spacing: 0.15em;
           color: rgba(201, 169, 110, 0.5);
@@ -664,7 +664,7 @@ export default function PortalDocuments() {
           margin: 8px 0 4px;
         }
         .viewer__date {
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 11px;
           color: rgba(255, 255, 255, 0.2);
         }
@@ -708,13 +708,13 @@ export default function PortalDocuments() {
           border-top: 1px solid rgba(255, 255, 255, 0.04);
         }
         .viewer__encrypted {
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 10px;
           color: rgba(110, 201, 160, 0.4);
           letter-spacing: 0.1em;
         }
         .viewer__notice {
-          font-family: "Archivo", sans-serif;
+          font-family: "Inter", sans-serif;
           font-size: 10px;
           color: rgba(255, 255, 255, 0.15);
           letter-spacing: 0.05em;
