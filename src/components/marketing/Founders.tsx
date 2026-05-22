@@ -47,6 +47,7 @@ export function Founders() {
                     width={420}
                     height={420}
                     loading="lazy"
+                    style={f.portraitPosition ? { objectPosition: f.portraitPosition } : undefined}
                   />
                 </div>
                 <div style={{ textAlign: "center" }}>

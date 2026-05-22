@@ -408,6 +408,7 @@ export interface Founder {
   initial: string;
   title: string;
   quote: string;
+  portraitPosition?: string;
 }
 
 export const FOUNDERS: Founder[] = [
@@ -422,6 +423,7 @@ export const FOUNDERS: Founder[] = [
     name: "Roman",
     initial: "R",
     title: "CO-FOUNDER",
+    portraitPosition: "center 28%",
     quote:
       "I arrived in Santa Monica in 2010 and never really left. Then the fires came, and it all became too personal. Friends lost houses. My daughter\u2019s school was in ashes. You can\u2019t pretend, after that, that you\u2019re doing this work for anyone but the people living it. I oversee construction across LA every day\u2009\u2014\u2009I see how corners get cut and how the homeowner is left with the consequences. It\u2019s why we started this. Not someday. Now.",
   },
