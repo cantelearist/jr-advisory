@@ -390,6 +390,8 @@ export async function createInvoice(input: {
     paid_date: null,
     pdf_path: null,
     notes: input.notes || null,
+    stripe_session_id: null,
+    stripe_payment_id: null,
     created_at: now,
     updated_at: now,
   };
