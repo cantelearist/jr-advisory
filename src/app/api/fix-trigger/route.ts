@@ -1,4 +1,4 @@
-/* ── Fix Auth Trigger — uses Supabase Management API or JS client ── */
+/* ── Fix Auth Trigger — diagnostic version ── */
 /* POST /api/fix-trigger?key=jr-fix-2026 */
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -14,98 +14,76 @@ export async function POST(req: NextRequest) {
 
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
   const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  const results: string[] = [];
+
+  results.push(`URL: ${supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : 'MISSING'}`);
+  results.push(`Key: ${serviceKey ? serviceKey.substring(0, 20) + '... (len=' + serviceKey.length + ')' : 'MISSING'}`);
+
   if (!supabaseUrl || !serviceKey) {
-    return NextResponse.json({ error: 'Supabase env vars missing' }, { status: 500 });
+    return NextResponse.json({ error: 'Env vars missing', results }, { status: 500 });
   }
 
   const sb = createClient(supabaseUrl, serviceKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
-  const results: string[] = [];
 
+  // Step 1: Simple query test
   try {
-    // 1. Check if profiles table works — try direct insert
-    const testId = '00000000-0000-0000-0000-000000000099';
-    const { error: delErr } = await sb.from('profiles').delete().eq('id', testId);
-    results.push(`Delete test profile: ${delErr ? delErr.message : 'ok'}`);
+    const { data, error } = await sb.from('clients').select('id').limit(1);
+    results.push(`Step 1 (query clients): ${error ? error.message : `ok (${data?.length} rows)`}`);
+  } catch (e: unknown) {
+    results.push(`Step 1 EXCEPTION: ${e instanceof Error ? e.message : String(e)}`);
+  }
 
-    const { error: insErr } = await sb.from('profiles').insert({
+  // Step 2: Test profiles table
+  try {
+    const { data, error } = await sb.from('profiles').select('id').limit(1);
+    results.push(`Step 2 (query profiles): ${error ? error.message : `ok (${data?.length} rows)`}`);
+  } catch (e: unknown) {
+    results.push(`Step 2 EXCEPTION: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // Step 3: Test insert into profiles
+  try {
+    const testId = '00000000-0000-4000-a000-000000000099';
+    const { error: insErr } = await sb.from('profiles').upsert({
       id: testId,
-      full_name: 'Test User',
-      email: 'test-trigger-check@test.com',
+      full_name: 'Trigger Test',
+      email: 'trigger-test@test.com',
       role: 'client'
     });
-    results.push(`Insert test profile: ${insErr ? insErr.message : 'ok'}`);
-
-    // Clean up
+    results.push(`Step 3 (upsert profile): ${insErr ? insErr.message : 'ok'}`);
     if (!insErr) {
       await sb.from('profiles').delete().eq('id', testId);
-      results.push('Cleaned up test profile');
+      results.push('Step 3 cleanup: ok');
     }
-
-    // 2. Use the SQL via rpc — try creating a helper function first
-    // Execute raw SQL through Supabase's built-in functions
-    const triggerSQL = `
-      CREATE OR REPLACE FUNCTION public.handle_new_user()
-      RETURNS trigger
-      LANGUAGE plpgsql
-      SECURITY DEFINER SET search_path = public
-      AS $$
-      BEGIN
-        INSERT INTO public.profiles (id, full_name, email, role)
-        VALUES (
-          NEW.id,
-          COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
-          COALESCE(NEW.email, ''),
-          COALESCE(NEW.raw_user_meta_data->>'role', 'client')::user_role
-        )
-        ON CONFLICT (id) DO UPDATE SET
-          full_name = EXCLUDED.full_name,
-          email = EXCLUDED.email,
-          role = EXCLUDED.role,
-          updated_at = now();
-        RETURN NEW;
-      END;
-      $$;
-    `;
-
-    // Try using the Supabase REST API to call exec_sql if available
-    // The service role key allows calling pg functions via rpc
-    const { data: rpcData, error: rpcErr } = await sb.rpc('exec_sql', { sql: triggerSQL });
-    if (rpcErr) {
-      results.push(`RPC exec_sql not available: ${rpcErr.message}`);
-
-      // Alternative: try using supabase-js's .rpc with pgmq or built-in
-      // Actually, let's try creating a temp function to execute our SQL
-      const { error: createExecErr } = await sb.rpc('query', { query_text: triggerSQL });
-      if (createExecErr) {
-        results.push(`RPC query not available: ${createExecErr.message}`);
-      }
-    } else {
-      results.push(`exec_sql result: ${JSON.stringify(rpcData)}`);
-    }
-
-    // 3. Try the admin.createUser without the trigger and see exact error
-    const { data: testUser, error: createErr } = await sb.auth.admin.createUser({
-      email: 'trigger-test-xyz@test.com',
-      password: 'TriggerTest123!',
-      email_confirm: true,
-      user_metadata: { full_name: 'Trigger Test', role: 'client' }
-    });
-    results.push(`Create test user: ${createErr ? createErr.message : `ok (${testUser?.user?.id})`}`);
-
-    // Clean up test user if created
-    if (testUser?.user?.id) {
-      await sb.auth.admin.deleteUser(testUser.user.id);
-      results.push('Cleaned up test user');
-      // Also clean up the profile if trigger worked
-      await sb.from('profiles').delete().eq('id', testUser.user.id);
-    }
-
-    return NextResponse.json({ success: true, results });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    results.push(`ERROR: ${msg}`);
-    return NextResponse.json({ success: false, results, error: msg }, { status: 500 });
+    results.push(`Step 3 EXCEPTION: ${e instanceof Error ? e.message : String(e)}`);
   }
+
+  // Step 4: Test createUser (the thing that's broken)
+  try {
+    const { data: userData, error: userErr } = await sb.auth.admin.createUser({
+      email: 'trigger-diag-test@test.com',
+      password: 'DiagTest123!',
+      email_confirm: true,
+      user_metadata: { full_name: 'Diag Test', role: 'client' }
+    });
+    results.push(`Step 4 (createUser): ${userErr ? userErr.message : `ok (id=${userData?.user?.id})`}`);
+    
+    if (userData?.user?.id) {
+      // Check if trigger created a profile
+      const { data: profile } = await sb.from('profiles').select('*').eq('id', userData.user.id).single();
+      results.push(`Step 4b (trigger profile): ${profile ? `found (${profile.full_name})` : 'NOT FOUND — trigger broken'}`);
+      
+      // Cleanup
+      await sb.from('profiles').delete().eq('id', userData.user.id);
+      await sb.auth.admin.deleteUser(userData.user.id);
+      results.push('Step 4 cleanup: ok');
+    }
+  } catch (e: unknown) {
+    results.push(`Step 4 EXCEPTION: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  return NextResponse.json({ success: true, results });
 }
