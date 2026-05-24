@@ -471,64 +471,161 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* === ENGAGEMENTS === */}
-          {tab === 'engagements' && (
+          {/* === ENGAGEMENTS — KANBAN BOARD === */}
+          {tab === 'engagements' && (() => {
+            const KANBAN_PHASES = ['1', '2', '3', '4'] as const;
+            const PHASE_COLORS: Record<string, string> = {
+              '1': 'rgba(201,169,110,0.5)',
+              '2': 'rgba(74,222,128,0.5)',
+              '3': 'rgba(96,165,250,0.5)',
+              '4': 'rgba(167,139,250,0.5)',
+            };
+            return (
             <div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
-                <h2 className="display" style={{ fontSize: 24, margin: 0 }}>All Engagements</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <h2 className="display" style={{ fontSize: 24, margin: 0 }}>Engagement Pipeline</h2>
                 <button onClick={() => setEngModal({ open: true, engagement: null })} style={addBtnStyle}>+ NEW ENGAGEMENT</button>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-                {engagements.map(eng => {
-                  const client = clients.find(c => c.id === eng.client_id);
+              {/* Kanban Board */}
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 16,
+                minHeight: 400,
+              }}>
+                {KANBAN_PHASES.map(phase => {
+                  const phaseEngs = engagements.filter(e => e.phase === phase);
                   return (
                     <div
-                      key={eng.id}
-                      onClick={() => setEngModal({ open: true, engagement: eng })}
+                      key={phase}
+                      onDragOver={e => { e.preventDefault(); e.currentTarget.style.background = 'rgba(201,169,110,0.04)'; }}
+                      onDragLeave={e => { e.currentTarget.style.background = 'transparent'; }}
+                      onDrop={async e => {
+                        e.preventDefault();
+                        e.currentTarget.style.background = 'transparent';
+                        const engId = e.dataTransfer.getData('text/plain');
+                        const eng = engagements.find(en => en.id === engId);
+                        if (eng && eng.phase !== phase) {
+                          await updateEngagement(eng.id, {
+                            phase,
+                            phase_label: PHASE_LABELS[phase].split(' — ')[1] || PHASE_LABELS[phase],
+                          });
+                          loadData();
+                        }
+                      }}
                       style={{
-                        ...cardStyle,
-                        padding: '20px 24px',
-                        display: 'grid',
-                        gridTemplateColumns: '1.2fr 1fr 1fr auto',
-                        alignItems: 'center',
-                        gap: 20,
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                      }}
-                      onMouseEnter={e => {
-                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(201,169,110,0.15)';
-                        (e.currentTarget as HTMLElement).style.background = 'rgba(201,169,110,0.03)';
-                      }}
-                      onMouseLeave={e => {
-                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)';
-                        (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)';
+                        borderRadius: 10,
+                        border: '1px solid rgba(255,255,255,0.04)',
+                        padding: 12,
+                        transition: 'background 0.2s ease',
+                        display: 'flex', flexDirection: 'column',
                       }}
                     >
-                      <div>
-                        <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.9)', margin: 0, fontWeight: 500 }}>
-                          {client?.name || 'Unknown'}
-                        </p>
-                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>{eng.property}</p>
+                      {/* Column header */}
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 10,
+                        marginBottom: 16, paddingBottom: 12,
+                        borderBottom: `2px solid ${PHASE_COLORS[phase]}`,
+                      }}>
+                        <span className="mono" style={{
+                          fontSize: 9, letterSpacing: 2,
+                          color: PHASE_COLORS[phase],
+                        }}>
+                          PHASE {PHASE_LABELS[phase]}
+                        </span>
+                        <span style={{
+                          background: `${PHASE_COLORS[phase]}25`,
+                          color: PHASE_COLORS[phase],
+                          fontSize: 10, fontWeight: 700,
+                          padding: '2px 8px', borderRadius: 10,
+                          fontFamily: "'JetBrains Mono', monospace",
+                        }}>
+                          {phaseEngs.length}
+                        </span>
                       </div>
-                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', margin: 0 }}>{eng.type}</p>
-                      <div>
-                        <p className="mono" style={{ fontSize: 11, color: '#c9a96e', letterSpacing: 1.5, margin: 0 }}>
-                          PHASE {PHASE_LABELS[eng.phase]}
-                        </p>
-                        {eng.next_milestone && (
-                          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>
-                            Next: {eng.next_milestone}
-                          </p>
+
+                      {/* Cards */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 8, flex: 1 }}>
+                        {phaseEngs.length === 0 && (
+                          <div style={{
+                            flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            border: '1px dashed rgba(255,255,255,0.06)', borderRadius: 8,
+                            minHeight: 100,
+                          }}>
+                            <p className="mono" style={{ fontSize: 9, color: 'rgba(255,255,255,0.15)', letterSpacing: 1.5 }}>
+                              DROP HERE
+                            </p>
+                          </div>
                         )}
+                        {phaseEngs.map(eng => {
+                          const client = clients.find(c => c.id === eng.client_id);
+                          const engInvoices = invoices.filter(i => i.engagement_id === eng.id);
+                          const totalBilled = engInvoices.reduce((s, i) => s + Number(i.amount), 0);
+                          return (
+                            <div
+                              key={eng.id}
+                              draggable
+                              onDragStart={e => {
+                                e.dataTransfer.setData('text/plain', eng.id);
+                                e.dataTransfer.effectAllowed = 'move';
+                                (e.currentTarget as HTMLElement).style.opacity = '0.4';
+                              }}
+                              onDragEnd={e => {
+                                (e.currentTarget as HTMLElement).style.opacity = '1';
+                              }}
+                              onClick={() => client ? router.push(`/portal/admin/clients/${client.id}`) : setEngModal({ open: true, engagement: eng })}
+                              style={{
+                                ...cardStyle,
+                                padding: '14px 16px',
+                                cursor: 'grab',
+                                transition: 'all 0.2s ease',
+                                borderLeft: `3px solid ${PHASE_COLORS[phase]}`,
+                              }}
+                              onMouseEnter={e => {
+                                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(201,169,110,0.2)';
+                                (e.currentTarget as HTMLElement).style.background = 'rgba(201,169,110,0.03)';
+                              }}
+                              onMouseLeave={e => {
+                                (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)';
+                                (e.currentTarget as HTMLElement).style.borderLeftColor = PHASE_COLORS[phase];
+                                (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)';
+                              }}
+                            >
+                              <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', margin: 0, fontWeight: 500 }}>
+                                {client?.name || 'Unknown'}
+                              </p>
+                              <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>
+                                {eng.type}
+                              </p>
+                              <p style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', margin: '2px 0 0' }}>
+                                {eng.property}
+                              </p>
+                              {eng.next_milestone && (
+                                <p style={{
+                                  fontSize: 11, color: '#c9a96e', margin: '8px 0 0',
+                                  opacity: 0.7, fontStyle: 'italic',
+                                }}>
+                                  ▸ {eng.next_milestone}
+                                </p>
+                              )}
+                              {totalBilled > 0 && (
+                                <p className="mono" style={{
+                                  fontSize: 10, color: 'rgba(255,255,255,0.3)', margin: '6px 0 0',
+                                  letterSpacing: 0.5,
+                                }}>
+                                  {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(totalBilled)}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })}
                       </div>
-                      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0 }}>Since {eng.start_date}</p>
                     </div>
                   );
                 })}
               </div>
             </div>
-          )}
+          );
+          })()}
 
           {/* === DOCUMENTS === */}
           {tab === 'documents' && (
