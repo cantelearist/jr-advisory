@@ -12,11 +12,12 @@ import {
   createEngagement, updateEngagement,
   createInvoice, updateInvoice,
 } from '@/lib/data';
-import type { Client, Engagement, Invoice } from '@/lib/database.types';
+import type { Client, Engagement, Invoice, Document as DBDocument } from '@/lib/database.types';
 import ClientModal, { type ClientFormData } from '@/components/portal/admin/ClientModal';
 import EngagementModal, { type EngagementFormData } from '@/components/portal/admin/EngagementModal';
 import InvoiceModal, { type InvoiceFormData } from '@/components/portal/admin/InvoiceModal';
 import ContentEditor from '@/components/portal/admin/ContentEditor';
+import DocumentUpload from '@/components/portal/admin/DocumentUpload';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
@@ -34,7 +35,7 @@ const STATUS_COLORS: Record<string, string> = {
   archived: 'rgba(255,255,255,0.2)',
 };
 
-type Tab = 'overview' | 'clients' | 'engagements' | 'invoices' | 'content' | 'settings';
+type Tab = 'overview' | 'clients' | 'engagements' | 'documents' | 'invoices' | 'content' | 'settings';
 
 export default function AdminPanel() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -43,6 +44,8 @@ export default function AdminPanel() {
   const [clients, setClients] = useState<Client[]>([]);
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [documents, setDocuments] = useState<DBDocument[]>([]);
+  const [showDocUpload, setShowDocUpload] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [inviteStatus, setInviteStatus] = useState<Record<string, string>>({});
 
@@ -86,6 +89,7 @@ export default function AdminPanel() {
       setClients(data.clients);
       setEngagements(data.engagements);
       setInvoices(data.invoices);
+      setDocuments(data.documents || []);
     } catch {
       // Fallback to direct queries
       const [c, e, i] = await Promise.all([
@@ -189,6 +193,7 @@ export default function AdminPanel() {
     { id: 'overview', label: 'OVERVIEW', icon: '◎' },
     { id: 'clients', label: 'CLIENTS', icon: '◉' },
     { id: 'engagements', label: 'ENGAGEMENTS', icon: '◈' },
+    { id: 'documents', label: 'DOCUMENTS', icon: '▤' },
     { id: 'invoices', label: 'INVOICES', icon: '▦' },
     { id: 'content', label: 'CONTENT', icon: '✎' },
     { id: 'settings', label: 'SETTINGS', icon: '⚙' },
@@ -501,6 +506,99 @@ export default function AdminPanel() {
                   );
                 })}
               </div>
+            </div>
+          )}
+
+          {/* === DOCUMENTS === */}
+          {tab === 'documents' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+                <h2 className="display" style={{ fontSize: 24, margin: 0 }}>Document Vault</h2>
+                <button onClick={() => setShowDocUpload(true)} style={addBtnStyle}>+ UPLOAD DOCUMENT</button>
+              </div>
+
+              {/* Stats */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 16, marginBottom: 32 }}>
+                {['nda', 'lab-results', 'proposals', 'clearance', 'invoices', 'reports'].map(cat => {
+                  const count = documents.filter(d => d.category === cat).length;
+                  const labels: Record<string, string> = { nda: 'NDAs', 'lab-results': 'Lab Results', proposals: 'Proposals', clearance: 'Clearance', invoices: 'Invoices', reports: 'Reports' };
+                  return (
+                    <div key={cat} style={{ ...cardStyle, padding: 20, textAlign: 'center' }}>
+                      <div style={{ fontSize: 28, fontFamily: "'Cormorant Garamond', serif", color: '#c9a96e' }}>{count}</div>
+                      <div style={{ fontSize: 10, letterSpacing: '0.15em', color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>{labels[cat] || cat}</div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Document list */}
+              <div style={{ ...cardStyle, overflow: 'hidden' }}>
+                <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                  <thead>
+                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                      {['Document', 'Client', 'Category', 'Status', 'Uploaded', 'Actions'].map(h => (
+                        <th key={h} style={{ padding: '14px 20px', textAlign: 'left', fontSize: 10, letterSpacing: '0.2em', color: 'rgba(255,255,255,0.25)', fontWeight: 400 }}>{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {documents.length === 0 ? (
+                      <tr><td colSpan={6} style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>No documents yet — upload your first file above</td></tr>
+                    ) : documents.map(doc => {
+                      const client = clients.find(c => c.id === doc.client_id);
+                      const catLabels: Record<string, string> = { nda: 'NDA', 'lab-results': 'Lab Results', proposals: 'Proposal', clearance: 'Clearance', invoices: 'Invoice', reports: 'Report' };
+                      const hasFile = !!doc.file_path;
+                      return (
+                        <tr key={doc.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                          <td style={{ padding: '14px 20px', fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>
+                            {hasFile && <span style={{ color: '#4ade80', marginRight: 8, fontSize: 10 }}>●</span>}
+                            {doc.name}
+                          </td>
+                          <td style={{ padding: '14px 20px', fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>{client?.name || '—'}</td>
+                          <td style={{ padding: '14px 20px', fontSize: 11, letterSpacing: '0.1em', color: 'rgba(255,255,255,0.3)' }}>{catLabels[doc.category] || doc.category}</td>
+                          <td style={{ padding: '14px 20px' }}>
+                            <span style={{ fontSize: 10, letterSpacing: '0.1em', padding: '3px 10px', border: '1px solid rgba(255,255,255,0.08)', color: doc.status === 'final' ? 'rgba(255,255,255,0.4)' : '#c9a96e' }}>{doc.status.toUpperCase()}</span>
+                          </td>
+                          <td style={{ padding: '14px 20px', fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{new Date(doc.created_at).toLocaleDateString()}</td>
+                          <td style={{ padding: '14px 20px' }}>
+                            {hasFile && (
+                              <button
+                                onClick={async () => {
+                                  const res = await fetch(`/api/documents/download?id=${doc.id}`);
+                                  const data = await res.json();
+                                  if (data.url) window.open(data.url, '_blank');
+                                }}
+                                style={{ background: 'none', border: '1px solid rgba(201,169,110,0.2)', color: '#c9a96e', fontSize: 10, padding: '4px 12px', letterSpacing: '0.1em', cursor: 'pointer' }}
+                              >
+                                DOWNLOAD
+                              </button>
+                            )}
+                            <button
+                              onClick={async () => {
+                                if (!confirm(`Delete "${doc.name}"?`)) return;
+                                await fetch(`/api/documents/delete?id=${doc.id}`, { method: 'DELETE' });
+                                loadData();
+                              }}
+                              style={{ background: 'none', border: '1px solid rgba(255,50,50,0.15)', color: 'rgba(255,50,50,0.5)', fontSize: 10, padding: '4px 12px', letterSpacing: '0.1em', cursor: 'pointer', marginLeft: 8 }}
+                            >
+                              DELETE
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+
+              {showDocUpload && (
+                <DocumentUpload
+                  clients={clients}
+                  engagements={engagements}
+                  onUploadComplete={() => { loadData(); }}
+                  onClose={() => setShowDocUpload(false)}
+                />
+              )}
             </div>
           )}
 
