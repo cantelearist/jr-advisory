@@ -59,7 +59,7 @@ export default function PortalInvoices() {
   return (
     <div className="portal-page">
       <Scene3D variant="dashboard" />
-      <PortalNav active="invoices" />
+      <PortalNav />
 
       <main className="portal-main" style={{ paddingTop: 100 }}>
         <div style={{ maxWidth: 1100, margin: '0 auto', padding: '0 32px', opacity: loaded ? 1 : 0, transition: 'opacity 0.6s ease' }}>

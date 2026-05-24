@@ -217,7 +217,7 @@ export default function AdminPanel() {
   return (
     <div className="portal-page">
       <Scene3D variant="dashboard" />
-      <PortalNav active="admin" />
+      <PortalNav />
 
       <main className="portal-main" style={{ paddingTop: 100 }}>
         <div style={{
