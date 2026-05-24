@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata } from 'next';
+import { AuthProvider } from '@/components/portal/AuthProvider';
 
 export const metadata: Metadata = {
-  title: "Client Office — James Roman Advisory",
-  description: "Private client portal for engagement management.",
+  title: 'Client Office — James Roman Advisory',
+  description: 'Private client portal for engagement management.',
 };
 
 export default function PortalLayout({
@@ -10,5 +11,5 @@ export default function PortalLayout({
 }: {
   children: React.ReactNode;
 }) {
-  return <>{children}</>;
+  return <AuthProvider>{children}</AuthProvider>;
 }

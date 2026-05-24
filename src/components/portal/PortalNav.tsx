@@ -1,9 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
-import { getDatabase } from "@/lib/testData";
+import { usePathname } from "next/navigation";
+import { useAuth } from "@/components/portal/AuthProvider";
 
 const NAV_ITEMS = [
   { label: "Office", href: "/portal/dashboard", icon: "◎" },
@@ -13,37 +13,17 @@ const NAV_ITEMS = [
   { label: "Invoices", href: "/portal/invoices", icon: "▦" },
 ];
 
-export default function PortalNav({ active }: { active?: string } = {}) {
+export default function PortalNav() {
   const pathname = usePathname();
-  const router = useRouter();
+  const { user, profile, isAdmin, signOut } = useAuth();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-  const [clientName, setClientName] = useState("Client");
-  const [clientInitial, setClientInitial] = useState("C");
   const [showUserMenu, setShowUserMenu] = useState(false);
 
-  useEffect(() => {
-    const db = getDatabase();
-    const clientId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("jr_active_client")
-        : null;
-    const client = db.clients.find((c) => c.id === clientId) || db.clients[0];
-    if (client) {
-      setClientName(client.name);
-      setClientInitial(client.name.charAt(0));
-    }
-  }, []);
-
-  const handleSignOut = () => {
-    if (typeof window !== "undefined") {
-      localStorage.removeItem("jr_active_client");
-    }
-    router.push("/portal");
-  };
+  const displayName = profile?.full_name || user?.user_metadata?.full_name || user?.email || "Client";
+  const initial = displayName.charAt(0).toUpperCase();
 
   return (
     <nav className="portal-nav">
-      {/* Top bar */}
       <div className="portal-nav__top">
         <div className="portal-nav__brand">
           <Link href="/" className="portal-nav__home-link" title="Back to main site">
@@ -90,14 +70,16 @@ export default function PortalNav({ active }: { active?: string } = {}) {
             className="portal-nav__user-btn"
             onClick={() => setShowUserMenu(!showUserMenu)}
           >
-            <span className="portal-nav__user-name">{clientName}</span>
-            <div className="portal-nav__user-avatar">{clientInitial}</div>
+            <span className="portal-nav__user-name">{displayName}</span>
+            <div className="portal-nav__user-avatar">{initial}</div>
           </button>
 
-          {/* User dropdown */}
           {showUserMenu && (
             <div className="portal-nav__dropdown">
-              <div className="portal-nav__dropdown-name">{clientName}</div>
+              <div className="portal-nav__dropdown-name">{displayName}</div>
+              {isAdmin && (
+                <div className="portal-nav__dropdown-role">Administrator</div>
+              )}
               <div className="portal-nav__dropdown-divider" />
               <Link
                 href="/portal/dashboard"
@@ -113,13 +95,15 @@ export default function PortalNav({ active }: { active?: string } = {}) {
               >
                 ▦ Invoices
               </Link>
-              <Link
-                href="/portal/admin"
-                className="portal-nav__dropdown-item"
-                onClick={() => setShowUserMenu(false)}
-              >
-                ⚙ Admin Panel
-              </Link>
+              {isAdmin && (
+                <Link
+                  href="/portal/admin"
+                  className="portal-nav__dropdown-item"
+                  onClick={() => setShowUserMenu(false)}
+                >
+                  ⚙ Admin Panel
+                </Link>
+              )}
               <Link
                 href="/"
                 className="portal-nav__dropdown-item"
@@ -130,7 +114,7 @@ export default function PortalNav({ active }: { active?: string } = {}) {
               <div className="portal-nav__dropdown-divider" />
               <button
                 className="portal-nav__dropdown-item portal-nav__dropdown-signout"
-                onClick={handleSignOut}
+                onClick={signOut}
               >
                 Sign Out
               </button>
@@ -160,8 +144,6 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           max-width: 1600px;
           margin: 0 auto;
         }
-
-        /* Brand group: logo + separator + portal label */
         .portal-nav__brand {
           display: flex;
           align-items: center;
@@ -182,10 +164,7 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           text-decoration: none;
           transition: color 0.3s ease;
         }
-        .portal-nav__portal-label:hover {
-          color: rgba(255, 255, 255, 0.6);
-        }
-        /* Logo - matches main site */
+        .portal-nav__portal-label:hover { color: rgba(255, 255, 255, 0.6); }
         .portal-nav__home-link {
           display: flex;
           align-items: center;
@@ -193,15 +172,12 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           color: inherit;
           transition: opacity 0.3s ease;
         }
-        .portal-nav__home-link:hover {
-          opacity: 0.85;
-        }
+        .portal-nav__home-link:hover { opacity: 0.85; }
         .portal-nav__logo-img {
           height: 34px;
           width: auto;
           object-fit: contain;
         }
-
         .portal-nav__links {
           display: flex;
           gap: 40px;
@@ -231,13 +207,9 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           transition: color 0.4s ease;
         }
         .portal-nav__link:hover .portal-nav__link-label,
-        .portal-nav__link--active .portal-nav__link-label {
-          color: rgba(255, 255, 255, 0.95);
-        }
+        .portal-nav__link--active .portal-nav__link-label { color: rgba(255, 255, 255, 0.95); }
         .portal-nav__link:hover .portal-nav__link-icon,
-        .portal-nav__link--active .portal-nav__link-icon {
-          color: #c9a96e;
-        }
+        .portal-nav__link--active .portal-nav__link-icon { color: #c9a96e; }
         .portal-nav__link-line {
           position: absolute;
           bottom: 0;
@@ -248,11 +220,7 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           transition: transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
           transform-origin: left;
         }
-
-        /* User section */
-        .portal-nav__user {
-          position: relative;
-        }
+        .portal-nav__user { position: relative; }
         .portal-nav__user-btn {
           display: flex;
           align-items: center;
@@ -263,9 +231,7 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           padding: 4px;
           transition: opacity 0.3s ease;
         }
-        .portal-nav__user-btn:hover {
-          opacity: 0.85;
-        }
+        .portal-nav__user-btn:hover { opacity: 0.85; }
         .portal-nav__user-name {
           font-family: "Inter", sans-serif;
           font-size: 11px;
@@ -285,8 +251,6 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           color: #c9a96e;
           background: rgba(201, 169, 110, 0.05);
         }
-
-        /* Dropdown */
         .portal-nav__dropdown {
           position: absolute;
           top: calc(100% + 8px);
@@ -299,10 +263,18 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           z-index: 200;
         }
         .portal-nav__dropdown-name {
-          padding: 12px 16px 8px;
+          padding: 12px 16px 4px;
           font-family: "Cormorant Garamond", Georgia, serif;
           font-size: 16px;
           color: rgba(255, 255, 255, 0.8);
+        }
+        .portal-nav__dropdown-role {
+          padding: 0 16px 8px;
+          font-family: "Inter", sans-serif;
+          font-size: 9px;
+          letter-spacing: 0.2em;
+          text-transform: uppercase;
+          color: #c9a96e;
         }
         .portal-nav__dropdown-divider {
           height: 1px;
@@ -328,40 +300,19 @@ export default function PortalNav({ active }: { active?: string } = {}) {
           background: rgba(201, 169, 110, 0.06);
           color: rgba(255, 255, 255, 0.8);
         }
-        .portal-nav__dropdown-signout {
-          color: rgba(201, 169, 110, 0.6);
-        }
+        .portal-nav__dropdown-signout { color: rgba(201, 169, 110, 0.6); }
         .portal-nav__dropdown-signout:hover {
           color: #c9a96e;
           background: rgba(201, 169, 110, 0.08);
         }
-
         @media (max-width: 768px) {
-          .portal-nav__top {
-            padding: 0 20px;
-            height: 60px;
-          }
-          .portal-nav__links {
-            gap: 20px;
-          }
-          .portal-nav__link-label {
-            display: none;
-          }
-          .portal-nav__link-icon {
-            font-size: 18px;
-          }
-          .portal-nav__user-name {
-            display: none;
-          }
-          .portal-nav__logo-text-wrap {
-            display: none;
-          }
-          .portal-nav__brand-sep {
-            display: none;
-          }
-          .portal-nav__portal-label {
-            display: none;
-          }
+          .portal-nav__top { padding: 0 20px; height: 60px; }
+          .portal-nav__links { gap: 20px; }
+          .portal-nav__link-label { display: none; }
+          .portal-nav__link-icon { font-size: 18px; }
+          .portal-nav__user-name { display: none; }
+          .portal-nav__brand-sep { display: none; }
+          .portal-nav__portal-label { display: none; }
         }
       `}</style>
     </nav>

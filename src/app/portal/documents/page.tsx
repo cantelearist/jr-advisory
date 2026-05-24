@@ -3,8 +3,9 @@
 import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import PortalNav from "@/components/portal/PortalNav";
-import { getDatabase, getClientDocuments } from "@/lib/testData";
-import type { DocRecord } from "@/lib/testData";
+import { useAuth } from "@/components/portal/AuthProvider";
+import { getMyDocuments } from "@/lib/portal-data";
+import type { Document as DBDocument } from "@/lib/database.types";
 
 const Scene3D = dynamic(() => import("@/components/portal/Scene3D"), {
   ssr: false,
@@ -256,35 +257,28 @@ interface DocItem {
 }
 
 export default function PortalDocuments() {
+  const { supabase, user, loading: authLoading } = useAuth();
   const [activeCategory, setActiveCategory] = useState("All");
   const [hoveredDoc, setHoveredDoc] = useState<number | null>(null);
-  const [clientDocs, setClientDocs] = useState<DocRecord[]>([]);
+  const [clientDocs, setClientDocs] = useState<DBDocument[]>([]);
   const [viewingDoc, setViewingDoc] = useState<DocItem | null>(null);
 
   useEffect(() => {
-    const db = getDatabase();
-    const clientId =
-      typeof window !== "undefined"
-        ? localStorage.getItem("jr_active_client")
-        : null;
-    const client =
-      db.clients.find((c) => c.id === clientId) || db.clients[0];
-    if (client) {
-      setClientDocs(getClientDocuments(client.id));
-    }
-  }, []);
+    if (authLoading || !user) return;
+    getMyDocuments(supabase).then(setClientDocs);
+  }, [supabase, user, authLoading]);
 
   const DOCUMENTS: DocItem[] = clientDocs.map((d, i) => ({
     id: i + 1,
     name: d.name,
     category: CATEGORY_MAP[d.category] || d.category,
     rawCategory: d.category,
-    date: new Date(d.date).toLocaleDateString("en-US", {
+    date: new Date(d.created_at).toLocaleDateString("en-US", {
       month: "short",
       day: "numeric",
       year: "numeric",
     }),
-    size: d.size,
+    size: d.file_size || "—",
     status: STATUS_MAP[d.status] || d.status,
   }));
 

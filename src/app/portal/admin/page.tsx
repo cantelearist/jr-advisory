@@ -1,8 +1,10 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import PortalNav from '@/components/portal/PortalNav';
 import dynamic from 'next/dynamic';
+import { useAuth } from '@/components/portal/AuthProvider';
 import {
   fetchAllClients, fetchAllEngagements, fetchAllInvoices,
   fetchAdminData,
@@ -10,8 +12,6 @@ import {
   createEngagement, updateEngagement,
   createInvoice, updateInvoice,
 } from '@/lib/data';
-import { resetDatabase } from '@/lib/testData';
-import { isSupabaseConfigured } from '@/lib/supabase';
 import type { Client, Engagement, Invoice } from '@/lib/database.types';
 import ClientModal, { type ClientFormData } from '@/components/portal/admin/ClientModal';
 import EngagementModal, { type EngagementFormData } from '@/components/portal/admin/EngagementModal';
@@ -37,11 +37,42 @@ const STATUS_COLORS: Record<string, string> = {
 type Tab = 'overview' | 'clients' | 'engagements' | 'invoices' | 'content' | 'settings';
 
 export default function AdminPanel() {
+  const { isAdmin, loading: authLoading } = useAuth();
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>('overview');
   const [clients, setClients] = useState<Client[]>([]);
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [inviteStatus, setInviteStatus] = useState<Record<string, string>>({});
+
+  /* Redirect non-admins */
+  useEffect(() => {
+    if (!authLoading && !isAdmin) {
+      router.replace('/portal/dashboard');
+    }
+  }, [authLoading, isAdmin, router]);
+
+  const handleInvite = async (clientId: string) => {
+    setInviteStatus(s => ({ ...s, [clientId]: 'sending...' }));
+    try {
+      const res = await fetch('/api/auth/invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientId }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setInviteStatus(s => ({ ...s, [clientId]: `✓ ${data.password}` }));
+      } else if (data.message) {
+        setInviteStatus(s => ({ ...s, [clientId]: data.message }));
+      } else {
+        setInviteStatus(s => ({ ...s, [clientId]: `Error: ${data.error}` }));
+      }
+    } catch {
+      setInviteStatus(s => ({ ...s, [clientId]: 'Failed' }));
+    }
+  };
 
   /* Modal state */
   const [clientModal, setClientModal] = useState<{ open: boolean; client: Client | null }>({ open: false, client: null });
@@ -142,14 +173,15 @@ export default function AdminPanel() {
     await loadData();
   };
 
-  const handleReset = () => {
+  const handleReset = async () => {
     if (confirm('Reset all test data to seed state? This cannot be undone.')) {
-      resetDatabase();
-      if (typeof window !== 'undefined') {
-        localStorage.removeItem('jr_advisory_custom_invoices');
-        localStorage.removeItem('jr_advisory_site_content');
+      try {
+        await fetch('/api/seed?key=jr-seed-2026', { method: 'POST' });
+        await fetch('/api/auth/setup?key=jr-auth-2026', { method: 'POST' });
+        loadData();
+      } catch {
+        alert('Reset failed — check console.');
       }
-      loadData();
     }
   };
 
@@ -374,17 +406,38 @@ export default function AdminPanel() {
                         <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>{eng ? `Phase ${eng.phase}` : '—'}</p>
                       </div>
                       <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{client.area}</p>
-                      <span className="mono" style={{
-                        fontSize: 10,
-                        letterSpacing: 1.5,
-                        color: STATUS_COLORS[client.status] || 'rgba(255,255,255,0.4)',
-                        padding: '6px 14px',
-                        borderRadius: 6,
-                        background: `${STATUS_COLORS[client.status] || 'rgba(255,255,255,0.4)'}15`,
-                        border: `1px solid ${STATUS_COLORS[client.status] || 'rgba(255,255,255,0.4)'}30`,
-                      }}>
-                        {client.status.toUpperCase()}
-                      </span>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <span className="mono" style={{
+                          fontSize: 10,
+                          letterSpacing: 1.5,
+                          color: STATUS_COLORS[client.status] || 'rgba(255,255,255,0.4)',
+                          padding: '6px 14px',
+                          borderRadius: 6,
+                          background: `${STATUS_COLORS[client.status] || 'rgba(255,255,255,0.4)'}15`,
+                          border: `1px solid ${STATUS_COLORS[client.status] || 'rgba(255,255,255,0.4)'}30`,
+                        }}>
+                          {client.status.toUpperCase()}
+                        </span>
+                        {!client.profile_id && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); handleInvite(client.id); }}
+                            className="mono"
+                            style={{
+                              fontSize: 9, letterSpacing: 1.2, color: '#c9a96e', padding: '5px 10px',
+                              borderRadius: 6, background: 'rgba(201,169,110,0.08)',
+                              border: '1px solid rgba(201,169,110,0.2)', cursor: 'pointer',
+                              transition: 'all 0.2s', whiteSpace: 'nowrap',
+                            }}
+                          >
+                            {inviteStatus[client.id] || 'CREATE LOGIN'}
+                          </button>
+                        )}
+                        {client.profile_id && (
+                          <span className="mono" style={{ fontSize: 9, color: '#4ade80', letterSpacing: 1 }}>
+                            HAS LOGIN
+                          </span>
+                        )}
+                      </div>
                     </div>
                   );
                 })}
@@ -569,15 +622,11 @@ export default function AdminPanel() {
                 <h3 style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', margin: '0 0 16px' }}>Authentication</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontSize: 14 }}>
                   <span style={{ color: 'rgba(255,255,255,0.4)' }}>Mode:</span>
-                  <span style={{ color: isSupabaseConfigured() ? '#4ade80' : '#c9a96e' }}>
-                    {isSupabaseConfigured() ? 'Supabase (Live)' : 'Demo (localStorage)'}
-                  </span>
-                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>Supabase:</span>
-                  <span style={{ color: isSupabaseConfigured() ? '#4ade80' : 'rgba(255,255,255,0.5)' }}>
-                    {isSupabaseConfigured() ? 'Connected ✓' : 'Not configured'}
-                  </span>
+                  <span style={{ color: '#4ade80' }}>Supabase (Live)</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>Auth:</span>
+                  <span style={{ color: '#4ade80' }}>Email / Magic Link ✓</span>
                   <span style={{ color: 'rgba(255,255,255,0.4)' }}>Clients:</span>
-                  <span style={{ color: 'rgba(255,255,255,0.7)' }}>{clients.length} {isSupabaseConfigured() ? 'accounts' : 'test accounts'}</span>
+                  <span style={{ color: 'rgba(255,255,255,0.7)' }}>{clients.length} accounts</span>
                 </div>
               </div>
 
