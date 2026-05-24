@@ -1,13 +1,21 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { getAuthClient } from '@/lib/supabase-browser';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
-export default function PortalLogin() {
+export default function PortalLoginPage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#000' }} />}>
+      <PortalLogin />
+    </Suspense>
+  );
+}
+
+function PortalLogin() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [supabase] = useState(() => getAuthClient());
