@@ -34,28 +34,20 @@ export async function POST(req: NextRequest) {
   // ── Create admin accounts ──
   for (const acct of ADMIN_ACCOUNTS) {
     try {
-      // Check if user already exists
       const { data: existingUsers } = await admin.auth.admin.listUsers();
       const existing = existingUsers?.users?.find(
         (u) => u.email === acct.email
       );
 
       if (existing) {
-        // Update password and metadata
         await admin.auth.admin.updateUserById(existing.id, {
           password: acct.password,
           user_metadata: { full_name: acct.full_name, role: 'admin' },
         });
-        // Ensure profile exists and is admin
         await admin
           .from('profiles')
           .upsert(
-            {
-              id: existing.id,
-              full_name: acct.full_name,
-              email: acct.email,
-              role: 'admin',
-            },
+            { id: existing.id, full_name: acct.full_name, email: acct.email, role: 'admin' },
             { onConflict: 'id' }
           );
         results.admins.push(`${acct.email} (updated)`);
@@ -67,12 +59,15 @@ export async function POST(req: NextRequest) {
           user_metadata: { full_name: acct.full_name, role: 'admin' },
         });
         if (error) throw error;
-        // The handle_new_user trigger creates the profile, but ensure role is admin
-        if (data?.user) {
-          await admin
-            .from('profiles')
-            .update({ role: 'admin' })
-            .eq('id', data.user.id);
+        // Manually insert profile (trigger is disabled)
+        const { error: profileErr } = await admin
+          .from('profiles')
+          .upsert(
+            { id: data.user.id, full_name: acct.full_name, email: acct.email, role: 'admin' },
+            { onConflict: 'id' }
+          );
+        if (profileErr) {
+          results.errors.push(`Profile for ${acct.email}: ${profileErr.message}`);
         }
         results.admins.push(`${acct.email} (created)`);
       }
@@ -100,24 +95,14 @@ export async function POST(req: NextRequest) {
 
         if (existing) {
           userId = existing.id;
-          // Update metadata
           await admin.auth.admin.updateUserById(userId, {
             password: CLIENT_PASSWORD,
-            user_metadata: {
-              full_name: client.name,
-              role: 'client',
-            },
+            user_metadata: { full_name: client.name, role: 'client' },
           });
-          // Ensure profile exists
           await admin
             .from('profiles')
             .upsert(
-              {
-                id: userId,
-                full_name: client.name,
-                email: client.email,
-                role: 'client',
-              },
+              { id: userId, full_name: client.name, email: client.email, role: 'client' },
               { onConflict: 'id' }
             );
           results.clients.push(`${client.email} (updated)`);
@@ -126,13 +111,20 @@ export async function POST(req: NextRequest) {
             email: client.email,
             password: CLIENT_PASSWORD,
             email_confirm: true,
-            user_metadata: {
-              full_name: client.name,
-              role: 'client',
-            },
+            user_metadata: { full_name: client.name, role: 'client' },
           });
           if (error) throw error;
           userId = data.user!.id;
+          // Manually insert profile (trigger is disabled)
+          const { error: profileErr } = await admin
+            .from('profiles')
+            .upsert(
+              { id: userId, full_name: client.name, email: client.email, role: 'client' },
+              { onConflict: 'id' }
+            );
+          if (profileErr) {
+            results.errors.push(`Profile for ${client.email}: ${profileErr.message}`);
+          }
           results.clients.push(`${client.email} (created)`);
         }
 
