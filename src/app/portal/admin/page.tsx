@@ -843,6 +843,19 @@ export default function AdminPanel() {
                 </div>
               </div>
 
+              {/* Payments */}
+              <div style={{ ...cardStyle, borderRadius: 12, padding: 32, marginBottom: 24 }}>
+                <h3 style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', margin: '0 0 16px' }}>Payments</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontSize: 14 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>Processor:</span>
+                  <span style={{ color: '#c9a96e' }}>Stripe</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>Status:</span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Pending API keys</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>Checkout:</span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Ready (needs STRIPE_SECRET_KEY env var)</span>
+                </div>
+              </div>
+
               {/* Firm info */}
               <div style={{ ...cardStyle, borderRadius: 12, padding: 32 }}>
                 <h3 style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', margin: '0 0 16px' }}>Firm Information</h3>

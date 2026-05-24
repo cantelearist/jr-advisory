@@ -30,6 +30,7 @@ export default function PortalInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [filter, setFilter] = useState<string>('all');
+  const [payingId, setPayingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (authLoading || !user) return;
@@ -55,6 +56,29 @@ export default function PortalInvoices() {
       return new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     } catch { return d; }
   };
+
+  const handlePay = async (invoiceId: string) => {
+    setPayingId(invoiceId);
+    try {
+      const res = await fetch('/api/payments/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoice_id: invoiceId }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        alert(data.error || 'Unable to create checkout session');
+        setPayingId(null);
+      }
+    } catch {
+      alert('Payment service unavailable');
+      setPayingId(null);
+    }
+  };
+
+  const canPay = (inv: Invoice) => inv.status === 'sent' || inv.status === 'overdue';
 
   return (
     <div className="portal-page">
@@ -143,9 +167,9 @@ export default function PortalInvoices() {
                 borderRadius: 10,
                 padding: '24px 28px',
                 display: 'grid',
-                gridTemplateColumns: '1fr 1fr auto auto',
+                gridTemplateColumns: '1fr 1fr auto auto auto',
                 alignItems: 'center',
-                gap: 24,
+                gap: 20,
                 backdropFilter: 'blur(8px)',
                 transition: 'border-color 0.2s ease',
                 cursor: 'default',
@@ -208,6 +232,34 @@ export default function PortalInvoices() {
                     {STATUS_LABELS[inv.status] || inv.status.toUpperCase()}
                   </span>
                 </div>
+
+                {/* Pay button */}
+                <div style={{ minWidth: 100 }}>
+                  {canPay(inv) ? (
+                    <button
+                      onClick={() => handlePay(inv.id)}
+                      disabled={payingId === inv.id}
+                      style={{
+                        padding: '10px 24px',
+                        background: payingId === inv.id ? 'rgba(201,169,110,0.3)' : '#c9a96e',
+                        border: 'none',
+                        borderRadius: 8,
+                        color: '#0a0a0a',
+                        fontSize: 13,
+                        fontWeight: 700,
+                        cursor: payingId === inv.id ? 'wait' : 'pointer',
+                        letterSpacing: 1,
+                        transition: 'all 0.2s ease',
+                        opacity: payingId === inv.id ? 0.6 : 1,
+                        width: '100%',
+                      }}
+                    >
+                      {payingId === inv.id ? 'LOADING…' : 'PAY NOW'}
+                    </button>
+                  ) : (
+                    <div /> // Empty placeholder for grid alignment
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -220,7 +272,7 @@ export default function PortalInvoices() {
             textAlign: 'center',
           }}>
             <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.25)', lineHeight: 1.6 }}>
-              For billing inquiries, please use the secure messaging channel or contact the firm directly.
+              Payments processed securely via Stripe. For billing inquiries, please use the secure messaging channel.
               <br />
               All amounts in USD. Payment terms: Net 30 unless otherwise specified.
             </p>

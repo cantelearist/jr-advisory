@@ -18,9 +18,10 @@
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.1",
     "next": "^15",
-    "react": "^19",
     "postgres": "^3.4.5",
-    "react-dom": "^19"
+    "react": "^19",
+    "react-dom": "^19",
+    "stripe": "^17.7.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",

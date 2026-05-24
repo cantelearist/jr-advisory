@@ -100,6 +100,8 @@ export interface Invoice {
   paid_date: string | null;
   pdf_path: string | null;
   notes: string | null;
+  stripe_session_id: string | null;
+  stripe_payment_id: string | null;
   created_at: string;
   updated_at: string;
 }
