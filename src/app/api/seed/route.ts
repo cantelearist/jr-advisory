@@ -36,14 +36,14 @@ export async function POST(request: Request) {
     const sb = adminClient();
 
     /* ── Wipe existing data (order matters for FK) ── */
-    await sb.from('audit_log').delete().neq('id', '');
-    await sb.from('nda_records').delete().neq('id', '');
-    await sb.from('timeline_events').delete().neq('id', '');
-    await sb.from('messages').delete().neq('id', '');
-    await sb.from('documents').delete().neq('id', '');
-    await sb.from('invoices').delete().neq('id', '');
-    await sb.from('engagements').delete().neq('id', '');
-    await sb.from('clients').delete().neq('id', '');
+    await sb.from('audit_log').delete().not('id', 'is', null);
+    await sb.from('nda_records').delete().not('id', 'is', null);
+    await sb.from('timeline_events').delete().not('id', 'is', null);
+    await sb.from('messages').delete().not('id', 'is', null);
+    await sb.from('documents').delete().not('id', 'is', null);
+    await sb.from('invoices').delete().not('id', 'is', null);
+    await sb.from('engagements').delete().not('id', 'is', null);
+    await sb.from('clients').delete().not('id', 'is', null);
 
     /* ════════════════════════════════════════════════
        CLIENTS — 5 clients, each at a different stage
