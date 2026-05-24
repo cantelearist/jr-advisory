@@ -14,17 +14,15 @@ function adminClient() {
   });
 }
 
-/* ── Deterministic UUIDs (v4-style, seeded) ── */
-const uuid = (prefix: string, n: number) =>
-  `${prefix}${'0'.repeat(4 - String(n).length)}${n}-0000-4000-a000-000000000000`;
-
-const C = (n: number) => uuid('c0000000-0000-0000-0000', n); // clients
-const E = (n: number) => uuid('e0000000-0000-0000-0000', n); // engagements
-const D = (n: number) => uuid('d0000000-0000-0000-0000', n); // documents
-const M = (n: number) => uuid('f0000000-0000-0000-0000', n); // messages (f for mail)
-const T = (n: number) => uuid('a0000000-0000-0000-0000', n); // timeline
-const I = (n: number) => uuid('b0000000-0000-0000-0000', n); // invoices
-const N = (n: number) => uuid('10000000-0000-0000-0000', n); // ndas
+/* ── Deterministic UUIDs (valid v4 format: 8-4-4-4-12) ── */
+const pad = (n: number) => String(n).padStart(4, '0');
+const C = (n: number) => `c0000000-c000-4000-a000-00000000${pad(n)}`; // clients
+const E = (n: number) => `e0000000-e000-4000-a000-00000000${pad(n)}`; // engagements
+const D = (n: number) => `d0000000-d000-4000-a000-00000000${pad(n)}`; // documents
+const M = (n: number) => `f0000000-f000-4000-a000-00000000${pad(n)}`; // messages
+const T = (n: number) => `a0000000-a000-4000-a000-00000000${pad(n)}`; // timeline
+const I = (n: number) => `b0000000-b000-4000-a000-00000000${pad(n)}`; // invoices
+const N = (n: number) => `11000000-1100-4000-a000-00000000${pad(n)}`; // ndas
 
 export async function POST(request: Request) {
   try {
