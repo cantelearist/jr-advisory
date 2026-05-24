@@ -331,7 +331,7 @@ export default function AdminPanel() {
                             return (
                               <div
                                 key={eng.id}
-                                onClick={() => setEngModal({ open: true, engagement: eng })}
+                                onClick={() => client ? router.push(`/portal/admin/clients/${client.id}`) : setEngModal({ open: true, engagement: eng })}
                                 style={{
                                   background: 'rgba(255,255,255,0.03)',
                                   borderRadius: 8,
@@ -399,7 +399,7 @@ export default function AdminPanel() {
                   return (
                     <div
                       key={client.id}
-                      onClick={() => setClientModal({ open: true, client })}
+                      onClick={() => router.push(`/portal/admin/clients/${client.id}`)}
                       style={{
                         ...cardStyle,
                         padding: '20px 24px',
