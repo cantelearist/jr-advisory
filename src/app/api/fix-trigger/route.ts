@@ -1,8 +1,8 @@
-/* ── Fix Auth Trigger — One-time DB migration ── */
+/* ── Fix Auth Trigger — uses Supabase Management API or JS client ── */
 /* POST /api/fix-trigger?key=jr-fix-2026 */
 
 import { NextResponse, type NextRequest } from 'next/server';
-import postgres from 'postgres';
+import { createClient } from '@supabase/supabase-js';
 
 const FIX_KEY = 'jr-fix-2026';
 
@@ -12,43 +12,40 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 403 });
   }
 
-  const databaseUrl = process.env.DATABASE_URL;
-  if (!databaseUrl) {
-    return NextResponse.json({ error: 'DATABASE_URL not set' }, { status: 500 });
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+  if (!supabaseUrl || !serviceKey) {
+    return NextResponse.json({ error: 'Supabase env vars missing' }, { status: 500 });
   }
 
-  const sql = postgres(databaseUrl, { ssl: 'require' });
+  const sb = createClient(supabaseUrl, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
   const results: string[] = [];
 
   try {
-    // 1) Check existing triggers
-    const triggers = await sql`
-      SELECT trigger_name, event_manipulation, action_statement
-      FROM information_schema.triggers
-      WHERE event_object_schema = 'auth' AND event_object_table = 'users'
-    `;
-    results.push(`Found ${triggers.length} existing trigger(s)`);
-    for (const t of triggers) {
-      results.push(`  - ${t.trigger_name} (${t.event_manipulation})`);
+    // 1. Check if profiles table works — try direct insert
+    const testId = '00000000-0000-0000-0000-000000000099';
+    const { error: delErr } = await sb.from('profiles').delete().eq('id', testId);
+    results.push(`Delete test profile: ${delErr ? delErr.message : 'ok'}`);
+
+    const { error: insErr } = await sb.from('profiles').insert({
+      id: testId,
+      full_name: 'Test User',
+      email: 'test-trigger-check@test.com',
+      role: 'client'
+    });
+    results.push(`Insert test profile: ${insErr ? insErr.message : 'ok'}`);
+
+    // Clean up
+    if (!insErr) {
+      await sb.from('profiles').delete().eq('id', testId);
+      results.push('Cleaned up test profile');
     }
 
-    // 2) Check existing function
-    const funcs = await sql`
-      SELECT routine_name, routine_schema
-      FROM information_schema.routines
-      WHERE routine_name = 'handle_new_user'
-    `;
-    results.push(`Found ${funcs.length} existing function(s)`);
-
-    // 3) Drop broken trigger and function
-    await sql`DROP TRIGGER IF EXISTS on_auth_user_created ON auth.users`;
-    results.push('Dropped trigger on_auth_user_created (if existed)');
-
-    await sql`DROP FUNCTION IF EXISTS public.handle_new_user()`;
-    results.push('Dropped function handle_new_user (if existed)');
-
-    // 4) Create correct trigger function
-    await sql.unsafe(`
+    // 2. Use the SQL via rpc — try creating a helper function first
+    // Execute raw SQL through Supabase's built-in functions
+    const triggerSQL = `
       CREATE OR REPLACE FUNCTION public.handle_new_user()
       RETURNS trigger
       LANGUAGE plpgsql
@@ -60,7 +57,7 @@ export async function POST(req: NextRequest) {
           NEW.id,
           COALESCE(NEW.raw_user_meta_data->>'full_name', ''),
           COALESCE(NEW.email, ''),
-          COALESCE(NEW.raw_user_meta_data->>'role', 'client')
+          COALESCE(NEW.raw_user_meta_data->>'role', 'client')::user_role
         )
         ON CONFLICT (id) DO UPDATE SET
           full_name = EXCLUDED.full_name,
@@ -70,34 +67,45 @@ export async function POST(req: NextRequest) {
         RETURN NEW;
       END;
       $$;
-    `);
-    results.push('✅ Created handle_new_user() function');
-
-    // 5) Create trigger
-    await sql.unsafe(`
-      CREATE TRIGGER on_auth_user_created
-        AFTER INSERT ON auth.users
-        FOR EACH ROW EXECUTE FUNCTION public.handle_new_user();
-    `);
-    results.push('✅ Created on_auth_user_created trigger');
-
-    // 6) Verify
-    const newTriggers = await sql`
-      SELECT trigger_name, event_manipulation
-      FROM information_schema.triggers
-      WHERE event_object_schema = 'auth' AND event_object_table = 'users'
     `;
-    results.push(`Verified: ${newTriggers.length} trigger(s) on auth.users`);
-    for (const t of newTriggers) {
-      results.push(`  ✅ ${t.trigger_name} (${t.event_manipulation})`);
+
+    // Try using the Supabase REST API to call exec_sql if available
+    // The service role key allows calling pg functions via rpc
+    const { data: rpcData, error: rpcErr } = await sb.rpc('exec_sql', { sql: triggerSQL });
+    if (rpcErr) {
+      results.push(`RPC exec_sql not available: ${rpcErr.message}`);
+
+      // Alternative: try using supabase-js's .rpc with pgmq or built-in
+      // Actually, let's try creating a temp function to execute our SQL
+      const { error: createExecErr } = await sb.rpc('query', { query_text: triggerSQL });
+      if (createExecErr) {
+        results.push(`RPC query not available: ${createExecErr.message}`);
+      }
+    } else {
+      results.push(`exec_sql result: ${JSON.stringify(rpcData)}`);
     }
 
-    await sql.end();
+    // 3. Try the admin.createUser without the trigger and see exact error
+    const { data: testUser, error: createErr } = await sb.auth.admin.createUser({
+      email: 'trigger-test-xyz@test.com',
+      password: 'TriggerTest123!',
+      email_confirm: true,
+      user_metadata: { full_name: 'Trigger Test', role: 'client' }
+    });
+    results.push(`Create test user: ${createErr ? createErr.message : `ok (${testUser?.user?.id})`}`);
+
+    // Clean up test user if created
+    if (testUser?.user?.id) {
+      await sb.auth.admin.deleteUser(testUser.user.id);
+      results.push('Cleaned up test user');
+      // Also clean up the profile if trigger worked
+      await sb.from('profiles').delete().eq('id', testUser.user.id);
+    }
+
     return NextResponse.json({ success: true, results });
   } catch (e: unknown) {
     const msg = e instanceof Error ? e.message : String(e);
     results.push(`ERROR: ${msg}`);
-    try { await sql.end(); } catch {}
     return NextResponse.json({ success: false, results, error: msg }, { status: 500 });
   }
 }
