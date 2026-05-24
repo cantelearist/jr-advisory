@@ -5,15 +5,22 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || '');
-
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET || '';
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 
+function getStripe() {
+  const key = process.env.STRIPE_SECRET_KEY;
+  if (!key) throw new Error('STRIPE_SECRET_KEY not configured');
+  return new Stripe(key);
+}
+
 export async function POST(req: NextRequest) {
-  if (!process.env.STRIPE_SECRET_KEY) {
-    return NextResponse.json({ error: 'Stripe not configured' }, { status: 500 });
+  let stripe: Stripe;
+  try {
+    stripe = getStripe();
+  } catch {
+    return NextResponse.json({ error: 'Stripe not configured' }, { status: 503 });
   }
 
   const sb = createClient(supabaseUrl, serviceKey, {
@@ -47,7 +54,7 @@ export async function POST(req: NextRequest) {
     }
 
     // Mark invoice as paid
-    const now = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+    const now = new Date().toISOString().split('T')[0];
     const { error: updateErr } = await sb
       .from('invoices')
       .update({
