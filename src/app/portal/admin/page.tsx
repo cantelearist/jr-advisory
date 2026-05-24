@@ -18,6 +18,8 @@ import EngagementModal, { type EngagementFormData } from '@/components/portal/ad
 import InvoiceModal, { type InvoiceFormData } from '@/components/portal/admin/InvoiceModal';
 import ContentEditor from '@/components/portal/admin/ContentEditor';
 import DocumentUpload from '@/components/portal/admin/DocumentUpload';
+import ComposeMessage from '@/components/portal/admin/ComposeMessage';
+import type { Message } from '@/lib/database.types';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
@@ -35,7 +37,7 @@ const STATUS_COLORS: Record<string, string> = {
   archived: 'rgba(255,255,255,0.2)',
 };
 
-type Tab = 'overview' | 'clients' | 'engagements' | 'documents' | 'invoices' | 'content' | 'settings';
+type Tab = 'overview' | 'clients' | 'engagements' | 'documents' | 'messages' | 'invoices' | 'content' | 'settings';
 
 export default function AdminPanel() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -46,6 +48,9 @@ export default function AdminPanel() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [documents, setDocuments] = useState<DBDocument[]>([]);
   const [showDocUpload, setShowDocUpload] = useState(false);
+  const [showCompose, setShowCompose] = useState(false);
+  const [adminMessages, setAdminMessages] = useState<Message[]>([]);
+  const [msgClientFilter, setMsgClientFilter] = useState<string>('all');
   const [loaded, setLoaded] = useState(false);
   const [inviteStatus, setInviteStatus] = useState<Record<string, string>>({});
 
@@ -105,6 +110,21 @@ export default function AdminPanel() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Load messages for admin tab
+  const loadMessages = useCallback(async (clientId?: string) => {
+    try {
+      const url = clientId ? `/api/messages/list?client_id=${clientId}` : '/api/messages/list';
+      const res = await fetch(url);
+      const data = await res.json();
+      setAdminMessages(data.messages || []);
+    } catch { /* ignore */ }
+  }, []);
+
+  // Load messages when switching to messages tab
+  useEffect(() => {
+    if (tab === 'messages') loadMessages(msgClientFilter !== 'all' ? msgClientFilter : undefined);
+  }, [tab, loadMessages, msgClientFilter]);
 
   /* Computed */
   const activeClients = clients.filter(c => c.status === 'active').length;
@@ -194,6 +214,7 @@ export default function AdminPanel() {
     { id: 'clients', label: 'CLIENTS', icon: '◉' },
     { id: 'engagements', label: 'ENGAGEMENTS', icon: '◈' },
     { id: 'documents', label: 'DOCUMENTS', icon: '▤' },
+    { id: 'messages', label: 'MESSAGES', icon: '✉' },
     { id: 'invoices', label: 'INVOICES', icon: '▦' },
     { id: 'content', label: 'CONTENT', icon: '✎' },
     { id: 'settings', label: 'SETTINGS', icon: '⚙' },
@@ -597,6 +618,100 @@ export default function AdminPanel() {
                   engagements={engagements}
                   onUploadComplete={() => { loadData(); }}
                   onClose={() => setShowDocUpload(false)}
+                />
+              )}
+            </div>
+          )}
+
+          {/* === MESSAGES === */}
+          {tab === 'messages' && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
+                <h2 style={{ fontSize: 18, fontWeight: 300, color: '#c9a96e', margin: 0, letterSpacing: 1 }}>Client Messages</h2>
+                <button
+                  onClick={() => setShowCompose(true)}
+                  style={{ padding: '8px 20px', background: '#c9a96e', border: 'none', borderRadius: 8, color: '#0a0a0a', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+                >
+                  + NEW MESSAGE
+                </button>
+              </div>
+
+              {/* Client filter pills */}
+              <div style={{ display: 'flex', gap: 8, marginBottom: 20, flexWrap: 'wrap' }}>
+                <button
+                  onClick={() => { setMsgClientFilter('all'); loadMessages(); }}
+                  style={{
+                    padding: '6px 14px', borderRadius: 6, fontSize: 12, cursor: 'pointer',
+                    background: msgClientFilter === 'all' ? 'rgba(201,169,110,0.15)' : 'rgba(255,255,255,0.03)',
+                    border: `1px solid ${msgClientFilter === 'all' ? 'rgba(201,169,110,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                    color: msgClientFilter === 'all' ? '#c9a96e' : 'rgba(255,255,255,0.4)',
+                  }}
+                >
+                  All
+                </button>
+                {clients.map(c => (
+                  <button
+                    key={c.id}
+                    onClick={() => { setMsgClientFilter(c.id); loadMessages(c.id); }}
+                    style={{
+                      padding: '6px 14px', borderRadius: 6, fontSize: 12, cursor: 'pointer',
+                      background: msgClientFilter === c.id ? 'rgba(201,169,110,0.15)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${msgClientFilter === c.id ? 'rgba(201,169,110,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                      color: msgClientFilter === c.id ? '#c9a96e' : 'rgba(255,255,255,0.4)',
+                    }}
+                  >
+                    {c.name.split(' ').slice(-1)[0]}
+                  </button>
+                ))}
+              </div>
+
+              {/* Messages table */}
+              <table style={{ width: '100%', borderCollapse: 'collapse' }}>
+                <thead>
+                  <tr>
+                    {['Client', 'Subject', 'From', 'Date', 'Status'].map(h => (
+                      <th key={h} style={{ textAlign: 'left', padding: '10px 12px', fontSize: 11, color: 'rgba(255,255,255,0.3)', textTransform: 'uppercase', letterSpacing: 1, borderBottom: '1px solid rgba(255,255,255,0.06)' }}>{h}</th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {adminMessages.length === 0 && (
+                    <tr><td colSpan={5} style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>No messages{msgClientFilter !== 'all' ? ' for this client' : ''}</td></tr>
+                  )}
+                  {adminMessages.map(msg => {
+                    const client = clients.find(c => c.id === msg.client_id);
+                    return (
+                      <tr key={msg.id} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                        <td style={{ padding: '12px', fontSize: 13, color: 'rgba(255,255,255,0.7)' }}>{client?.name || '—'}</td>
+                        <td style={{ padding: '12px', fontSize: 13, color: '#fff', fontWeight: msg.read ? 400 : 600 }}>{msg.subject}</td>
+                        <td style={{ padding: '12px', fontSize: 13, color: msg.sender_type === 'firm' ? '#c9a96e' : 'rgba(255,255,255,0.5)' }}>
+                          {msg.sender_type === 'firm' ? 'The Firm' : client?.name || 'Client'}
+                        </td>
+                        <td style={{ padding: '12px', fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+                          {new Date(msg.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </td>
+                        <td style={{ padding: '12px' }}>
+                          <span style={{
+                            padding: '3px 10px', borderRadius: 4, fontSize: 11,
+                            background: msg.read ? 'rgba(255,255,255,0.05)' : 'rgba(201,169,110,0.15)',
+                            color: msg.read ? 'rgba(255,255,255,0.3)' : '#c9a96e',
+                          }}>
+                            {msg.read ? 'Read' : 'Unread'}
+                          </span>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+
+              {showCompose && (
+                <ComposeMessage
+                  clients={clients}
+                  engagements={engagements}
+                  preselectedClientId={msgClientFilter !== 'all' ? msgClientFilter : undefined}
+                  onClose={() => setShowCompose(false)}
+                  onSent={() => { setShowCompose(false); loadMessages(msgClientFilter !== 'all' ? msgClientFilter : undefined); }}
                 />
               )}
             </div>

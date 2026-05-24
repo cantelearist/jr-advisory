@@ -1,408 +1,359 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+/* ── Messages — Client & Admin View with Supabase Realtime ── */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import PortalNav from '@/components/portal/PortalNav';
-// Test database integration ready — will wire in next iteration
-// import { getDatabase, getClientMessages, saveDatabase } from '@/lib/testData';
-// import type { Message as DBMessage } from '@/lib/testData';
+import { useAuth } from '@/components/portal/AuthProvider';
+import type { Message, Client } from '@/lib/database.types';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
-const MESSAGES = [
-  {
-    id: 1,
-    from: 'firm',
-    sender: 'James Roman Advisory',
-    date: 'May 15, 2026 · 3:42 PM',
-    subject: 'Vendor Proposal Comparison — Ready for Review',
-    body: `Good afternoon,
+function formatDate(iso: string) {
+  const d = new Date(iso);
+  return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+    + ' · '
+    + d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
 
-The scope comparison matrix is now in your document vault. Three qualified vendors have submitted proposals based on the remediation scope we developed from the Phase II findings.
+function timeAgo(iso: string) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'Just now';
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  const days = Math.floor(hrs / 24);
+  return `${days}d ago`;
+}
 
-Each proposal has been reviewed for completeness, assumption accuracy, and pricing transparency. The matrix highlights where each vendor aligns with the scope — and where they deviate.
+export default function MessagesPage() {
+  const { isAdmin, clientRecord, supabase, loading: authLoading } = useAuth();
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [clients, setClients] = useState<Client[]>([]);
+  const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [selectedMsg, setSelectedMsg] = useState<Message | null>(null);
+  const [replyBody, setReplyBody] = useState('');
+  const [sending, setSending] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const bottomRef = useRef<HTMLDivElement>(null);
+  const [liveIndicator, setLiveIndicator] = useState(false);
 
-We've scheduled the shortlist presentation for May 22. Before that call, we'd recommend reviewing the matrix and flagging any questions.
+  // Fetch messages
+  const fetchMessages = useCallback(async (clientId?: string) => {
+    const cid = clientId || selectedClientId;
+    if (!cid) return;
+    try {
+      const res = await fetch(`/api/messages/list?client_id=${cid}`);
+      const data = await res.json();
+      setMessages(data.messages || []);
+    } catch { /* ignore */ }
+  }, [selectedClientId]);
 
-No immediate action required on your end. We'll walk through everything together.
+  // Initial load
+  useEffect(() => {
+    if (authLoading) return;
+    const init = async () => {
+      if (isAdmin) {
+        // Admin: fetch all clients from admin API
+        const res = await fetch('/api/admin');
+        const data = await res.json();
+        const clientList = data.clients || [];
+        setClients(clientList);
+        if (clientList.length > 0) {
+          setSelectedClientId(clientList[0].id);
+        }
+      } else if (clientRecord) {
+        setSelectedClientId(clientRecord.id);
+      }
+      setLoading(false);
+    };
+    init();
+  }, [authLoading, isAdmin, clientRecord]);
 
-— The Firm`,
-    read: false,
-  },
-  {
-    id: 2,
-    from: 'client',
-    sender: 'You',
-    date: 'May 12, 2026 · 10:15 AM',
-    subject: 'RE: Phase II Closeout',
-    body: `Thank you for the thorough documentation. The closeout summary is clear. Ready to proceed to vendor evaluation when you are.`,
-    read: true,
-  },
-  {
-    id: 3,
-    from: 'firm',
-    sender: 'James Roman Advisory',
-    date: 'May 3, 2026 · 5:18 PM',
-    subject: 'Phase II Closeout — Assessment Complete',
-    body: `The independent assessment phase is now complete. All documentation has been uploaded to your vault, including:
+  // Fetch messages when client changes
+  useEffect(() => {
+    if (selectedClientId) {
+      fetchMessages(selectedClientId);
+    }
+  }, [selectedClientId, fetchMessages]);
 
-• IEP Assessment — Final Report
-• Moisture Mapping Report (Zones A–C)
-• Air Quality Sampling Results
-• Phase II Closeout Summary
+  // Supabase Realtime subscription
+  useEffect(() => {
+    if (!selectedClientId) return;
 
-Key findings: Elevated moisture and confirmed microbial activity in three zones. The data supports a targeted remediation scope, which we'll develop in Phase III.
+    const channel = supabase
+      .channel(`messages:${selectedClientId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'messages',
+          filter: `client_id=eq.${selectedClientId}`,
+        },
+        (payload) => {
+          const newMsg = payload.new as Message;
+          setMessages(prev => [newMsg, ...prev]);
+          // Flash live indicator
+          setLiveIndicator(true);
+          setTimeout(() => setLiveIndicator(false), 2000);
+        }
+      )
+      .subscribe();
 
-We'll begin vendor outreach this week. Expect 3–4 qualified proposals within 10 days.
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [selectedClientId, supabase]);
 
-— The Firm`,
-    read: true,
-  },
-  {
-    id: 4,
-    from: 'firm',
-    sender: 'James Roman Advisory',
-    date: 'Apr 12, 2026 · 2:30 PM',
-    subject: 'Air Quality Results Received',
-    body: `Lab results from the April 5 sampling are in. Report uploaded to your vault under Lab Results.
+  // Mark messages as read when viewing
+  useEffect(() => {
+    if (!selectedMsg || selectedMsg.read) return;
+    fetch('/api/messages/read', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message_id: selectedMsg.id }),
+    });
+    setMessages(prev =>
+      prev.map(m => m.id === selectedMsg.id ? { ...m, read: true } : m)
+    );
+  }, [selectedMsg]);
 
-Summary: Two of three zones show spore counts above baseline. This is consistent with the moisture findings and will inform the remediation scope.
+  // Send reply
+  const handleReply = async () => {
+    if (!replyBody.trim() || !selectedMsg) return;
+    setSending(true);
+    try {
+      await fetch('/api/messages/send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: selectedClientId,
+          engagement_id: selectedMsg.engagement_id,
+          sender_type: isAdmin ? 'firm' : 'client',
+          sender_name: isAdmin ? 'James Roman Advisory' : (clientRecord?.name || 'Client'),
+          subject: `RE: ${selectedMsg.subject.replace(/^RE: /i, '')}`,
+          body: replyBody.trim(),
+        }),
+      });
+      setReplyBody('');
+      // Realtime will pick up the new message
+    } catch { /* ignore */ }
+    setSending(false);
+  };
 
-We'll continue with the remaining site inspections as scheduled. No immediate action needed.
+  const unreadCount = messages.filter(m => !m.read && m.sender_type !== (isAdmin ? 'firm' : 'client')).length;
+  const selectedClientName = clients.find(c => c.id === selectedClientId)?.name || clientRecord?.name || '';
 
-— The Firm`,
-    read: true,
-  },
-  {
-    id: 5,
-    from: 'firm',
-    sender: 'James Roman Advisory',
-    date: 'Mar 21, 2026 · 11:00 AM',
-    subject: 'Engagement Confirmed',
-    body: `Welcome to your private office.
+  // Group messages by thread (subject)
+  const threads = messages.reduce((acc, msg) => {
+    const threadKey = msg.subject.replace(/^RE: /i, '');
+    if (!acc[threadKey]) acc[threadKey] = [];
+    acc[threadKey].push(msg);
+    return acc;
+  }, {} as Record<string, Message[]>);
 
-Your engagement has been formally accepted. The signed NDA and engagement letter are in your document vault. Your dedicated portal is now active — all communications, documents, and timeline updates will be accessible here.
+  const sortedThreadKeys = Object.keys(threads).sort((a, b) => {
+    const latestA = new Date(threads[a][0].created_at).getTime();
+    const latestB = new Date(threads[b][0].created_at).getTime();
+    return latestB - latestA;
+  });
 
-Phase I is complete. We'll begin the independent assessment (Phase II) next week.
-
-This channel is encrypted and confidential. Only authorized parties have access.
-
-— The Firm`,
-    read: true,
-  },
-];
-
-export default function PortalMessages() {
-  const [selectedId, setSelectedId] = useState<number>(1);
-  const selected = MESSAGES.find(m => m.id === selectedId)!;
+  if (authLoading || loading) {
+    return (
+      <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Loading…</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="msg">
-      <Scene3D variant="minimal" />
-      <PortalNav />
-      <div className="msg__vignette" />
+    <div style={{ minHeight: '100vh', background: '#0a0a0a', position: 'relative' }}>
+      <div style={{ position: 'fixed', inset: 0, zIndex: 0, opacity: 0.3 }}><Scene3D /></div>
+      <div style={{ position: 'relative', zIndex: 1 }}>
+        <PortalNav />
 
-      <main className="msg__main">
-        <section className="msg__hero">
-          <span className="msg__label">SECURE MESSAGES</span>
-          <h1 className="msg__title">Correspondence</h1>
-          <p className="msg__sub">
-            <span className="msg__encrypted">⬡ End-to-end encrypted</span> · {MESSAGES.length} messages
-          </p>
-        </section>
-
-        <div className="msg__layout">
-          {/* Thread list */}
-          <div className="msg__list">
-            {MESSAGES.map((msg) => (
-              <button
-                key={msg.id}
-                className={`msg__thread ${selectedId === msg.id ? 'msg__thread--active' : ''} ${!msg.read ? 'msg__thread--unread' : ''}`}
-                onClick={() => setSelectedId(msg.id)}
-              >
-                <div className="msg__thread-header">
-                  <span className="msg__thread-sender">{msg.sender}</span>
-                  <span className="msg__thread-date">{msg.date.split('·')[0]}</span>
-                </div>
-                <span className="msg__thread-subject">{msg.subject}</span>
-                {!msg.read && <div className="msg__thread-dot" />}
-              </button>
-            ))}
+        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '32px 24px' }}>
+          {/* Header */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
+            <div>
+              <h1 style={{ fontSize: 24, fontWeight: 300, color: '#c9a96e', margin: 0, letterSpacing: 2, fontFamily: "'Cormorant Garamond', serif" }}>
+                SECURE MESSAGES
+              </h1>
+              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: 13, marginTop: 4 }}>
+                {isAdmin ? `${clients.length} client conversations` : selectedClientName}
+                {liveIndicator && <span style={{ color: '#4ade80', marginLeft: 8 }}>● Live</span>}
+              </p>
+            </div>
+            {unreadCount > 0 && (
+              <div style={{ background: 'rgba(201,169,110,0.15)', border: '1px solid rgba(201,169,110,0.3)', borderRadius: 20, padding: '6px 16px', color: '#c9a96e', fontSize: 13 }}>
+                {unreadCount} unread
+              </div>
+            )}
           </div>
 
-          {/* Message detail */}
-          <div className="msg__detail">
-            <div className="msg__detail-header">
-              <div className="msg__detail-meta">
-                <span className="msg__detail-sender">{selected.sender}</span>
-                <span className="msg__detail-date">{selected.date}</span>
-              </div>
-              <h2 className="msg__detail-subject">{selected.subject}</h2>
+          {/* Admin: client selector */}
+          {isAdmin && clients.length > 0 && (
+            <div style={{ display: 'flex', gap: 8, marginBottom: 24, flexWrap: 'wrap' }}>
+              {clients.map(c => {
+                const clientUnread = messages.filter(m => m.client_id === c.id && !m.read && m.sender_type === 'client').length;
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => { setSelectedClientId(c.id); setSelectedMsg(null); }}
+                    style={{
+                      padding: '8px 16px', borderRadius: 8, fontSize: 13, cursor: 'pointer',
+                      background: selectedClientId === c.id ? 'rgba(201,169,110,0.15)' : 'rgba(255,255,255,0.03)',
+                      border: `1px solid ${selectedClientId === c.id ? 'rgba(201,169,110,0.3)' : 'rgba(255,255,255,0.08)'}`,
+                      color: selectedClientId === c.id ? '#c9a96e' : 'rgba(255,255,255,0.5)',
+                      position: 'relative',
+                    }}
+                  >
+                    {c.name.split(' ').slice(-1)[0]}
+                    {clientUnread > 0 && (
+                      <span style={{ position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: '50%', background: '#c9a96e', color: '#0a0a0a', fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        {clientUnread}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
-            <div className="msg__detail-body">
-              {selected.body.split('\n').map((line, i) => (
-                <p key={i} className={line.startsWith('•') ? 'msg__detail-bullet' : ''}>
-                  {line || '\u00A0'}
-                </p>
-              ))}
+          )}
+
+          {/* Two-pane: thread list + detail */}
+          <div style={{ display: 'grid', gridTemplateColumns: selectedMsg ? '380px 1fr' : '1fr', gap: 24, minHeight: 500 }}>
+            {/* Thread list */}
+            <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden' }}>
+              {sortedThreadKeys.length === 0 ? (
+                <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>
+                  No messages yet
+                </div>
+              ) : (
+                sortedThreadKeys.map(threadKey => {
+                  const threadMsgs = threads[threadKey];
+                  const latest = threadMsgs[0];
+                  const hasUnread = threadMsgs.some(m => !m.read && m.sender_type !== (isAdmin ? 'firm' : 'client'));
+                  const isSelected = selectedMsg && threadKey === selectedMsg.subject.replace(/^RE: /i, '');
+
+                  return (
+                    <div
+                      key={threadKey}
+                      onClick={() => setSelectedMsg(latest)}
+                      style={{
+                        padding: '16px 20px', cursor: 'pointer',
+                        borderBottom: '1px solid rgba(255,255,255,0.04)',
+                        background: isSelected ? 'rgba(201,169,110,0.08)' : 'transparent',
+                        borderLeft: hasUnread ? '3px solid #c9a96e' : '3px solid transparent',
+                      }}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                        <span style={{ fontSize: 14, fontWeight: hasUnread ? 600 : 400, color: hasUnread ? '#fff' : 'rgba(255,255,255,0.7)', flex: 1 }}>
+                          {threadKey}
+                        </span>
+                        <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)', whiteSpace: 'nowrap', marginLeft: 8 }}>
+                          {timeAgo(latest.created_at)}
+                        </span>
+                      </div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.4)' }}>
+                        {latest.sender_type === 'firm' ? 'The Firm' : (clients.find(c => c.id === latest.client_id)?.name || 'Client')}
+                        {threadMsgs.length > 1 && <span style={{ marginLeft: 6, color: 'rgba(201,169,110,0.5)' }}>({threadMsgs.length})</span>}
+                      </div>
+                      <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)', marginTop: 4, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                        {latest.body.substring(0, 80)}…
+                      </div>
+                    </div>
+                  );
+                })
+              )}
             </div>
 
-            {/* Reply box */}
-            <div className="msg__reply">
-              <textarea
-                className="msg__reply-input"
-                placeholder="Write a secure reply..."
-                rows={3}
-              />
-              <div className="msg__reply-actions">
-                <span className="msg__reply-encrypt">⬡ Encrypted</span>
-                <button className="msg__reply-send">Send Reply →</button>
+            {/* Message detail */}
+            {selectedMsg && (
+              <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, display: 'flex', flexDirection: 'column' }}>
+                {/* Thread header */}
+                <div style={{ padding: '20px 24px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <h2 style={{ fontSize: 16, fontWeight: 500, color: '#fff', margin: 0 }}>
+                      {selectedMsg.subject.replace(/^RE: /i, '')}
+                    </h2>
+                    <button onClick={() => setSelectedMsg(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}>✕</button>
+                  </div>
+                  <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
+                    🔒 End-to-end encrypted
+                  </div>
+                </div>
+
+                {/* Messages in thread */}
+                <div style={{ flex: 1, overflow: 'auto', padding: '16px 24px', maxHeight: 400 }}>
+                  {(threads[selectedMsg.subject.replace(/^RE: /i, '')] || [selectedMsg])
+                    .slice().reverse()
+                    .map(msg => (
+                      <div
+                        key={msg.id}
+                        style={{
+                          marginBottom: 16, padding: 16, borderRadius: 10,
+                          background: msg.sender_type === 'firm' ? 'rgba(201,169,110,0.06)' : 'rgba(255,255,255,0.04)',
+                          borderLeft: `3px solid ${msg.sender_type === 'firm' ? 'rgba(201,169,110,0.4)' : 'rgba(255,255,255,0.1)'}`,
+                        }}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                          <span style={{ fontSize: 13, fontWeight: 500, color: msg.sender_type === 'firm' ? '#c9a96e' : 'rgba(255,255,255,0.8)' }}>
+                            {msg.sender_name}
+                          </span>
+                          <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+                            {formatDate(msg.created_at)}
+                          </span>
+                        </div>
+                        <div style={{ fontSize: 14, color: 'rgba(255,255,255,0.7)', lineHeight: 1.7, whiteSpace: 'pre-wrap' }}>
+                          {msg.body}
+                        </div>
+                      </div>
+                    ))}
+                  <div ref={bottomRef} />
+                </div>
+
+                {/* Reply box */}
+                <div style={{ padding: '16px 24px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                  <div style={{ display: 'flex', gap: 12 }}>
+                    <textarea
+                      value={replyBody}
+                      onChange={e => setReplyBody(e.target.value)}
+                      placeholder="Type a reply…"
+                      rows={2}
+                      style={{
+                        flex: 1, padding: '10px 14px', background: '#0a0a0a',
+                        border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8,
+                        color: '#fff', fontSize: 14, outline: 'none', resize: 'none',
+                        fontFamily: 'inherit', lineHeight: 1.5,
+                      }}
+                      onKeyDown={e => {
+                        if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleReply();
+                      }}
+                    />
+                    <button
+                      onClick={handleReply}
+                      disabled={sending || !replyBody.trim()}
+                      style={{
+                        padding: '10px 20px', background: '#c9a96e', border: 'none', borderRadius: 8,
+                        color: '#0a0a0a', fontSize: 14, fontWeight: 600, cursor: 'pointer',
+                        opacity: sending || !replyBody.trim() ? 0.4 : 1, alignSelf: 'flex-end',
+                      }}
+                    >
+                      {sending ? '…' : 'Send'}
+                    </button>
+                  </div>
+                  <div style={{ fontSize: 11, color: 'rgba(255,255,255,0.2)', marginTop: 6 }}>
+                    ⌘+Enter to send
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
-      </main>
-
-      <style jsx>{`
-        .msg {
-          position: relative;
-          min-height: 100vh;
-          background: #000;
-        }
-        .msg__vignette {
-          position: fixed;
-          inset: 0;
-          background: radial-gradient(ellipse at 50% 20%, transparent 20%, rgba(0,0,0,0.9) 100%);
-          z-index: 1;
-          pointer-events: none;
-        }
-        .msg__main {
-          position: relative;
-          z-index: 10;
-          padding: 120px 60px 60px;
-          max-width: 1300px;
-          margin: 0 auto;
-        }
-
-        .msg__hero {
-          margin-bottom: 40px;
-          opacity: 0;
-          animation: msgReveal 1s ease 0.2s forwards;
-        }
-        .msg__label {
-          font-family: 'Inter', sans-serif;
-          font-size: 10px;
-          letter-spacing: 0.4em;
-          color: rgba(201, 169, 110, 0.5);
-        }
-        .msg__title {
-          font-family: 'Cormorant Garamond', Georgia, serif;
-          font-size: clamp(40px, 6vw, 72px);
-          font-weight: 300;
-          color: #fff;
-          margin: 12px 0 16px;
-          line-height: 1;
-        }
-        .msg__sub {
-          font-family: 'Inter', sans-serif;
-          font-size: 12px;
-          color: rgba(255,255,255,0.2);
-          letter-spacing: 0.1em;
-        }
-        .msg__encrypted { color: rgba(110, 201, 160, 0.5); }
-
-        .msg__layout {
-          display: grid;
-          grid-template-columns: 380px 1fr;
-          gap: 0;
-          border: 1px solid rgba(255,255,255,0.04);
-          min-height: 600px;
-          opacity: 0;
-          animation: msgReveal 1s ease 0.4s forwards;
-        }
-
-        /* ── Thread list ── */
-        .msg__list {
-          border-right: 1px solid rgba(255,255,255,0.04);
-          overflow-y: auto;
-          max-height: 700px;
-        }
-        .msg__thread {
-          display: block;
-          width: 100%;
-          text-align: left;
-          padding: 20px 24px;
-          background: transparent;
-          border: none;
-          border-bottom: 1px solid rgba(255,255,255,0.03);
-          cursor: pointer;
-          transition: all 0.3s ease;
-          position: relative;
-        }
-        .msg__thread:hover {
-          background: rgba(255,255,255,0.02);
-        }
-        .msg__thread--active {
-          background: rgba(201, 169, 110, 0.03);
-          border-left: 2px solid #c9a96e;
-        }
-        .msg__thread-header {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 6px;
-        }
-        .msg__thread-sender {
-          font-family: 'Inter', sans-serif;
-          font-size: 11px;
-          color: rgba(255,255,255,0.4);
-          letter-spacing: 0.05em;
-        }
-        .msg__thread--unread .msg__thread-sender { color: rgba(255,255,255,0.8); }
-        .msg__thread-date {
-          font-family: 'Inter', sans-serif;
-          font-size: 10px;
-          color: rgba(255,255,255,0.15);
-        }
-        .msg__thread-subject {
-          font-family: 'Inter', sans-serif;
-          font-size: 13px;
-          color: rgba(255,255,255,0.35);
-          line-height: 1.4;
-          display: block;
-        }
-        .msg__thread--unread .msg__thread-subject { color: rgba(255,255,255,0.75); }
-        .msg__thread-dot {
-          position: absolute;
-          right: 16px;
-          top: 50%;
-          transform: translateY(-50%);
-          width: 6px;
-          height: 6px;
-          border-radius: 50%;
-          background: #c9a96e;
-        }
-
-        /* ── Detail ── */
-        .msg__detail {
-          display: flex;
-          flex-direction: column;
-          background: rgba(255,255,255,0.01);
-        }
-        .msg__detail-header {
-          padding: 28px 32px;
-          border-bottom: 1px solid rgba(255,255,255,0.03);
-        }
-        .msg__detail-meta {
-          display: flex;
-          justify-content: space-between;
-          margin-bottom: 12px;
-        }
-        .msg__detail-sender {
-          font-family: 'Inter', sans-serif;
-          font-size: 11px;
-          color: rgba(255,255,255,0.35);
-          letter-spacing: 0.1em;
-          text-transform: uppercase;
-        }
-        .msg__detail-date {
-          font-family: 'Inter', sans-serif;
-          font-size: 11px;
-          color: rgba(255,255,255,0.15);
-        }
-        .msg__detail-subject {
-          font-family: 'Cormorant Garamond', Georgia, serif;
-          font-size: 22px;
-          font-weight: 400;
-          color: #fff;
-          margin: 0;
-          line-height: 1.3;
-        }
-        .msg__detail-body {
-          flex: 1;
-          padding: 28px 32px;
-          overflow-y: auto;
-        }
-        .msg__detail-body p {
-          font-family: 'Inter', sans-serif;
-          font-size: 14px;
-          color: rgba(255,255,255,0.55);
-          line-height: 1.75;
-          margin: 0 0 4px;
-          letter-spacing: 0.01em;
-        }
-        .msg__detail-bullet {
-          padding-left: 8px;
-          color: rgba(255,255,255,0.45) !important;
-        }
-
-        /* ── Reply ── */
-        .msg__reply {
-          padding: 20px 32px 24px;
-          border-top: 1px solid rgba(255,255,255,0.04);
-        }
-        .msg__reply-input {
-          width: 100%;
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(255,255,255,0.06);
-          padding: 16px;
-          font-family: 'Inter', sans-serif;
-          font-size: 13px;
-          color: #fff;
-          resize: none;
-          outline: none;
-          transition: border-color 0.3s;
-          box-sizing: border-box;
-        }
-        .msg__reply-input:focus {
-          border-color: rgba(201, 169, 110, 0.3);
-        }
-        .msg__reply-input::placeholder { color: rgba(255,255,255,0.15); }
-        .msg__reply-actions {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-top: 12px;
-        }
-        .msg__reply-encrypt {
-          font-family: 'Inter', sans-serif;
-          font-size: 10px;
-          color: rgba(110, 201, 160, 0.4);
-          letter-spacing: 0.1em;
-        }
-        .msg__reply-send {
-          padding: 10px 24px;
-          background: transparent;
-          border: 1px solid rgba(201, 169, 110, 0.3);
-          color: #c9a96e;
-          font-family: 'Inter', sans-serif;
-          font-size: 11px;
-          letter-spacing: 0.15em;
-          cursor: pointer;
-          transition: all 0.4s ease;
-        }
-        .msg__reply-send:hover {
-          background: rgba(201, 169, 110, 0.1);
-          border-color: rgba(201, 169, 110, 0.5);
-        }
-
-        @keyframes msgReveal {
-          from { opacity: 0; transform: translateY(20px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-
-        @media (max-width: 900px) {
-          .msg__main { padding: 100px 20px 40px; }
-          .msg__layout {
-            grid-template-columns: 1fr;
-            max-height: none;
-          }
-          .msg__list {
-            border-right: none;
-            border-bottom: 1px solid rgba(255,255,255,0.04);
-            max-height: 250px;
-          }
-        }
-      `}</style>
+      </div>
     </div>
   );
 }
