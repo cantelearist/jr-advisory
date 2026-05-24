@@ -475,6 +475,7 @@ export interface AdminData {
   messages: Message[];
   documents: Document[];
   timeline: TimelineEvent[];
+  auditLog: { id: string; user_id: string | null; action: string; entity_type: string; entity_id: string | null; metadata: Record<string, unknown> | null; ip_address: string | null; created_at: string }[];
 }
 
 export async function fetchAdminData(): Promise<AdminData> {
@@ -488,6 +489,7 @@ export async function fetchAdminData(): Promise<AdminData> {
       messages: db.messages.map(toMessage),
       documents: db.documents.map(toDocument),
       timeline: db.timeline.map(toTimelineEvent),
+      auditLog: [],
     };
   }
   // Use server API route (bypasses RLS with service role key)
@@ -502,6 +504,7 @@ export async function fetchAdminData(): Promise<AdminData> {
       messages: data.messages || [],
       documents: data.documents || [],
       timeline: data.timeline || [],
+      auditLog: data.auditLog || [],
     };
   } catch (e) {
     console.error('fetchAdminData failed, falling back to localStorage', e);
@@ -513,6 +516,7 @@ export async function fetchAdminData(): Promise<AdminData> {
       messages: db.messages.map(toMessage),
       documents: db.documents.map(toDocument),
       timeline: db.timeline.map(toTimelineEvent),
+      auditLog: [],
     };
   }
 }

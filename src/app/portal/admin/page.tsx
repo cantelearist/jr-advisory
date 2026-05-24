@@ -12,7 +12,7 @@ import {
   createEngagement, updateEngagement,
   createInvoice, updateInvoice,
 } from '@/lib/data';
-import type { Client, Engagement, Invoice, Document as DBDocument } from '@/lib/database.types';
+import type { Client, Engagement, Invoice, Document as DBDocument, AuditLogEntry } from '@/lib/database.types';
 import ClientModal, { type ClientFormData } from '@/components/portal/admin/ClientModal';
 import EngagementModal, { type EngagementFormData } from '@/components/portal/admin/EngagementModal';
 import InvoiceModal, { type InvoiceFormData } from '@/components/portal/admin/InvoiceModal';
@@ -37,7 +37,7 @@ const STATUS_COLORS: Record<string, string> = {
   archived: 'rgba(255,255,255,0.2)',
 };
 
-type Tab = 'overview' | 'clients' | 'engagements' | 'documents' | 'messages' | 'invoices' | 'content' | 'settings';
+type Tab = 'overview' | 'clients' | 'engagements' | 'documents' | 'messages' | 'invoices' | 'activity' | 'content' | 'settings';
 
 export default function AdminPanel() {
   const { isAdmin, loading: authLoading } = useAuth();
@@ -51,6 +51,7 @@ export default function AdminPanel() {
   const [showCompose, setShowCompose] = useState(false);
   const [adminMessages, setAdminMessages] = useState<Message[]>([]);
   const [msgClientFilter, setMsgClientFilter] = useState<string>('all');
+  const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [inviteStatus, setInviteStatus] = useState<Record<string, string>>({});
 
@@ -95,6 +96,7 @@ export default function AdminPanel() {
       setEngagements(data.engagements);
       setInvoices(data.invoices);
       setDocuments(data.documents || []);
+      setAuditLog(data.auditLog || []);
     } catch {
       // Fallback to direct queries
       const [c, e, i] = await Promise.all([
@@ -216,6 +218,7 @@ export default function AdminPanel() {
     { id: 'documents', label: 'DOCUMENTS', icon: '▤' },
     { id: 'messages', label: 'MESSAGES', icon: '✉' },
     { id: 'invoices', label: 'INVOICES', icon: '▦' },
+    { id: 'activity', label: 'ACTIVITY', icon: '▸' },
     { id: 'content', label: 'CONTENT', icon: '✎' },
     { id: 'settings', label: 'SETTINGS', icon: '⚙' },
   ];
@@ -887,6 +890,110 @@ export default function AdminPanel() {
               </div>
             </div>
           )}
+
+          {/* === ACTIVITY / AUDIT LOG === */}
+          {tab === 'activity' && (() => {
+            const ACTION_LABELS: Record<string, { label: string; color: string; icon: string }> = {
+              client_created:    { label: 'Client Created', color: '#4ade80', icon: '◉' },
+              client_updated:    { label: 'Client Updated', color: '#60a5fa', icon: '◉' },
+              client_deleted:    { label: 'Client Deleted', color: '#ef4444', icon: '◉' },
+              engagement_created:{ label: 'Engagement Created', color: '#4ade80', icon: '◈' },
+              engagement_updated:{ label: 'Engagement Updated', color: '#60a5fa', icon: '◈' },
+              invoice_created:   { label: 'Invoice Created', color: '#4ade80', icon: '▦' },
+              invoice_updated:   { label: 'Invoice Updated', color: '#60a5fa', icon: '▦' },
+              message_sent:      { label: 'Message Sent', color: '#c9a96e', icon: '✉' },
+              document_uploaded: { label: 'Document Uploaded', color: '#a78bfa', icon: '▤' },
+              phase_change:      { label: 'Phase Changed', color: '#f59e0b', icon: '▸' },
+              login:             { label: 'Login', color: '#60a5fa', icon: '→' },
+              seed_reset:        { label: 'Data Reset', color: '#ef4444', icon: '⟲' },
+            };
+            const actionFilter = 'all';
+            const displayLog = auditLog.filter(() => actionFilter === 'all');
+            return (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+                <div>
+                  <h2 className="display" style={{ fontSize: 24, margin: '0 0 4px' }}>Audit Log</h2>
+                  <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: 0 }}>
+                    {auditLog.length} events recorded
+                  </p>
+                </div>
+              </div>
+
+              {/* Stats row */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: 12, marginBottom: 28 }}>
+                {Object.entries(
+                  auditLog.reduce((acc, e) => { acc[e.action] = (acc[e.action] || 0) + 1; return acc; }, {} as Record<string, number>)
+                )
+                  .sort((a, b) => b[1] - a[1])
+                  .slice(0, 6)
+                  .map(([action, count]) => {
+                    const info = ACTION_LABELS[action] || { label: action, color: '#888', icon: '•' };
+                    return (
+                      <div key={action} style={{ ...cardStyle, padding: '14px 16px', textAlign: 'center' }}>
+                        <div style={{ fontSize: 22, fontFamily: "'Cormorant Garamond', serif", color: info.color }}>{count}</div>
+                        <div className="mono" style={{ fontSize: 9, letterSpacing: 1.5, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
+                          {info.label.toUpperCase()}
+                        </div>
+                      </div>
+                    );
+                  })}
+              </div>
+
+              {/* Log entries */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {displayLog.length === 0 && (
+                  <div style={{ ...cardStyle, padding: 40, textAlign: 'center' }}>
+                    <p style={{ color: 'rgba(255,255,255,0.3)', margin: 0 }}>No audit events recorded yet</p>
+                  </div>
+                )}
+                {displayLog.map((entry, i) => {
+                  const info = ACTION_LABELS[entry.action] || { label: entry.action, color: '#888', icon: '•' };
+                  const meta = entry.metadata as Record<string, string> | null;
+                  const ts = new Date(entry.created_at);
+                  const timeStr = ts.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) +
+                    ' · ' + ts.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+                  return (
+                    <div
+                      key={entry.id || i}
+                      style={{
+                        display: 'grid',
+                        gridTemplateColumns: '28px 1fr auto',
+                        gap: 12,
+                        alignItems: 'start',
+                        padding: '12px 16px',
+                        background: i % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent',
+                        borderRadius: 6,
+                      }}
+                    >
+                      <span style={{ color: info.color, fontSize: 14, textAlign: 'center', lineHeight: '20px' }}>
+                        {info.icon}
+                      </span>
+                      <div>
+                        <span style={{ fontSize: 13, color: info.color, fontWeight: 500 }}>
+                          {info.label}
+                        </span>
+                        {meta && (
+                          <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginLeft: 10 }}>
+                            {meta.client_name || meta.name || meta.subject || (meta.client_id ? `Client ${String(meta.client_id).slice(0, 8)}…` : '')}
+                          </span>
+                        )}
+                        {entry.entity_id && (
+                          <p className="mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.15)', margin: '2px 0 0' }}>
+                            {entry.entity_type}:{entry.entity_id.slice(0, 8)}
+                          </p>
+                        )}
+                      </div>
+                      <span className="mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}>
+                        {timeStr}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          );
+          })()}
 
           {/* === CONTENT EDITOR === */}
           {tab === 'content' && (

@@ -15,7 +15,7 @@ export async function GET() {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  const [clients, engagements, invoices, messages, documents, timeline, ndas] = await Promise.all([
+  const [clients, engagements, invoices, messages, documents, timeline, ndas, auditLog] = await Promise.all([
     sb.from('clients').select('*').order('created_at', { ascending: false }),
     sb.from('engagements').select('*').order('created_at', { ascending: false }),
     sb.from('invoices').select('*').order('created_at', { ascending: false }),
@@ -23,6 +23,7 @@ export async function GET() {
     sb.from('documents').select('*').order('created_at', { ascending: false }),
     sb.from('timeline_events').select('*').order('event_date', { ascending: true }),
     sb.from('nda_records').select('*').order('signed_date', { ascending: false }),
+    sb.from('audit_log').select('*').order('created_at', { ascending: false }).limit(200),
   ]);
 
   return NextResponse.json({
@@ -33,5 +34,6 @@ export async function GET() {
     documents: documents.data || [],
     timeline: timeline.data || [],
     ndas: ndas.data || [],
+    auditLog: auditLog.data || [],
   });
 }
