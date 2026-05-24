@@ -463,3 +463,54 @@ const DEMO_INVOICES: Invoice[] = [
     pdf_path: null, notes: 'Completed engagement — final invoice', created_at: '2026-04-01', updated_at: '2026-04-01',
   },
 ];
+
+/* ── Admin Data (server-side, bypasses RLS) ── */
+
+export interface AdminData {
+  clients: Client[];
+  engagements: Engagement[];
+  invoices: Invoice[];
+  messages: Message[];
+  documents: Document[];
+  timeline: TimelineEvent[];
+}
+
+export async function fetchAdminData(): Promise<AdminData> {
+  if (!isSupabaseConfigured()) {
+    // Fallback to localStorage demo data
+    const db = getDatabase();
+    return {
+      clients: db.clients.map(toClient),
+      engagements: db.engagements.map(toEngagement),
+      invoices: DEMO_INVOICES,
+      messages: db.messages.map(toMessage),
+      documents: db.documents.map(toDocument),
+      timeline: db.timeline.map(toTimelineEvent),
+    };
+  }
+  // Use server API route (bypasses RLS with service role key)
+  try {
+    const res = await fetch('/api/admin');
+    if (!res.ok) throw new Error(`Admin API: ${res.status}`);
+    const data = await res.json();
+    return {
+      clients: data.clients || [],
+      engagements: data.engagements || [],
+      invoices: data.invoices || [],
+      messages: data.messages || [],
+      documents: data.documents || [],
+      timeline: data.timeline || [],
+    };
+  } catch (e) {
+    console.error('fetchAdminData failed, falling back to localStorage', e);
+    const db = getDatabase();
+    return {
+      clients: db.clients.map(toClient),
+      engagements: db.engagements.map(toEngagement),
+      invoices: DEMO_INVOICES,
+      messages: db.messages.map(toMessage),
+      documents: db.documents.map(toDocument),
+      timeline: db.timeline.map(toTimelineEvent),
+    };
+  }
+}

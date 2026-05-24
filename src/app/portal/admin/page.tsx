@@ -5,6 +5,7 @@ import PortalNav from '@/components/portal/PortalNav';
 import dynamic from 'next/dynamic';
 import {
   fetchAllClients, fetchAllEngagements, fetchAllInvoices,
+  fetchAdminData,
   createClient, updateClient, deleteClient,
   createEngagement, updateEngagement,
   createInvoice, updateInvoice,
@@ -48,14 +49,23 @@ export default function AdminPanel() {
   const [invModal, setInvModal] = useState<{ open: boolean; invoice: Invoice | null }>({ open: false, invoice: null });
 
   const loadData = useCallback(async () => {
-    const [c, e, i] = await Promise.all([
-      fetchAllClients(),
-      fetchAllEngagements(),
-      fetchAllInvoices(),
-    ]);
-    setClients(c);
-    setEngagements(e);
-    setInvoices(i);
+    try {
+      // Use admin API route (bypasses RLS)
+      const data = await fetchAdminData();
+      setClients(data.clients);
+      setEngagements(data.engagements);
+      setInvoices(data.invoices);
+    } catch {
+      // Fallback to direct queries
+      const [c, e, i] = await Promise.all([
+        fetchAllClients(),
+        fetchAllEngagements(),
+        fetchAllInvoices(),
+      ]);
+      setClients(c);
+      setEngagements(e);
+      setInvoices(i);
+    }
     setLoaded(true);
   }, []);
 
