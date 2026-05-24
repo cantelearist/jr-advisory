@@ -953,6 +953,21 @@ export default function AdminPanel() {
                 </div>
               </div>
 
+              {/* Notifications */}
+              <div style={{ ...cardStyle, borderRadius: 12, padding: 32, marginBottom: 24 }}>
+                <h3 style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', margin: '0 0 16px' }}>Email Notifications</h3>
+                <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontSize: 14 }}>
+                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>Provider:</span>
+                  <span style={{ color: '#c9a96e' }}>Resend</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>Status:</span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Ready (needs RESEND_API_KEY env var)</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>Triggers:</span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>New message · Invoice sent · Document upload · Phase change</span>
+                  <span style={{ color: 'rgba(255,255,255,0.4)' }}>From:</span>
+                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>notifications@jamesroman.la</span>
+                </div>
+              </div>
+
               {/* Firm info */}
               <div style={{ ...cardStyle, borderRadius: 12, padding: 32 }}>
                 <h3 style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', margin: '0 0 16px' }}>Firm Information</h3>
