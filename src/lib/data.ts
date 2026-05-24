@@ -432,37 +432,37 @@ const DEMO_INVOICES: Invoice[] = [
     id: 'inv_001', client_id: 'cli_001', engagement_id: 'eng_001',
     invoice_number: 'JRA-2026-001', description: 'Phase I — Confidential Consultation',
     amount: 4500, status: 'paid', due_date: '2026-04-01', paid_date: '2026-03-28',
-    pdf_path: null, notes: null, created_at: '2026-03-14', updated_at: '2026-03-28',
+    pdf_path: null, notes: null, stripe_session_id: null, stripe_payment_id: null, created_at: '2026-03-14', updated_at: '2026-03-28',
   },
   {
     id: 'inv_002', client_id: 'cli_001', engagement_id: 'eng_001',
     invoice_number: 'JRA-2026-002', description: 'Phase II — Independent Assessment',
     amount: 8750, status: 'paid', due_date: '2026-04-15', paid_date: '2026-04-12',
-    pdf_path: null, notes: null, created_at: '2026-04-01', updated_at: '2026-04-12',
+    pdf_path: null, notes: null, stripe_session_id: null, stripe_payment_id: null, created_at: '2026-04-01', updated_at: '2026-04-12',
   },
   {
     id: 'inv_003', client_id: 'cli_001', engagement_id: 'eng_001',
     invoice_number: 'JRA-2026-003', description: 'Phase III — Scope & Vendor Curation',
     amount: 6200, status: 'sent', due_date: '2026-05-30', paid_date: null,
-    pdf_path: null, notes: 'Net 30', created_at: '2026-05-01', updated_at: '2026-05-01',
+    pdf_path: null, notes: 'Net 30', stripe_session_id: null, stripe_payment_id: null, created_at: '2026-05-01', updated_at: '2026-05-01',
   },
   {
     id: 'inv_004', client_id: 'cli_002', engagement_id: 'eng_002',
     invoice_number: 'JRA-2026-004', description: 'Phase I — Confidential Consultation',
     amount: 4500, status: 'paid', due_date: '2026-03-01', paid_date: '2026-02-25',
-    pdf_path: null, notes: null, created_at: '2026-02-01', updated_at: '2026-02-25',
+    pdf_path: null, notes: null, stripe_session_id: null, stripe_payment_id: null, created_at: '2026-02-01', updated_at: '2026-02-25',
   },
   {
     id: 'inv_005', client_id: 'cli_002', engagement_id: 'eng_002',
     invoice_number: 'JRA-2026-005', description: 'Phase II — Independent Assessment (Asbestos Survey)',
     amount: 12400, status: 'sent', due_date: '2026-05-25', paid_date: null,
-    pdf_path: null, notes: 'Multi-building survey', created_at: '2026-04-15', updated_at: '2026-04-15',
+    pdf_path: null, notes: 'Multi-building survey', stripe_session_id: null, stripe_payment_id: null, created_at: '2026-04-15', updated_at: '2026-04-15',
   },
   {
     id: 'inv_006', client_id: 'cli_004', engagement_id: 'eng_004',
     invoice_number: 'JRA-2026-006', description: 'Phases I–IV — Full Engagement (Indoor Air Quality)',
     amount: 28500, status: 'paid', due_date: '2026-04-01', paid_date: '2026-04-01',
-    pdf_path: null, notes: 'Completed engagement — final invoice', created_at: '2026-04-01', updated_at: '2026-04-01',
+    pdf_path: null, notes: 'Completed engagement — final invoice', stripe_session_id: null, stripe_payment_id: null, created_at: '2026-04-01', updated_at: '2026-04-01',
   },
 ];
 
