@@ -3,17 +3,27 @@
 import { useState, useEffect, useCallback } from 'react';
 import PortalNav from '@/components/portal/PortalNav';
 import dynamic from 'next/dynamic';
-import { fetchAllClients, fetchAllEngagements, fetchAllInvoices } from '@/lib/data';
+import {
+  fetchAllClients, fetchAllEngagements, fetchAllInvoices,
+  createClient, updateClient, deleteClient,
+  createEngagement, updateEngagement,
+  createInvoice, updateInvoice,
+} from '@/lib/data';
 import { resetDatabase } from '@/lib/testData';
+import { isSupabaseConfigured } from '@/lib/supabase';
 import type { Client, Engagement, Invoice } from '@/lib/database.types';
+import ClientModal, { type ClientFormData } from '@/components/portal/admin/ClientModal';
+import EngagementModal, { type EngagementFormData } from '@/components/portal/admin/EngagementModal';
+import InvoiceModal, { type InvoiceFormData } from '@/components/portal/admin/InvoiceModal';
+import ContentEditor from '@/components/portal/admin/ContentEditor';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
 const PHASE_LABELS: Record<string, string> = {
-  '1': 'I — Confidential Consultation',
-  '2': 'II — Independent Assessment',
-  '3': 'III — Scope & Vendor Curation',
-  '4': 'IV — Oversight & Clearance',
+  '1': 'I — Consultation',
+  '2': 'II — Assessment',
+  '3': 'III — Scope & Vendor',
+  '4': 'IV — Oversight',
 };
 
 const STATUS_COLORS: Record<string, string> = {
@@ -23,7 +33,7 @@ const STATUS_COLORS: Record<string, string> = {
   archived: 'rgba(255,255,255,0.2)',
 };
 
-type Tab = 'overview' | 'clients' | 'engagements' | 'invoices' | 'settings';
+type Tab = 'overview' | 'clients' | 'engagements' | 'invoices' | 'content' | 'settings';
 
 export default function AdminPanel() {
   const [tab, setTab] = useState<Tab>('overview');
@@ -31,6 +41,11 @@ export default function AdminPanel() {
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loaded, setLoaded] = useState(false);
+
+  /* Modal state */
+  const [clientModal, setClientModal] = useState<{ open: boolean; client: Client | null }>({ open: false, client: null });
+  const [engModal, setEngModal] = useState<{ open: boolean; engagement: Engagement | null }>({ open: false, engagement: null });
+  const [invModal, setInvModal] = useState<{ open: boolean; invoice: Invoice | null }>({ open: false, invoice: null });
 
   const loadData = useCallback(async () => {
     const [c, e, i] = await Promise.all([
@@ -46,28 +61,116 @@ export default function AdminPanel() {
 
   useEffect(() => { loadData(); }, [loadData]);
 
+  /* Computed */
   const activeClients = clients.filter(c => c.status === 'active').length;
   const totalRevenue = invoices.reduce((s, i) => s + Number(i.amount), 0);
   const paidRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.amount), 0);
   const outstanding = invoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((s, i) => s + Number(i.amount), 0);
-
   const formatCurrency = (n: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
+
+  /* CRUD handlers */
+  const handleSaveClient = async (data: ClientFormData) => {
+    if (clientModal.client) {
+      await updateClient(clientModal.client.id, data);
+    } else {
+      await createClient(data);
+    }
+    await loadData();
+  };
+
+  const handleDeleteClient = async () => {
+    if (clientModal.client) {
+      await deleteClient(clientModal.client.id);
+      await loadData();
+    }
+  };
+
+  const handleSaveEngagement = async (data: EngagementFormData) => {
+    if (engModal.engagement) {
+      await updateEngagement(engModal.engagement.id, {
+        type: data.type,
+        phase: data.phase as Engagement['phase'],
+        phase_label: data.phase_label,
+        next_milestone: data.next_milestone,
+        notes: data.notes,
+      });
+    } else {
+      await createEngagement({
+        client_id: data.client_id,
+        type: data.type,
+        property: data.property,
+        phase: data.phase,
+        phase_label: data.phase_label,
+        notes: data.notes,
+      });
+    }
+    await loadData();
+  };
+
+  const handleSaveInvoice = async (data: InvoiceFormData) => {
+    if (invModal.invoice) {
+      await updateInvoice(invModal.invoice.id, {
+        status: data.status,
+        amount: data.amount,
+        description: data.description,
+        due_date: data.due_date,
+        notes: data.notes,
+      });
+    } else {
+      await createInvoice({
+        client_id: data.client_id,
+        engagement_id: data.engagement_id,
+        invoice_number: data.invoice_number,
+        description: data.description,
+        amount: data.amount,
+        due_date: data.due_date,
+        status: data.status,
+        notes: data.notes,
+      });
+    }
+    await loadData();
+  };
 
   const handleReset = () => {
     if (confirm('Reset all test data to seed state? This cannot be undone.')) {
       resetDatabase();
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('jr_advisory_custom_invoices');
+        localStorage.removeItem('jr_advisory_site_content');
+      }
       loadData();
     }
   };
 
-  const tabs: { id: Tab; label: string }[] = [
-    { id: 'overview', label: 'OVERVIEW' },
-    { id: 'clients', label: 'CLIENTS' },
-    { id: 'engagements', label: 'ENGAGEMENTS' },
-    { id: 'invoices', label: 'INVOICES' },
-    { id: 'settings', label: 'SETTINGS' },
+  const tabs: { id: Tab; label: string; icon: string }[] = [
+    { id: 'overview', label: 'OVERVIEW', icon: '◎' },
+    { id: 'clients', label: 'CLIENTS', icon: '◉' },
+    { id: 'engagements', label: 'ENGAGEMENTS', icon: '◈' },
+    { id: 'invoices', label: 'INVOICES', icon: '▦' },
+    { id: 'content', label: 'CONTENT', icon: '✎' },
+    { id: 'settings', label: 'SETTINGS', icon: '⚙' },
   ];
+
+  const cardStyle = {
+    background: 'rgba(255,255,255,0.02)',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: 10,
+  };
+
+  const addBtnStyle = {
+    background: 'rgba(201,169,110,0.12)',
+    border: '1px solid rgba(201,169,110,0.3)',
+    color: '#c9a96e',
+    padding: '10px 24px',
+    borderRadius: 6,
+    cursor: 'pointer' as const,
+    fontSize: 12,
+    letterSpacing: 1.5,
+    fontFamily: "'JetBrains Mono', monospace",
+    textTransform: 'uppercase' as const,
+    transition: 'all 0.2s ease',
+  };
 
   return (
     <div className="portal-page">
@@ -75,7 +178,10 @@ export default function AdminPanel() {
       <PortalNav active="admin" />
 
       <main className="portal-main" style={{ paddingTop: 100 }}>
-        <div style={{ maxWidth: 1200, margin: '0 auto', padding: '0 32px', opacity: loaded ? 1 : 0, transition: 'opacity 0.6s ease' }}>
+        <div style={{
+          maxWidth: 1200, margin: '0 auto', padding: '0 32px',
+          opacity: loaded ? 1 : 0, transition: 'opacity 0.6s ease',
+        }}>
 
           {/* Header */}
           <div style={{ marginBottom: 40 }}>
@@ -84,33 +190,41 @@ export default function AdminPanel() {
           </div>
 
           {/* Tabs */}
-          <div style={{ display: 'flex', gap: 8, marginBottom: 40, borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 16 }}>
+          <div style={{
+            display: 'flex', gap: 6, marginBottom: 40,
+            borderBottom: '1px solid rgba(255,255,255,0.06)', paddingBottom: 16,
+            overflowX: 'auto',
+          }}>
             {tabs.map(t => (
               <button
                 key={t.id}
                 onClick={() => setTab(t.id)}
-                className="mono"
                 style={{
                   background: tab === t.id ? 'rgba(201,169,110,0.12)' : 'transparent',
                   border: `1px solid ${tab === t.id ? 'rgba(201,169,110,0.3)' : 'transparent'}`,
                   color: tab === t.id ? '#c9a96e' : 'rgba(255,255,255,0.4)',
-                  padding: '10px 20px',
+                  padding: '10px 18px',
                   borderRadius: 6,
                   cursor: 'pointer',
                   fontSize: 11,
+                  fontFamily: "'JetBrains Mono', monospace",
                   letterSpacing: 2,
                   transition: 'all 0.2s ease',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 8,
+                  whiteSpace: 'nowrap',
                 }}
               >
+                <span style={{ fontSize: 14 }}>{t.icon}</span>
                 {t.label}
               </button>
             ))}
           </div>
 
-          {/* === OVERVIEW TAB === */}
+          {/* === OVERVIEW === */}
           {tab === 'overview' && (
             <>
-              {/* Stats */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 20, marginBottom: 48 }}>
                 {[
                   { label: 'ACTIVE CLIENTS', value: String(activeClients), color: '#4ade80' },
@@ -119,8 +233,7 @@ export default function AdminPanel() {
                   { label: 'COLLECTED', value: formatCurrency(paidRevenue), color: '#4ade80' },
                 ].map((s, i) => (
                   <div key={i} style={{
-                    background: 'rgba(255,255,255,0.03)',
-                    border: '1px solid rgba(255,255,255,0.06)',
+                    ...cardStyle,
                     borderRadius: 12,
                     padding: '24px 20px',
                     backdropFilter: 'blur(12px)',
@@ -138,12 +251,7 @@ export default function AdminPanel() {
                   {(['1', '2', '3', '4'] as const).map(phase => {
                     const phaseEngs = engagements.filter(e => e.phase === phase);
                     return (
-                      <div key={phase} style={{
-                        background: 'rgba(255,255,255,0.02)',
-                        border: '1px solid rgba(255,255,255,0.06)',
-                        borderRadius: 10,
-                        padding: 20,
-                      }}>
+                      <div key={phase} style={{ ...cardStyle, padding: 20 }}>
                         <p className="mono" style={{ color: '#c9a96e', fontSize: 10, letterSpacing: 2, marginBottom: 16 }}>
                           PHASE {PHASE_LABELS[phase]}
                         </p>
@@ -153,12 +261,27 @@ export default function AdminPanel() {
                           phaseEngs.map(eng => {
                             const client = clients.find(c => c.id === eng.client_id);
                             return (
-                              <div key={eng.id} style={{
-                                background: 'rgba(255,255,255,0.03)',
-                                borderRadius: 8,
-                                padding: '12px 14px',
-                                marginBottom: 8,
-                              }}>
+                              <div
+                                key={eng.id}
+                                onClick={() => setEngModal({ open: true, engagement: eng })}
+                                style={{
+                                  background: 'rgba(255,255,255,0.03)',
+                                  borderRadius: 8,
+                                  padding: '12px 14px',
+                                  marginBottom: 8,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.2s ease',
+                                  border: '1px solid transparent',
+                                }}
+                                onMouseEnter={e => {
+                                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(201,169,110,0.15)';
+                                  (e.currentTarget as HTMLElement).style.background = 'rgba(201,169,110,0.04)';
+                                }}
+                                onMouseLeave={e => {
+                                  (e.currentTarget as HTMLElement).style.borderColor = 'transparent';
+                                  (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.03)';
+                                }}
+                              >
                                 <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', margin: 0, fontWeight: 500 }}>
                                   {client?.name || 'Unknown'}
                                 </p>
@@ -179,42 +302,55 @@ export default function AdminPanel() {
                   })}
                 </div>
               </div>
+
+              {/* Quick stats row */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                <div style={{ ...cardStyle, padding: 24, borderRadius: 12 }}>
+                  <p className="mono" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>OUTSTANDING</p>
+                  <p className="display" style={{ fontSize: 24, color: outstanding > 0 ? '#c9a96e' : '#4ade80', margin: 0 }}>{formatCurrency(outstanding)}</p>
+                </div>
+                <div style={{ ...cardStyle, padding: 24, borderRadius: 12 }}>
+                  <p className="mono" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>ACTIVE ENGAGEMENTS</p>
+                  <p className="display" style={{ fontSize: 24, margin: 0 }}>{engagements.length}</p>
+                </div>
+              </div>
             </>
           )}
 
-          {/* === CLIENTS TAB === */}
+          {/* === CLIENTS === */}
           {tab === 'clients' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                 <h2 className="display" style={{ fontSize: 24, margin: 0 }}>All Clients</h2>
-                <button className="btn" style={{
-                  background: 'rgba(201,169,110,0.12)',
-                  border: '1px solid rgba(201,169,110,0.3)',
-                  color: '#c9a96e',
-                  padding: '10px 24px',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  letterSpacing: 1.5,
-                }}>
-                  + INVITE CLIENT
-                </button>
+                <button onClick={() => setClientModal({ open: true, client: null })} style={addBtnStyle}>+ NEW CLIENT</button>
               </div>
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {clients.map(client => {
                   const eng = engagements.find(e => e.client_id === client.id);
                   return (
-                    <div key={client.id} style={{
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      borderRadius: 10,
-                      padding: '20px 24px',
-                      display: 'grid',
-                      gridTemplateColumns: '1.5fr 1fr 1fr auto',
-                      alignItems: 'center',
-                      gap: 20,
-                    }}>
+                    <div
+                      key={client.id}
+                      onClick={() => setClientModal({ open: true, client })}
+                      style={{
+                        ...cardStyle,
+                        padding: '20px 24px',
+                        display: 'grid',
+                        gridTemplateColumns: '1.5fr 1fr 1fr auto',
+                        alignItems: 'center',
+                        gap: 20,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(201,169,110,0.15)';
+                        (e.currentTarget as HTMLElement).style.background = 'rgba(201,169,110,0.03)';
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)';
+                        (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)';
+                      }}
+                    >
                       <div>
                         <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.9)', margin: 0, fontWeight: 500 }}>
                           {client.name}
@@ -224,18 +360,10 @@ export default function AdminPanel() {
                         </p>
                       </div>
                       <div>
-                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0 }}>
-                          {eng ? eng.type : '—'}
-                        </p>
-                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>
-                          {eng ? `Phase ${eng.phase}` : '—'}
-                        </p>
+                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)', margin: 0 }}>{eng ? eng.type : '—'}</p>
+                        <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', margin: '4px 0 0' }}>{eng ? `Phase ${eng.phase}` : '—'}</p>
                       </div>
-                      <div>
-                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
-                          {client.area}
-                        </p>
-                      </div>
+                      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>{client.area}</p>
                       <span className="mono" style={{
                         fontSize: 10,
                         letterSpacing: 1.5,
@@ -254,35 +382,47 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* === ENGAGEMENTS TAB === */}
+          {/* === ENGAGEMENTS === */}
           {tab === 'engagements' && (
             <div>
-              <h2 className="display" style={{ fontSize: 24, marginBottom: 32 }}>All Engagements</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
+                <h2 className="display" style={{ fontSize: 24, margin: 0 }}>All Engagements</h2>
+                <button onClick={() => setEngModal({ open: true, engagement: null })} style={addBtnStyle}>+ NEW ENGAGEMENT</button>
+              </div>
+
               <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {engagements.map(eng => {
                   const client = clients.find(c => c.id === eng.client_id);
                   return (
-                    <div key={eng.id} style={{
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      borderRadius: 10,
-                      padding: '20px 24px',
-                      display: 'grid',
-                      gridTemplateColumns: '1.2fr 1fr 1fr auto',
-                      alignItems: 'center',
-                      gap: 20,
-                    }}>
+                    <div
+                      key={eng.id}
+                      onClick={() => setEngModal({ open: true, engagement: eng })}
+                      style={{
+                        ...cardStyle,
+                        padding: '20px 24px',
+                        display: 'grid',
+                        gridTemplateColumns: '1.2fr 1fr 1fr auto',
+                        alignItems: 'center',
+                        gap: 20,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(201,169,110,0.15)';
+                        (e.currentTarget as HTMLElement).style.background = 'rgba(201,169,110,0.03)';
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)';
+                        (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.02)';
+                      }}
+                    >
                       <div>
                         <p style={{ fontSize: 16, color: 'rgba(255,255,255,0.9)', margin: 0, fontWeight: 500 }}>
                           {client?.name || 'Unknown'}
                         </p>
-                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>
-                          {eng.property}
-                        </p>
+                        <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.35)', margin: '4px 0 0' }}>{eng.property}</p>
                       </div>
-                      <div>
-                        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', margin: 0 }}>{eng.type}</p>
-                      </div>
+                      <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.6)', margin: 0 }}>{eng.type}</p>
                       <div>
                         <p className="mono" style={{ fontSize: 11, color: '#c9a96e', letterSpacing: 1.5, margin: 0 }}>
                           PHASE {PHASE_LABELS[eng.phase]}
@@ -293,9 +433,7 @@ export default function AdminPanel() {
                           </p>
                         )}
                       </div>
-                      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0 }}>
-                        Since {eng.start_date}
-                      </p>
+                      <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: 0 }}>Since {eng.start_date}</p>
                     </div>
                   );
                 })}
@@ -303,60 +441,59 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* === INVOICES TAB === */}
+          {/* === INVOICES === */}
           {tab === 'invoices' && (
             <div>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 32 }}>
                 <h2 className="display" style={{ fontSize: 24, margin: 0 }}>All Invoices</h2>
-                <button className="btn" style={{
-                  background: 'rgba(201,169,110,0.12)',
-                  border: '1px solid rgba(201,169,110,0.3)',
-                  color: '#c9a96e',
-                  padding: '10px 24px',
-                  borderRadius: 6,
-                  cursor: 'pointer',
-                  fontSize: 12,
-                  letterSpacing: 1.5,
-                }}>
-                  + CREATE INVOICE
-                </button>
+                <button onClick={() => setInvModal({ open: true, invoice: null })} style={addBtnStyle}>+ CREATE INVOICE</button>
               </div>
 
               {/* Summary */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 16, marginBottom: 32 }}>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '20px 16px' }}>
-                  <p className="mono" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 2, marginBottom: 8 }}>TOTAL</p>
-                  <p className="display" style={{ fontSize: 24, margin: 0 }}>{formatCurrency(totalRevenue)}</p>
-                </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '20px 16px' }}>
-                  <p className="mono" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 2, marginBottom: 8 }}>COLLECTED</p>
-                  <p className="display" style={{ fontSize: 24, color: '#4ade80', margin: 0 }}>{formatCurrency(paidRevenue)}</p>
-                </div>
-                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: '20px 16px' }}>
-                  <p className="mono" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 2, marginBottom: 8 }}>OUTSTANDING</p>
-                  <p className="display" style={{ fontSize: 24, color: '#c9a96e', margin: 0 }}>{formatCurrency(outstanding)}</p>
-                </div>
+                {[
+                  { label: 'TOTAL', value: formatCurrency(totalRevenue), color: 'rgba(255,255,255,0.85)' },
+                  { label: 'COLLECTED', value: formatCurrency(paidRevenue), color: '#4ade80' },
+                  { label: 'OUTSTANDING', value: formatCurrency(outstanding), color: '#c9a96e' },
+                ].map((s, i) => (
+                  <div key={i} style={{ ...cardStyle, padding: '20px 16px' }}>
+                    <p className="mono" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 2, marginBottom: 8 }}>{s.label}</p>
+                    <p className="display" style={{ fontSize: 24, color: s.color, margin: 0 }}>{s.value}</p>
+                  </div>
+                ))}
               </div>
 
-              {/* Invoice list */}
+              {/* List */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                 {invoices.map(inv => {
                   const client = clients.find(c => c.id === inv.client_id);
-                  const statusColor = {
+                  const statusColor: Record<string, string> = {
                     paid: '#4ade80', sent: '#c9a96e', draft: 'rgba(255,255,255,0.4)',
                     overdue: '#ef4444', cancelled: 'rgba(255,255,255,0.2)',
-                  }[inv.status] || 'rgba(255,255,255,0.4)';
+                  };
+                  const sc = statusColor[inv.status] || 'rgba(255,255,255,0.4)';
                   return (
-                    <div key={inv.id} style={{
-                      background: 'rgba(255,255,255,0.02)',
-                      border: '1px solid rgba(255,255,255,0.06)',
-                      borderRadius: 8,
-                      padding: '16px 20px',
-                      display: 'grid',
-                      gridTemplateColumns: 'auto 1.5fr 1fr auto auto',
-                      alignItems: 'center',
-                      gap: 16,
-                    }}>
+                    <div
+                      key={inv.id}
+                      onClick={() => setInvModal({ open: true, invoice: inv })}
+                      style={{
+                        ...cardStyle,
+                        borderRadius: 8,
+                        padding: '16px 20px',
+                        display: 'grid',
+                        gridTemplateColumns: 'auto 1.5fr 1fr auto auto',
+                        alignItems: 'center',
+                        gap: 16,
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                      }}
+                      onMouseEnter={e => {
+                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(201,169,110,0.15)';
+                      }}
+                      onMouseLeave={e => {
+                        (e.currentTarget as HTMLElement).style.borderColor = 'rgba(255,255,255,0.06)';
+                      }}
+                    >
                       <span className="mono" style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{inv.invoice_number}</span>
                       <div>
                         <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', margin: 0 }}>{client?.name || '—'}</p>
@@ -365,9 +502,9 @@ export default function AdminPanel() {
                       <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.4)', margin: 0 }}>Due {inv.due_date}</p>
                       <p className="display" style={{ fontSize: 20, margin: 0 }}>{formatCurrency(Number(inv.amount))}</p>
                       <span className="mono" style={{
-                        fontSize: 9, letterSpacing: 1.5, color: statusColor,
+                        fontSize: 9, letterSpacing: 1.5, color: sc,
                         padding: '5px 12px', borderRadius: 5,
-                        background: `${statusColor}15`, border: `1px solid ${statusColor}30`,
+                        background: `${sc}15`, border: `1px solid ${sc}30`,
                       }}>
                         {inv.status.toUpperCase()}
                       </span>
@@ -378,24 +515,31 @@ export default function AdminPanel() {
             </div>
           )}
 
-          {/* === SETTINGS TAB === */}
+          {/* === CONTENT EDITOR === */}
+          {tab === 'content' && (
+            <div>
+              <div style={{ marginBottom: 32 }}>
+                <h2 className="display" style={{ fontSize: 24, margin: '0 0 8px' }}>Site Content</h2>
+                <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', margin: 0 }}>
+                  Edit marketing page copy directly. Changes save to localStorage (demo mode) or Supabase.
+                </p>
+              </div>
+              <ContentEditor />
+            </div>
+          )}
+
+          {/* === SETTINGS === */}
           {tab === 'settings' && (
             <div>
               <h2 className="display" style={{ fontSize: 24, marginBottom: 32 }}>Settings</h2>
 
               {/* Database */}
-              <div style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 12,
-                padding: 32,
-                marginBottom: 24,
-              }}>
+              <div style={{ ...cardStyle, borderRadius: 12, padding: 32, marginBottom: 24 }}>
                 <h3 style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', margin: '0 0 16px' }}>Test Database</h3>
                 <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.4)', marginBottom: 20 }}>
-                  Reset all data to the initial seed state. This will remove any changes made during testing.
+                  Reset all data to the initial seed state. This will remove any changes, custom invoices, and content edits.
                 </p>
-                <button onClick={handleReset} className="btn" style={{
+                <button onClick={handleReset} style={{
                   background: 'rgba(239,68,68,0.12)',
                   border: '1px solid rgba(239,68,68,0.3)',
                   color: '#ef4444',
@@ -403,38 +547,32 @@ export default function AdminPanel() {
                   borderRadius: 6,
                   cursor: 'pointer',
                   fontSize: 12,
+                  fontFamily: "'JetBrains Mono', monospace",
                   letterSpacing: 1.5,
                 }}>
-                  RESET DATABASE
+                  RESET ALL DATA
                 </button>
               </div>
 
               {/* Auth status */}
-              <div style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 12,
-                padding: 32,
-                marginBottom: 24,
-              }}>
+              <div style={{ ...cardStyle, borderRadius: 12, padding: 32, marginBottom: 24 }}>
                 <h3 style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', margin: '0 0 16px' }}>Authentication</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontSize: 14 }}>
                   <span style={{ color: 'rgba(255,255,255,0.4)' }}>Mode:</span>
-                  <span style={{ color: '#c9a96e' }}>Demo (localStorage)</span>
+                  <span style={{ color: isSupabaseConfigured() ? '#4ade80' : '#c9a96e' }}>
+                    {isSupabaseConfigured() ? 'Supabase (Live)' : 'Demo (localStorage)'}
+                  </span>
                   <span style={{ color: 'rgba(255,255,255,0.4)' }}>Supabase:</span>
-                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>Not configured</span>
+                  <span style={{ color: isSupabaseConfigured() ? '#4ade80' : 'rgba(255,255,255,0.5)' }}>
+                    {isSupabaseConfigured() ? 'Connected ✓' : 'Not configured'}
+                  </span>
                   <span style={{ color: 'rgba(255,255,255,0.4)' }}>Clients:</span>
-                  <span style={{ color: 'rgba(255,255,255,0.7)' }}>{clients.length} test accounts</span>
+                  <span style={{ color: 'rgba(255,255,255,0.7)' }}>{clients.length} {isSupabaseConfigured() ? 'accounts' : 'test accounts'}</span>
                 </div>
               </div>
 
               {/* Firm info */}
-              <div style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 12,
-                padding: 32,
-              }}>
+              <div style={{ ...cardStyle, borderRadius: 12, padding: 32 }}>
                 <h3 style={{ fontSize: 16, color: 'rgba(255,255,255,0.7)', margin: '0 0 16px' }}>Firm Information</h3>
                 <div style={{ display: 'grid', gridTemplateColumns: 'auto 1fr', gap: '8px 16px', fontSize: 14 }}>
                   <span style={{ color: 'rgba(255,255,255,0.4)' }}>Name:</span>
@@ -451,6 +589,30 @@ export default function AdminPanel() {
           )}
         </div>
       </main>
+
+      {/* CRUD Modals */}
+      <ClientModal
+        open={clientModal.open}
+        onClose={() => setClientModal({ open: false, client: null })}
+        onSave={handleSaveClient}
+        onDelete={clientModal.client ? handleDeleteClient : undefined}
+        client={clientModal.client}
+      />
+      <EngagementModal
+        open={engModal.open}
+        onClose={() => setEngModal({ open: false, engagement: null })}
+        onSave={handleSaveEngagement}
+        engagement={engModal.engagement}
+        clients={clients}
+      />
+      <InvoiceModal
+        open={invModal.open}
+        onClose={() => setInvModal({ open: false, invoice: null })}
+        onSave={handleSaveInvoice}
+        invoice={invModal.invoice}
+        clients={clients}
+        engagements={engagements}
+      />
     </div>
   );
 }

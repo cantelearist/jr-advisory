@@ -216,6 +216,214 @@ export async function updateEngagementPhase(
   await getSupabase().from('engagements').update({ phase, phase_label: phaseLabel } as Record<string, unknown>).eq('id', engagementId);
 }
 
+/* ── CRUD: Clients ── */
+
+export async function createClient(input: {
+  name: string;
+  email: string;
+  phone?: string;
+  property: string;
+  area: string;
+  status?: Client['status'];
+}): Promise<Client> {
+  const now = new Date().toISOString();
+  const newClient: Client = {
+    id: `cli_${Date.now()}`,
+    profile_id: null,
+    name: input.name,
+    email: input.email,
+    phone: input.phone || null,
+    property: input.property,
+    area: input.area,
+    status: input.status || 'pending',
+    notes: null,
+    created_at: now,
+    updated_at: now,
+  };
+
+  if (!isSupabaseConfigured()) {
+    const db = getDatabase();
+    const testClient = {
+      id: newClient.id,
+      name: input.name,
+      email: input.email,
+      phone: input.phone || '',
+      property: input.property,
+      area: input.area,
+      status: (input.status || 'pending') as 'active' | 'pending' | 'completed',
+      createdAt: now,
+    };
+    db.clients.push(testClient);
+    const { saveDatabase } = await import('./testData');
+    saveDatabase(db);
+    return newClient;
+  }
+  const { data } = await getSupabase().from('clients').insert(input as Record<string, unknown>).select().single();
+  return (data as Client) || newClient;
+}
+
+export async function updateClient(
+  clientId: string,
+  updates: Partial<Pick<Client, 'name' | 'email' | 'phone' | 'property' | 'area' | 'status' | 'notes'>>,
+): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    const db = getDatabase();
+    const client = db.clients.find(c => c.id === clientId);
+    if (client) {
+      if (updates.name !== undefined) client.name = updates.name;
+      if (updates.email !== undefined) client.email = updates.email;
+      if (updates.phone !== undefined) client.phone = updates.phone || '';
+      if (updates.property !== undefined) client.property = updates.property;
+      if (updates.area !== undefined) client.area = updates.area;
+      if (updates.status !== undefined) client.status = updates.status as 'active' | 'pending' | 'completed';
+      const { saveDatabase } = await import('./testData');
+      saveDatabase(db);
+    }
+    return;
+  }
+  await getSupabase().from('clients').update({ ...updates, updated_at: new Date().toISOString() } as Record<string, unknown>).eq('id', clientId);
+}
+
+export async function deleteClient(clientId: string): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    const db = getDatabase();
+    db.clients = db.clients.filter(c => c.id !== clientId);
+    db.engagements = db.engagements.filter(e => e.clientId !== clientId);
+    db.documents = db.documents.filter(d => d.clientId !== clientId);
+    db.messages = db.messages.filter(m => m.clientId !== clientId);
+    const { saveDatabase } = await import('./testData');
+    saveDatabase(db);
+    return;
+  }
+  await getSupabase().from('clients').delete().eq('id', clientId);
+}
+
+/* ── CRUD: Engagements ── */
+
+export async function createEngagement(input: {
+  client_id: string;
+  type: string;
+  property: string;
+  phase?: string;
+  phase_label?: string;
+  notes?: string;
+}): Promise<Engagement> {
+  const now = new Date().toISOString();
+  const newEng: Engagement = {
+    id: `eng_${Date.now()}`,
+    client_id: input.client_id,
+    type: input.type,
+    phase: (input.phase || '1') as Engagement['phase'],
+    phase_label: input.phase_label || 'Confidential Consultation',
+    start_date: now.split('T')[0],
+    next_milestone: null,
+    property: input.property,
+    notes: input.notes || null,
+    created_at: now,
+    updated_at: now,
+  };
+
+  if (!isSupabaseConfigured()) {
+    const db = getDatabase();
+    const { saveDatabase } = await import('./testData');
+    db.engagements.push({
+      id: newEng.id,
+      clientId: input.client_id,
+      type: input.type,
+      phase: parseInt(input.phase || '1') as 1 | 2 | 3 | 4,
+      phaseLabel: newEng.phase_label,
+      startDate: newEng.start_date,
+      nextMilestone: '',
+      property: input.property,
+      notes: input.notes || '',
+    });
+    saveDatabase(db);
+    return newEng;
+  }
+  const { data } = await getSupabase().from('engagements').insert(input as Record<string, unknown>).select().single();
+  return (data as Engagement) || newEng;
+}
+
+export async function updateEngagement(
+  engagementId: string,
+  updates: Partial<Pick<Engagement, 'type' | 'phase' | 'phase_label' | 'next_milestone' | 'notes'>>,
+): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    const db = getDatabase();
+    const eng = db.engagements.find(e => e.id === engagementId);
+    if (eng) {
+      if (updates.type !== undefined) eng.type = updates.type;
+      if (updates.phase !== undefined) eng.phase = parseInt(updates.phase) as 1 | 2 | 3 | 4;
+      if (updates.phase_label !== undefined) eng.phaseLabel = updates.phase_label;
+      if (updates.next_milestone !== undefined) eng.nextMilestone = updates.next_milestone || '';
+      if (updates.notes !== undefined) eng.notes = updates.notes || '';
+      const { saveDatabase } = await import('./testData');
+      saveDatabase(db);
+    }
+    return;
+  }
+  await getSupabase().from('engagements').update({ ...updates, updated_at: new Date().toISOString() } as Record<string, unknown>).eq('id', engagementId);
+}
+
+/* ── CRUD: Invoices ── */
+
+export async function createInvoice(input: {
+  client_id: string;
+  engagement_id: string;
+  invoice_number: string;
+  description: string;
+  amount: number;
+  due_date: string;
+  status?: Invoice['status'];
+  notes?: string;
+}): Promise<Invoice> {
+  const now = new Date().toISOString();
+  const newInv: Invoice = {
+    id: `inv_${Date.now()}`,
+    client_id: input.client_id,
+    engagement_id: input.engagement_id,
+    invoice_number: input.invoice_number,
+    description: input.description,
+    amount: input.amount,
+    status: input.status || 'draft',
+    due_date: input.due_date,
+    paid_date: null,
+    pdf_path: null,
+    notes: input.notes || null,
+    created_at: now,
+    updated_at: now,
+  };
+
+  if (!isSupabaseConfigured()) {
+    // Demo mode: add to in-memory list (invoices are hardcoded, so store override)
+    const key = 'jr_advisory_custom_invoices';
+    const existing = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(key) || '[]') : [];
+    existing.push(newInv);
+    if (typeof window !== 'undefined') localStorage.setItem(key, JSON.stringify(existing));
+    return newInv;
+  }
+  const { data } = await getSupabase().from('invoices').insert(input as Record<string, unknown>).select().single();
+  return (data as Invoice) || newInv;
+}
+
+export async function updateInvoice(
+  invoiceId: string,
+  updates: Partial<Pick<Invoice, 'status' | 'amount' | 'description' | 'due_date' | 'paid_date' | 'notes'>>,
+): Promise<void> {
+  if (!isSupabaseConfigured()) {
+    // Demo mode: update in custom invoices store or demo list
+    const key = 'jr_advisory_custom_invoices';
+    const existing: Invoice[] = typeof window !== 'undefined' ? JSON.parse(localStorage.getItem(key) || '[]') : [];
+    const idx = existing.findIndex(i => i.id === invoiceId);
+    if (idx >= 0) {
+      existing[idx] = { ...existing[idx], ...updates, updated_at: new Date().toISOString() };
+      if (typeof window !== 'undefined') localStorage.setItem(key, JSON.stringify(existing));
+    }
+    return;
+  }
+  await getSupabase().from('invoices').update({ ...updates, updated_at: new Date().toISOString() } as Record<string, unknown>).eq('id', invoiceId);
+}
+
 /* ── Demo Invoices ── */
 const DEMO_INVOICES: Invoice[] = [
   {
