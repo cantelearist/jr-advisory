@@ -334,7 +334,8 @@ export default function PortalTimeline() {
         }
 
         @media (max-width: 768px) {
-          .tl__main { padding: 100px 20px 60px; }
+          .tl__main { padding: 100px 16px 40px; }
+          .tl__header h1 { font-size: 28px; }
           .tl__phase-header { flex-wrap: wrap; padding: 20px; gap: 16px; }
           .tl__phase-badge { order: -1; }
           .tl__events { padding-left: 20px; margin-left: 20px; }

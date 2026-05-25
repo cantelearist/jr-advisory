@@ -59,7 +59,8 @@ function PortalLogin() {
         setPhase('entering');
         const role = data.user.user_metadata?.role || 'client';
         const redirect = searchParams.get('redirect');
-        const dest = redirect || (role === 'admin' ? '/portal/admin' : '/portal/dashboard');
+        const onboarded = data.user.user_metadata?.onboarded !== false;
+        const dest = redirect || (role === 'admin' ? '/portal/admin' : (!onboarded ? '/portal/welcome' : '/portal/dashboard'));
         setTimeout(() => router.push(dest), 1600);
       }
     } catch {

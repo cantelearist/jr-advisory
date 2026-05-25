@@ -96,6 +96,7 @@ export async function POST(req: NextRequest) {
       user_metadata: {
         full_name: client.name,
         role: 'client',
+        onboarded: false,
       },
     });
 

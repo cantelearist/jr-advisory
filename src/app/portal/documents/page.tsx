@@ -746,10 +746,13 @@ export default function PortalDocuments() {
 
         @media (max-width: 768px) {
           .vault__main {
-            padding: 100px 20px 40px;
+            padding: 100px 16px 40px;
           }
+          .vault__header h1 { font-size: 28px; }
+          .vault__filters { flex-wrap: wrap; gap: 6px; }
+          .vault__filters button { font-size: 9px; padding: 6px 10px; }
           .vault__doc {
-            flex-wrap: wrap;
+            flex-wrap: wrap; padding: 16px;
             gap: 12px;
             padding: 16px;
           }
