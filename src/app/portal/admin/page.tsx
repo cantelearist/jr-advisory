@@ -12,7 +12,7 @@ import {
   createEngagement, updateEngagement,
   createInvoice, updateInvoice,
 } from '@/lib/data';
-import type { Client, Engagement, Invoice, Document as DBDocument, AuditLogEntry } from '@/lib/database.types';
+import type { Client, Engagement, Invoice, Document as DBDocument, AuditLogEntry, Todo } from '@/lib/database.types';
 import ClientModal, { type ClientFormData } from '@/components/portal/admin/ClientModal';
 import EngagementModal, { type EngagementFormData } from '@/components/portal/admin/EngagementModal';
 import InvoiceModal, { type InvoiceFormData } from '@/components/portal/admin/InvoiceModal';
@@ -52,6 +52,12 @@ export default function AdminPanel() {
   const [adminMessages, setAdminMessages] = useState<Message[]>([]);
   const [msgClientFilter, setMsgClientFilter] = useState<string>('all');
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
+  const [todos, setTodos] = useState<Todo[]>([]);
+  const [newTodoTitle, setNewTodoTitle] = useState('');
+  const [newTodoPriority, setNewTodoPriority] = useState<'urgent' | 'high' | 'normal' | 'low'>('normal');
+  const [newTodoClientId, setNewTodoClientId] = useState<string>('');
+  const [newTodoDue, setNewTodoDue] = useState('');
+  const [newTodoVisible, setNewTodoVisible] = useState(false);
   const [loaded, setLoaded] = useState(false);
   const [inviteStatus, setInviteStatus] = useState<Record<string, string>>({});
 
@@ -97,6 +103,7 @@ export default function AdminPanel() {
       setInvoices(data.invoices);
       setDocuments(data.documents || []);
       setAuditLog(data.auditLog || []);
+      setTodos((data.todos || []) as Todo[]);
     } catch {
       // Fallback to direct queries
       const [c, e, i] = await Promise.all([
@@ -128,7 +135,59 @@ export default function AdminPanel() {
     if (tab === 'messages') loadMessages(msgClientFilter !== 'all' ? msgClientFilter : undefined);
   }, [tab, loadMessages, msgClientFilter]);
 
+  /* Todo handlers */
+  const addTodo = async () => {
+    if (!newTodoTitle.trim()) return;
+    try {
+      const res = await fetch('/api/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: newTodoTitle.trim(),
+          priority: newTodoPriority,
+          client_id: newTodoClientId || null,
+          due_date: newTodoDue || null,
+          visible_to_client: newTodoVisible,
+        }),
+      });
+      const data = await res.json();
+      if (data.id) {
+        setTodos(prev => [data, ...prev]);
+        setNewTodoTitle('');
+        setNewTodoPriority('normal');
+        setNewTodoClientId('');
+        setNewTodoDue('');
+        setNewTodoVisible(false);
+      }
+    } catch { /* skip */ }
+  };
+
+  const toggleTodo = async (todo: Todo) => {
+    const next = todo.status === 'done' ? 'pending' : 'done';
+    try {
+      const res = await fetch(`/api/todos/${todo.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: next }),
+      });
+      const data = await res.json();
+      if (data.id) setTodos(prev => prev.map(t => t.id === data.id ? data : t));
+    } catch { /* skip */ }
+  };
+
+  const deleteTodo = async (id: string) => {
+    try {
+      await fetch(`/api/todos/${id}`, { method: 'DELETE' });
+      setTodos(prev => prev.filter(t => t.id !== id));
+    } catch { /* skip */ }
+  };
+
   /* Computed */
+  const urgentTodos = todos.filter(t => t.status !== 'done' && (t.priority === 'urgent' || t.priority === 'high'));
+  const overdueTodos = todos.filter(t => t.status !== 'done' && t.due_date && new Date(t.due_date) < new Date());
+  const overdueInvoices = invoices.filter(i => i.status === 'overdue');
+  const pendingTodos = todos.filter(t => t.status !== 'done');
+  const alertCount = urgentTodos.length + overdueTodos.length + overdueInvoices.length;
   const activeClients = clients.filter(c => c.status === 'active').length;
   const totalRevenue = invoices.reduce((s, i) => s + Number(i.amount), 0);
   const paidRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.amount), 0);
@@ -375,7 +434,7 @@ export default function AdminPanel() {
               </div>
 
               {/* Quick stats row */}
-              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 48 }}>
                 <div style={{ ...cardStyle, padding: 24, borderRadius: 12 }}>
                   <p className="mono" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>OUTSTANDING</p>
                   <p className="display" style={{ fontSize: 24, color: outstanding > 0 ? '#c9a96e' : '#4ade80', margin: 0 }}>{formatCurrency(outstanding)}</p>
@@ -383,6 +442,215 @@ export default function AdminPanel() {
                 <div style={{ ...cardStyle, padding: 24, borderRadius: 12 }}>
                   <p className="mono" style={{ color: 'rgba(255,255,255,0.4)', fontSize: 10, letterSpacing: 2, marginBottom: 12 }}>ACTIVE ENGAGEMENTS</p>
                   <p className="display" style={{ fontSize: 24, margin: 0 }}>{engagements.length}</p>
+                </div>
+              </div>
+
+              {/* ── URGENT TASKS ALERT ── */}
+              {alertCount > 0 && (
+                <div style={{
+                  background: 'rgba(239,68,68,0.06)',
+                  border: '1px solid rgba(239,68,68,0.2)',
+                  borderRadius: 12,
+                  padding: '20px 24px',
+                  marginBottom: 32,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 16,
+                }}>
+                  <span style={{ fontSize: 20, color: '#ef4444', lineHeight: 1.4 }}>⚠</span>
+                  <div style={{ flex: 1 }}>
+                    <p className="mono" style={{ fontSize: 11, color: '#ef4444', letterSpacing: 2, margin: '0 0 10px', fontWeight: 600 }}>
+                      {alertCount} ITEM{alertCount > 1 ? 'S' : ''} REQUIRING ATTENTION
+                    </p>
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+                      {urgentTodos.map(t => (
+                        <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{
+                            fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 1,
+                            padding: '2px 8px', borderRadius: 3,
+                            background: t.priority === 'urgent' ? 'rgba(239,68,68,0.15)' : 'rgba(245,158,11,0.15)',
+                            color: t.priority === 'urgent' ? '#ef4444' : '#f59e0b',
+                          }}>
+                            {t.priority.toUpperCase()}
+                          </span>
+                          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{t.title}</span>
+                          {t.client_id && (() => { const c = clients.find(cl => cl.id === t.client_id); return c ? <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)' }}>— {c.name}</span> : null; })()}
+                        </div>
+                      ))}
+                      {overdueTodos.filter(t => !urgentTodos.includes(t)).map(t => (
+                        <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 1, padding: '2px 8px', borderRadius: 3, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>OVERDUE</span>
+                          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{t.title}</span>
+                        </div>
+                      ))}
+                      {overdueInvoices.map(inv => (
+                        <div key={inv.id} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                          <span style={{ fontSize: 9, fontFamily: "'JetBrains Mono', monospace", letterSpacing: 1, padding: '2px 8px', borderRadius: 3, background: 'rgba(239,68,68,0.15)', color: '#ef4444' }}>OVERDUE INV</span>
+                          <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.75)' }}>{inv.invoice_number} — {formatCurrency(Number(inv.amount))}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* ── TO-DO LIST ── */}
+              <div style={{ marginBottom: 48 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 20 }}>
+                  <h2 className="display" style={{ fontSize: 24, margin: 0 }}>To-Do List</h2>
+                  <span className="mono" style={{ fontSize: 11, color: 'rgba(255,255,255,0.25)', letterSpacing: 1.5 }}>
+                    {pendingTodos.length} OPEN · {todos.filter(t => t.status === 'done').length} DONE
+                  </span>
+                </div>
+
+                {/* Add todo form */}
+                <div style={{
+                  ...cardStyle, padding: '16px 20px', marginBottom: 16, borderRadius: 10,
+                  display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap',
+                }}>
+                  <input
+                    value={newTodoTitle}
+                    onChange={e => setNewTodoTitle(e.target.value)}
+                    onKeyDown={e => e.key === 'Enter' && addTodo()}
+                    placeholder="Add a task…"
+                    style={{
+                      flex: 1, minWidth: 200, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 6, padding: '10px 14px', color: '#fff', fontSize: 13, fontFamily: 'Inter, sans-serif',
+                      outline: 'none',
+                    }}
+                  />
+                  <select
+                    value={newTodoPriority}
+                    onChange={e => setNewTodoPriority(e.target.value as 'urgent' | 'high' | 'normal' | 'low')}
+                    style={{
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 6, padding: '10px 12px', color: 'rgba(255,255,255,0.6)', fontSize: 11,
+                      fontFamily: "'JetBrains Mono', monospace", letterSpacing: 1, cursor: 'pointer',
+                    }}
+                  >
+                    <option value="urgent">URGENT</option>
+                    <option value="high">HIGH</option>
+                    <option value="normal">NORMAL</option>
+                    <option value="low">LOW</option>
+                  </select>
+                  <select
+                    value={newTodoClientId}
+                    onChange={e => setNewTodoClientId(e.target.value)}
+                    style={{
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 6, padding: '10px 12px', color: 'rgba(255,255,255,0.6)', fontSize: 11,
+                      fontFamily: "'JetBrains Mono', monospace", letterSpacing: 1, cursor: 'pointer', maxWidth: 160,
+                    }}
+                  >
+                    <option value="">NO CLIENT</option>
+                    {clients.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+                  </select>
+                  <input
+                    type="date"
+                    value={newTodoDue}
+                    onChange={e => setNewTodoDue(e.target.value)}
+                    style={{
+                      background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 6, padding: '10px 12px', color: 'rgba(255,255,255,0.6)', fontSize: 11,
+                      fontFamily: "'JetBrains Mono', monospace", cursor: 'pointer',
+                    }}
+                  />
+                  <label style={{ display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer', fontSize: 11, color: 'rgba(255,255,255,0.4)' }}>
+                    <input type="checkbox" checked={newTodoVisible} onChange={e => setNewTodoVisible(e.target.checked)} />
+                    Client-visible
+                  </label>
+                  <button onClick={addTodo} style={{ ...addBtnStyle, padding: '10px 20px' }}>+ ADD</button>
+                </div>
+
+                {/* Todo items */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                  {todos.length === 0 && (
+                    <div style={{ ...cardStyle, padding: 40, textAlign: 'center', borderRadius: 10 }}>
+                      <p style={{ color: 'rgba(255,255,255,0.2)', margin: 0, fontStyle: 'italic' }}>No tasks yet. Add one above.</p>
+                    </div>
+                  )}
+                  {todos.map(todo => {
+                    const isDone = todo.status === 'done';
+                    const isOverdue = !isDone && todo.due_date && new Date(todo.due_date) < new Date();
+                    const client = clients.find(c => c.id === todo.client_id);
+                    const prioColors: Record<string, string> = { urgent: '#ef4444', high: '#f59e0b', normal: '#60a5fa', low: 'rgba(255,255,255,0.25)' };
+                    return (
+                      <div
+                        key={todo.id}
+                        style={{
+                          display: 'grid', gridTemplateColumns: '32px 1fr auto auto',
+                          gap: 12, alignItems: 'center', padding: '12px 16px',
+                          background: isDone ? 'rgba(255,255,255,0.01)' : 'rgba(255,255,255,0.02)',
+                          borderRadius: 8, border: `1px solid ${isOverdue ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.04)'}`,
+                          opacity: isDone ? 0.45 : 1, transition: 'all 0.2s ease',
+                        }}
+                      >
+                        {/* Checkbox */}
+                        <button
+                          onClick={() => toggleTodo(todo)}
+                          style={{
+                            width: 22, height: 22, borderRadius: 5, cursor: 'pointer',
+                            background: isDone ? 'rgba(74,222,128,0.15)' : 'transparent',
+                            border: `2px solid ${isDone ? '#4ade80' : prioColors[todo.priority] || '#555'}`,
+                            display: 'flex', alignItems: 'center', justifyContent: 'center',
+                            color: '#4ade80', fontSize: 12, padding: 0,
+                          }}
+                        >
+                          {isDone ? '✓' : ''}
+                        </button>
+
+                        {/* Content */}
+                        <div>
+                          <span style={{
+                            fontSize: 14, color: isDone ? 'rgba(255,255,255,0.35)' : 'rgba(255,255,255,0.85)',
+                            textDecoration: isDone ? 'line-through' : 'none',
+                          }}>
+                            {todo.title}
+                          </span>
+                          <div style={{ display: 'flex', gap: 8, marginTop: 3, flexWrap: 'wrap' }}>
+                            <span className="mono" style={{
+                              fontSize: 9, letterSpacing: 1, padding: '1px 6px', borderRadius: 3,
+                              background: `${prioColors[todo.priority]}15`, color: prioColors[todo.priority],
+                            }}>
+                              {todo.priority.toUpperCase()}
+                            </span>
+                            {client && (
+                              <span style={{ fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>{client.name}</span>
+                            )}
+                            {todo.due_date && (
+                              <span className="mono" style={{
+                                fontSize: 10, color: isOverdue ? '#ef4444' : 'rgba(255,255,255,0.2)',
+                              }}>
+                                {isOverdue ? '⚠ ' : ''}Due {new Date(todo.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                              </span>
+                            )}
+                            {todo.visible_to_client && (
+                              <span style={{ fontSize: 9, color: '#c9a96e', opacity: 0.6 }}>👁 client-visible</span>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* Date */}
+                        <span className="mono" style={{ fontSize: 10, color: 'rgba(255,255,255,0.15)' }}>
+                          {new Date(todo.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+
+                        {/* Delete */}
+                        <button
+                          onClick={() => deleteTodo(todo.id)}
+                          style={{
+                            background: 'none', border: 'none', color: 'rgba(255,255,255,0.15)',
+                            cursor: 'pointer', fontSize: 14, padding: '4px 8px',
+                            transition: 'color 0.2s', borderRadius: 4,
+                          }}
+                          onMouseEnter={e => (e.currentTarget.style.color = '#ef4444')}
+                          onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.15)')}
+                        >
+                          ✕
+                        </button>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             </>

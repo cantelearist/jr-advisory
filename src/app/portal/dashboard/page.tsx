@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import PortalNav from '@/components/portal/PortalNav';
 import { useAuth } from '@/components/portal/AuthProvider';
 import { getMyPortalData, type PortalData } from '@/lib/portal-data';
-import type { Client, Engagement } from '@/lib/database.types';
+import type { Client, Engagement, Todo } from '@/lib/database.types';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
@@ -53,6 +53,9 @@ export default function PortalDashboard() {
   const docs = portalData?.documents || [];
   const msgs = portalData?.messages || [];
   const unreadMsgs = msgs.filter(m => !m.read).length;
+  const clientTodos: Todo[] = portalData?.todos || [];
+  const urgentClientTodos = clientTodos.filter(t => t.priority === 'urgent' || t.priority === 'high');
+  const overdueClientInvoices = (portalData?.invoices || []).filter(i => i.status === 'overdue');
 
   const daysSince = engagement
     ? Math.floor((Date.now() - new Date(engagement.start_date).getTime()) / 86400000)
@@ -153,6 +156,55 @@ export default function PortalDashboard() {
                 <span>Next: {engagement.next_milestone}</span>
               </div>
             )}
+          </section>
+        )}
+
+        {/* ── URGENT TASKS ALERT ── */}
+        {(urgentClientTodos.length > 0 || overdueClientInvoices.length > 0) && (
+          <section className="dash__alert" style={{ animationDelay: '0.5s' }}>
+            <div className="dash__alert-inner">
+              <span className="dash__alert-icon">⚠</span>
+              <div className="dash__alert-content">
+                <span className="dash__alert-title">Action Required</span>
+                {urgentClientTodos.map(t => (
+                  <p key={t.id} className="dash__alert-item">{t.title}{t.due_date ? ` — due ${new Date(t.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}` : ''}</p>
+                ))}
+                {overdueClientInvoices.map(inv => (
+                  <p key={inv.id} className="dash__alert-item">Invoice {inv.invoice_number} overdue — {new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(Number(inv.amount))}</p>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ── CLIENT TO-DO LIST ── */}
+        {clientTodos.length > 0 && (
+          <section className="dash__todos" style={{ animationDelay: '0.55s' }}>
+            <div className="dash__section-header">
+              <span className="dash__section-label">ACTION ITEMS</span>
+              <span className="dash__section-sub">{clientTodos.length} item{clientTodos.length !== 1 ? 's' : ''}</span>
+            </div>
+            <div className="dash__todo-list">
+              {clientTodos.map(todo => {
+                const prioColors: Record<string, string> = { urgent: '#ef4444', high: '#f59e0b', normal: '#60a5fa', low: 'rgba(255,255,255,0.25)' };
+                const isOverdue = todo.due_date && new Date(todo.due_date) < new Date();
+                return (
+                  <div key={todo.id} className="dash__todo-item" style={{ borderLeftColor: prioColors[todo.priority] }}>
+                    <div className="dash__todo-content">
+                      <span className="dash__todo-title">{todo.title}</span>
+                      {todo.description && <span className="dash__todo-desc">{todo.description}</span>}
+                    </div>
+                    <div className="dash__todo-meta">
+                      {todo.due_date && (
+                        <span className={`dash__todo-due${isOverdue ? ' dash__todo-due--overdue' : ''}`}>
+                          {isOverdue ? '⚠ ' : ''}Due {new Date(todo.due_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </section>
         )}
 
@@ -357,6 +409,50 @@ export default function PortalDashboard() {
           font-family: 'Inter', sans-serif; font-size: 12px;
           color: rgba(255,255,255,0.2); letter-spacing: 0.15em;
         }
+        .dash__alert {
+          margin-bottom: 40px;
+        }
+        .dash__alert-inner {
+          display: flex; align-items: flex-start; gap: 16px;
+          padding: 24px 28px;
+          background: rgba(239,68,68,0.04);
+          border: 1px solid rgba(239,68,68,0.15);
+          backdrop-filter: blur(10px);
+        }
+        .dash__alert-icon { font-size: 18; color: #ef4444; flex-shrink: 0; line-height: 1.5; }
+        .dash__alert-content { flex: 1; }
+        .dash__alert-title {
+          display: block; font-family: 'Inter', sans-serif; font-size: 11px;
+          letter-spacing: 0.25em; color: #ef4444; text-transform: uppercase;
+          font-weight: 600; margin-bottom: 10px;
+        }
+        .dash__alert-item {
+          font-family: 'Inter', sans-serif; font-size: 13px;
+          color: rgba(255,255,255,0.7); margin: 4px 0; line-height: 1.5;
+        }
+        .dash__todos { margin-bottom: 48px; }
+        .dash__todo-list { display: flex; flex-direction: column; gap: 8px; }
+        .dash__todo-item {
+          display: flex; justify-content: space-between; align-items: center;
+          padding: 18px 24px; border-left: 3px solid rgba(255,255,255,0.1);
+          background: rgba(255,255,255,0.02); transition: all 0.3s ease;
+        }
+        .dash__todo-item:hover { padding-left: 28px; background: rgba(255,255,255,0.03); }
+        .dash__todo-content { display: flex; flex-direction: column; gap: 4px; }
+        .dash__todo-title {
+          font-family: 'Inter', sans-serif; font-size: 14px;
+          color: rgba(255,255,255,0.8); letter-spacing: 0.02em;
+        }
+        .dash__todo-desc {
+          font-family: 'Inter', sans-serif; font-size: 12px;
+          color: rgba(255,255,255,0.3); letter-spacing: 0.02em;
+        }
+        .dash__todo-meta { display: flex; align-items: center; gap: 12px; }
+        .dash__todo-due {
+          font-family: 'Inter', sans-serif; font-size: 11px;
+          color: rgba(255,255,255,0.25); letter-spacing: 0.05em;
+        }
+        .dash__todo-due--overdue { color: #ef4444; }
         @keyframes dashReveal {
           from { opacity: 0; transform: translateY(30px); filter: blur(4px); }
           to { opacity: 1; transform: translateY(0); filter: blur(0); }

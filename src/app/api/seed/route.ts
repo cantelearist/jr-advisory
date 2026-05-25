@@ -23,6 +23,7 @@ const M = (n: number) => `f0000000-f000-4000-a000-00000000${pad(n)}`; // message
 const T = (n: number) => `a0000000-a000-4000-a000-00000000${pad(n)}`; // timeline
 const I = (n: number) => `b0000000-b000-4000-a000-00000000${pad(n)}`; // invoices
 const N = (n: number) => `11000000-1100-4000-a000-00000000${pad(n)}`; // ndas
+const TD = (n: number) => `b0000000-b000-4000-a000-00000000${pad(n)}`; // todos
 
 export async function POST(request: Request) {
   try {
@@ -36,6 +37,7 @@ export async function POST(request: Request) {
     const sb = adminClient();
 
     /* ── Wipe existing data (order matters for FK) ── */
+    await sb.from('todos').delete().not('id', 'is', null);
     await sb.from('audit_log').delete().not('id', 'is', null);
     await sb.from('nda_records').delete().not('id', 'is', null);
     await sb.from('timeline_events').delete().not('id', 'is', null);
@@ -328,6 +330,23 @@ export async function POST(request: Request) {
     const { error: nErr } = await sb.from('nda_records').insert(ndas);
     if (nErr) throw new Error(`nda_records: ${nErr.message}`);
 
+    /* ════════════════════════════════════════════════
+       TODOS
+       ════════════════════════════════════════════════ */
+    const todos = [
+      { id: TD(1),  client_id: C(1), engagement_id: E(1), title: 'Schedule walk-through with Alexandra', description: 'Confirm contractor availability for next week', priority: 'urgent',  status: 'pending',     due_date: '2026-05-28', visible_to_client: true,  created_by: null, assigned_to: null },
+      { id: TD(2),  client_id: C(1), engagement_id: E(1), title: 'Review vendor shortlist proposals',    description: 'Three proposals received — compare scope and pricing',                    priority: 'high',    status: 'pending',     due_date: '2026-05-30', visible_to_client: false, created_by: null, assigned_to: null },
+      { id: TD(3),  client_id: C(2), engagement_id: E(2), title: 'Send Building B survey results',       description: null,                                                                    priority: 'high',    status: 'in_progress', due_date: '2026-06-01', visible_to_client: true,  created_by: null, assigned_to: null },
+      { id: TD(4),  client_id: C(3), engagement_id: E(3), title: 'Collect signed NDA addendum',          description: 'Park family needs to sign updated terms',                                priority: 'normal',  status: 'pending',     due_date: '2026-06-05', visible_to_client: true,  created_by: null, assigned_to: null },
+      { id: TD(5),  client_id: C(5), engagement_id: E(5), title: 'Order Phase I ESA report',             description: 'Pre-purchase environmental assessment for Nakamura acquisition',           priority: 'normal',  status: 'pending',     due_date: '2026-06-10', visible_to_client: false, created_by: null, assigned_to: null },
+      { id: TD(6),  client_id: null,  engagement_id: null, title: 'Update fee schedule for Q3',           description: 'Review and adjust rates across all service tiers',                        priority: 'low',     status: 'pending',     due_date: '2026-06-15', visible_to_client: false, created_by: null, assigned_to: null },
+      { id: TD(7),  client_id: C(4), engagement_id: E(4), title: 'File final clearance certificate',     description: 'Submit to county records',                                                priority: 'normal',  status: 'done',        due_date: '2026-05-20', visible_to_client: false, created_by: null, assigned_to: null, completed_at: '2026-05-20T10:00:00Z' },
+      { id: TD(8),  client_id: C(1), engagement_id: E(1), title: 'Prepare phase transition memo',        description: 'Document readiness for Phase IV oversight',                               priority: 'urgent',  status: 'pending',     due_date: '2026-05-26', visible_to_client: true,  created_by: null, assigned_to: null },
+    ];
+
+    const { error: tdErr } = await sb.from('todos').insert(todos);
+    if (tdErr) throw new Error(`todos: ${tdErr.message}`);
+
     /* ── Summary ── */
     const summary = {
       success: true,
@@ -339,6 +358,7 @@ export async function POST(request: Request) {
         messages: messages.length,
         timeline_events: timeline.length,
         nda_records: ndas.length,
+        todos: todos.length,
       },
       total_billed: invoices.reduce((s, i) => s + i.amount, 0),
       total_collected: invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0),

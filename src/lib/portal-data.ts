@@ -7,6 +7,7 @@ import type {
   Message,
   TimelineEvent,
   Invoice,
+  Todo,
 } from './database.types';
 
 /* Client's own record (RLS returns only theirs) */
@@ -69,6 +70,18 @@ export async function getMyInvoices(supabase: SupabaseClient): Promise<Invoice[]
   return (data as Invoice[]) || [];
 }
 
+/* Client's visible todos */
+export async function getMyTodos(supabase: SupabaseClient): Promise<Todo[]> {
+  const { data } = await supabase
+    .from('todos')
+    .select('*')
+    .eq('visible_to_client', true)
+    .neq('status', 'done')
+    .order('priority', { ascending: true })
+    .order('created_at', { ascending: false });
+  return (data as Todo[]) || [];
+}
+
 /* Full portal data bundle (single fetch, good for dashboard) */
 export interface PortalData {
   client: Client | null;
@@ -77,16 +90,18 @@ export interface PortalData {
   messages: Message[];
   timeline: TimelineEvent[];
   invoices: Invoice[];
+  todos: Todo[];
 }
 
 export async function getMyPortalData(supabase: SupabaseClient): Promise<PortalData> {
   // Parallel fetches — RLS ensures per-user filtering
-  const [client, engagement, documents, messages, invoices] = await Promise.all([
+  const [client, engagement, documents, messages, invoices, todos] = await Promise.all([
     getMyClient(supabase),
     getMyEngagement(supabase),
     getMyDocuments(supabase),
     getMyMessages(supabase),
     getMyInvoices(supabase),
+    getMyTodos(supabase),
   ]);
 
   let timeline: TimelineEvent[] = [];
@@ -94,5 +109,5 @@ export async function getMyPortalData(supabase: SupabaseClient): Promise<PortalD
     timeline = await getMyTimeline(supabase, engagement.id);
   }
 
-  return { client, engagement, documents, messages, timeline, invoices };
+  return { client, engagement, documents, messages, timeline, invoices, todos };
 }

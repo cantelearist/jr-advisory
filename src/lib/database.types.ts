@@ -9,6 +9,8 @@ export type MsgSender = 'firm' | 'client';
 export type TimelineType = 'milestone' | 'document' | 'meeting' | 'update';
 export type InvoiceStatus = 'draft' | 'sent' | 'paid' | 'overdue' | 'cancelled';
 export type UserRole = 'admin' | 'client';
+export type TodoPriority = 'urgent' | 'high' | 'normal' | 'low';
+export type TodoStatus = 'pending' | 'in_progress' | 'done';
 
 export interface Profile {
   id: string;
@@ -117,6 +119,23 @@ export interface AuditLogEntry {
   created_at: string;
 }
 
+export interface Todo {
+  id: string;
+  client_id: string | null;
+  engagement_id: string | null;
+  assigned_to: string | null;
+  title: string;
+  description: string | null;
+  priority: TodoPriority;
+  status: TodoStatus;
+  due_date: string | null;
+  completed_at: string | null;
+  visible_to_client: boolean;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface NdaRecord {
   id: string;
   client_id: string;
@@ -140,6 +159,7 @@ export interface Database {
       timeline_events: { Row: TimelineEvent; Insert: Partial<TimelineEvent> & { engagement_id: string; phase: EngagementPhase; title: string }; Update: Partial<TimelineEvent> };
       invoices: { Row: Invoice; Insert: Partial<Invoice> & { client_id: string; engagement_id: string; invoice_number: string; description: string; amount: number; due_date: string }; Update: Partial<Invoice> };
       audit_log: { Row: AuditLogEntry; Insert: Partial<AuditLogEntry> & { action: string; entity_type: string }; Update: Partial<AuditLogEntry> };
+      todos: { Row: Todo; Insert: Partial<Todo> & { title: string }; Update: Partial<Todo> };
       nda_records: { Row: NdaRecord; Insert: Partial<NdaRecord> & { client_id: string; signed_date: string }; Update: Partial<NdaRecord> };
     };
     Functions: {

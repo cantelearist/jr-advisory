@@ -476,6 +476,7 @@ export interface AdminData {
   documents: Document[];
   timeline: TimelineEvent[];
   auditLog: { id: string; user_id: string | null; action: string; entity_type: string; entity_id: string | null; metadata: Record<string, unknown> | null; ip_address: string | null; created_at: string }[];
+  todos: { id: string; client_id: string | null; engagement_id: string | null; assigned_to: string | null; title: string; description: string | null; priority: string; status: string; due_date: string | null; completed_at: string | null; visible_to_client: boolean; created_by: string | null; created_at: string; updated_at: string }[];
 }
 
 export async function fetchAdminData(): Promise<AdminData> {
@@ -490,6 +491,7 @@ export async function fetchAdminData(): Promise<AdminData> {
       documents: db.documents.map(toDocument),
       timeline: db.timeline.map(toTimelineEvent),
       auditLog: [],
+      todos: [],
     };
   }
   // Use server API route (bypasses RLS with service role key)
@@ -505,6 +507,7 @@ export async function fetchAdminData(): Promise<AdminData> {
       documents: data.documents || [],
       timeline: data.timeline || [],
       auditLog: data.auditLog || [],
+      todos: data.todos || [],
     };
   } catch (e) {
     console.error('fetchAdminData failed, falling back to localStorage', e);
@@ -517,6 +520,7 @@ export async function fetchAdminData(): Promise<AdminData> {
       documents: db.documents.map(toDocument),
       timeline: db.timeline.map(toTimelineEvent),
       auditLog: [],
+      todos: [],
     };
   }
 }
