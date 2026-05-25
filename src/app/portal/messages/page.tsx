@@ -51,7 +51,7 @@ export default function MessagesPage() {
     } catch { /* ignore */ }
   }, [selectedClientId]);
 
-  // Initial load
+  // Initial load — with API fallback for reliable client ID resolution
   useEffect(() => {
     if (authLoading) return;
     const init = async () => {
@@ -66,6 +66,17 @@ export default function MessagesPage() {
         }
       } else if (clientRecord) {
         setSelectedClientId(clientRecord.id);
+      } else {
+        // Fallback: get client ID from portal data API (bypasses RLS)
+        try {
+          const portalRes = await fetch('/api/portal/data');
+          if (portalRes.ok) {
+            const portalData = await portalRes.json();
+            if (portalData.client?.id) {
+              setSelectedClientId(portalData.client.id);
+            }
+          }
+        } catch { /* ignore */ }
       }
       setLoading(false);
     };

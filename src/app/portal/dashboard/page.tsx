@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import dynamic from 'next/dynamic';
 import PortalNav from '@/components/portal/PortalNav';
 import { useAuth } from '@/components/portal/AuthProvider';
-import { getMyPortalData, type PortalData } from '@/lib/portal-data';
+import { fetchPortalData, type PortalData } from '@/lib/portal-data';
 import type { Client, Engagement, Todo } from '@/lib/database.types';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
@@ -26,7 +26,7 @@ export default function PortalDashboard() {
     if (authLoading || !user) return;
 
     const fetchData = async () => {
-      const data = await getMyPortalData(supabase);
+      const data = await fetchPortalData();
       setPortalData(data);
       setLoaded(true);
     };

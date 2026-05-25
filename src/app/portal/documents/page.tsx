@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import PortalNav from "@/components/portal/PortalNav";
 import { useAuth } from "@/components/portal/AuthProvider";
-import { getMyDocuments } from "@/lib/portal-data";
+import { fetchPortalData } from "@/lib/portal-data";
 import type { Document as DBDocument } from "@/lib/database.types";
 
 const Scene3D = dynamic(() => import("@/components/portal/Scene3D"), {
@@ -265,8 +265,8 @@ export default function PortalDocuments() {
 
   useEffect(() => {
     if (authLoading || !user) return;
-    getMyDocuments(supabase).then(setClientDocs);
-  }, [supabase, user, authLoading]);
+    fetchPortalData().then(data => setClientDocs(data.documents));
+  }, [user, authLoading]);
 
   const DOCUMENTS: DocItem[] = clientDocs.map((d, i) => ({
     id: i + 1,
