@@ -257,16 +257,17 @@ interface DocItem {
 }
 
 export default function PortalDocuments() {
-  const { supabase, user, loading: authLoading } = useAuth();
+  const { supabase } = useAuth();
   const [activeCategory, setActiveCategory] = useState("All");
   const [hoveredDoc, setHoveredDoc] = useState<number | null>(null);
   const [clientDocs, setClientDocs] = useState<DBDocument[]>([]);
   const [viewingDoc, setViewingDoc] = useState<DocItem | null>(null);
 
   useEffect(() => {
-    if (authLoading || !user) return;
-    fetchPortalData().then(data => setClientDocs(data.documents));
-  }, [user, authLoading]);
+    fetchPortalData().then(data => {
+      if (data.documents.length > 0) setClientDocs(data.documents);
+    });
+  }, []);
 
   const DOCUMENTS: DocItem[] = clientDocs.map((d, i) => ({
     id: i + 1,

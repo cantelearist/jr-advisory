@@ -51,37 +51,37 @@ export default function MessagesPage() {
     } catch { /* ignore */ }
   }, [selectedClientId]);
 
-  // Initial load — with API fallback for reliable client ID resolution
+  // Initial load — portal API first, then admin fallback
   useEffect(() => {
-    if (authLoading) return;
     const init = async () => {
-      if (isAdmin) {
-        // Admin: fetch all clients from admin API
-        const res = await fetch('/api/admin');
-        const data = await res.json();
-        const clientList = data.clients || [];
-        setClients(clientList);
-        if (clientList.length > 0) {
-          setSelectedClientId(clientList[0].id);
-        }
-      } else if (clientRecord) {
-        setSelectedClientId(clientRecord.id);
-      } else {
-        // Fallback: get client ID from portal data API (bypasses RLS)
-        try {
-          const portalRes = await fetch('/api/portal/data');
-          if (portalRes.ok) {
-            const portalData = await portalRes.json();
-            if (portalData.client?.id) {
-              setSelectedClientId(portalData.client.id);
-            }
+      try {
+        // Try admin API first (for admin users)
+        const adminRes = await fetch('/api/admin');
+        if (adminRes.ok) {
+          const adminData = await adminRes.json();
+          const clientList = adminData.clients || [];
+          if (clientList.length > 0) {
+            setClients(clientList);
+            setSelectedClientId(clientList[0].id);
+            setLoading(false);
+            return;
           }
-        } catch { /* ignore */ }
-      }
+        }
+      } catch { /* not admin */ }
+      // Client: get client ID from portal data API
+      try {
+        const portalRes = await fetch('/api/portal/data');
+        if (portalRes.ok) {
+          const portalData = await portalRes.json();
+          if (portalData.client?.id) {
+            setSelectedClientId(portalData.client.id);
+          }
+        }
+      } catch { /* ignore */ }
       setLoading(false);
     };
     init();
-  }, [authLoading, isAdmin, clientRecord]);
+  }, []);
 
   // Fetch messages when client changes
   useEffect(() => {
@@ -172,7 +172,7 @@ export default function MessagesPage() {
     return latestB - latestA;
   });
 
-  if (authLoading || loading) {
+  if (loading) {
     return (
       <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Loading…</div>
