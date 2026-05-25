@@ -23,14 +23,10 @@ export default function PortalDashboard() {
   const [portalData, setPortalData] = useState<PortalData | null>(null);
 
   useEffect(() => {
-    if (authLoading || !user) return;
-
-    const fetchData = async () => {
-      const data = await fetchPortalData();
+    fetchPortalData().then(data => {
       setPortalData(data);
       setLoaded(true);
-    };
-    fetchData();
+    });
 
     const updateTime = () => {
       const now = new Date();
@@ -39,7 +35,7 @@ export default function PortalDashboard() {
     updateTime();
     const interval = setInterval(updateTime, 60000);
     return () => clearInterval(interval);
-  }, [supabase, user, authLoading]);
+  }, []);
 
   const getGreeting = () => {
     const h = new Date().getHours();
@@ -61,7 +57,7 @@ export default function PortalDashboard() {
     ? Math.floor((Date.now() - new Date(engagement.start_date).getTime()) / 86400000)
     : 0;
 
-  const displayName = profile?.full_name || user?.user_metadata?.full_name || 'there';
+  const displayName = portalData?.client?.name || profile?.full_name || user?.user_metadata?.full_name || 'there';
 
   const phases = PHASE_LABELS.map((p, i) => ({
     ...p,
@@ -93,7 +89,7 @@ export default function PortalDashboard() {
     { label: 'Days Active', value: String(Math.max(daysSince, 1)), sub: 'since engagement' },
   ];
 
-  if (authLoading || !portalData) {
+  if (!portalData) {
     return (
       <div style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <span style={{ color: 'rgba(201,169,110,0.5)', fontFamily: 'Inter, sans-serif', fontSize: 12, letterSpacing: '0.3em' }}>

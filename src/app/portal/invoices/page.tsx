@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import PortalNav from '@/components/portal/PortalNav';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/portal/AuthProvider';
-import { getMyInvoices } from '@/lib/portal-data';
+import { fetchPortalData } from '@/lib/portal-data';
 import type { Invoice } from '@/lib/database.types';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
@@ -26,19 +26,18 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function PortalInvoices() {
-  const { supabase, user, loading: authLoading } = useAuth();
+  const { supabase } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [filter, setFilter] = useState<string>('all');
   const [payingId, setPayingId] = useState<string | null>(null);
 
   useEffect(() => {
-    if (authLoading || !user) return;
-    getMyInvoices(supabase).then(data => {
-      setInvoices(data);
+    fetchPortalData().then(data => {
+      setInvoices(data.invoices);
       setLoaded(true);
     });
-  }, [supabase, user, authLoading]);
+  }, []);
 
   const filtered = filter === 'all'
     ? invoices
