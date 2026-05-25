@@ -24,7 +24,7 @@ export async function GET() {
     sb.from('timeline_events').select('*').order('event_date', { ascending: true }),
     sb.from('nda_records').select('*').order('signed_date', { ascending: false }),
     sb.from('audit_log').select('*').order('created_at', { ascending: false }).limit(200),
-    sb.from('todos').select('*').order('created_at', { ascending: false }),
+    sb.from('todo').select('*').order('created_at', { ascending: false }),
   ]);
 
   return NextResponse.json({

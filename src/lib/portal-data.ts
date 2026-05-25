@@ -73,7 +73,7 @@ export async function getMyInvoices(supabase: SupabaseClient): Promise<Invoice[]
 /* Client's visible todos */
 export async function getMyTodos(supabase: SupabaseClient): Promise<Todo[]> {
   const { data } = await supabase
-    .from('todos')
+    .from('todo')
     .select('*')
     .eq('visible_to_client', true)
     .neq('status', 'done')

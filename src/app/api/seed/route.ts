@@ -37,7 +37,7 @@ export async function POST(request: Request) {
     const sb = adminClient();
 
     /* ── Wipe existing data (order matters for FK) ── */
-    await sb.from('todos').delete().not('id', 'is', null);
+    await sb.from('todo').delete().not('id', 'is', null);
     await sb.from('audit_log').delete().not('id', 'is', null);
     await sb.from('nda_records').delete().not('id', 'is', null);
     await sb.from('timeline_events').delete().not('id', 'is', null);
@@ -344,7 +344,7 @@ export async function POST(request: Request) {
       { id: TD(8),  client_id: C(1), engagement_id: E(1), title: 'Prepare phase transition memo',        description: 'Document readiness for Phase IV oversight',                               priority: 'urgent',  status: 'pending',     due_date: '2026-05-26', visible_to_client: true },
     ];
 
-    const { error: tdErr } = await sb.from('todos').insert(todos);
+    const { error: tdErr } = await sb.from('todo').insert(todos);
     if (tdErr) throw new Error(`todos: ${tdErr.message}`);
 
     /* ── Summary ── */

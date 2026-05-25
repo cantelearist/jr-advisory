@@ -62,8 +62,8 @@ export async function POST(request: Request) {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Check if todos table exists
-  const { error: checkErr } = await sb.from('todos').select('id').limit(1);
+  // Check if todo table exists
+  const { error: checkErr } = await sb.from('todo').select('id').limit(1);
   const todosMissing = checkErr && (checkErr.message.includes('does not exist') || checkErr.code === '42P01');
 
   if (!todosMissing) {
@@ -72,7 +72,7 @@ export async function POST(request: Request) {
 
   // Try to create via RPC
   const sql = `
-    CREATE TABLE IF NOT EXISTS public.todos (
+    CREATE TABLE IF NOT EXISTS public.todo (
       id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
       client_id uuid REFERENCES public.clients(id) ON DELETE CASCADE,
       engagement_id uuid REFERENCES public.engagements(id) ON DELETE SET NULL,
@@ -88,13 +88,13 @@ export async function POST(request: Request) {
       created_at timestamptz DEFAULT now(),
       updated_at timestamptz DEFAULT now()
     );
-    ALTER TABLE public.todos ENABLE ROW LEVEL SECURITY;
-    CREATE POLICY "Service role bypass todos" ON public.todos FOR ALL USING (auth.role() = 'service_role');
+    ALTER TABLE public.todo ENABLE ROW LEVEL SECURITY;
+    CREATE POLICY "Service role bypass todo" ON public.todo FOR ALL USING (auth.role() = 'service_role');
   `;
 
   const result = await runSQL(sql);
   if (result.success) {
-    return NextResponse.json({ status: 'ok', message: 'todos table created ✓' });
+    return NextResponse.json({ status: 'ok', message: 'todo table created ✓' });
   }
 
   // Manual fallback

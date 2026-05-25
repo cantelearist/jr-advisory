@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
   const clientId = req.nextUrl.searchParams.get('client_id');
   const status = req.nextUrl.searchParams.get('status');
 
-  let q = sb().from('todos').select('*').order('created_at', { ascending: false });
+  let q = sb().from('todo').select('*').order('created_at', { ascending: false });
   if (clientId) q = q.eq('client_id', clientId);
   if (status) q = q.eq('status', status);
 
@@ -39,7 +39,7 @@ export async function POST(req: NextRequest) {
 
   if (!title) return NextResponse.json({ error: 'Title required' }, { status: 400 });
 
-  const { data, error } = await sb().from('todos').insert({
+  const { data, error } = await sb().from('todo').insert({
     title,
     description: description || null,
     priority: priority || 'normal',

@@ -34,7 +34,7 @@ export async function PATCH(
   }
 
   const { data, error } = await sb()
-    .from('todos')
+    .from('todo')
     .update(updates)
     .eq('id', id)
     .select()
@@ -52,7 +52,7 @@ export async function DELETE(
     return NextResponse.json({ error: 'Not configured' }, { status: 500 });
 
   const { id } = await params;
-  const { error } = await sb().from('todos').delete().eq('id', id);
+  const { error } = await sb().from('todo').delete().eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });
