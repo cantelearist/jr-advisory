@@ -1,7 +1,7 @@
 # JR Advisory — Technical Handoff
 
 > **James Roman Advisory** · Private client portal for hazmat remediation oversight
-> Last updated: May 25, 2026 · Commit `5207feb3`
+> Last updated: May 26, 2026 · Commit `3b642d33`
 
 ---
 
@@ -372,9 +372,15 @@ useEffect(() => {
 
 ### Currently Connected
 - ✅ Supabase (all 3 keys — both Vercel projects, all envs)
-- ⏳ Stripe — needs API keys
-- ⏳ Resend — needs API key
-- ⏳ DATABASE_URL — current value has wrong password
+- ⏳ Stripe — keys obtained, need to add to Vercel env vars: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`
+- ⏳ Resend — key obtained (`re_FY8Qzkak_...`), need to add `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` to Vercel
+- ⏳ DATABASE_URL — password needs reset in Supabase Dashboard → Settings → Database
+
+### Stripe Webhook
+- Webhook ID: `we_1TbAcV9fhKrRctJYo3Fpjr8G`
+- URL: `https://www.jamesroman.la/api/payments/webhook`
+- Events: `checkout.session.completed`, `payment_intent.succeeded`
+- Status: Enabled — will fire once Stripe env vars are set on Vercel
 
 ---
 
@@ -551,11 +557,18 @@ Uses IIFE pattern for complex tab content:
 
 | Issue | Status | Fix |
 |---|---|---|
-| Auth trigger (`handle_new_user`) | ⚠️ May need setup | Run SQL in Supabase Dashboard SQL Editor |
-| Stripe integration | ⏳ Not connected | Add API keys + webhook |
-| Resend email | ⏳ Not connected | Add API key |
-| DATABASE_URL password | ⚠️ Wrong password | Update in Supabase Dashboard → Database |
+| Auth trigger (`handle_new_user`) | ⚠️ Needs setup | Paste SQL (see §10) in Supabase Dashboard → SQL Editor → Run |
+| Stripe env vars | ⏳ Keys ready, not deployed | Add 3 vars to Vercel env vars, then redeploy |
+| Resend env vars | ⏳ Key ready, not deployed | Add `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` to Vercel |
+| Resend domain verification | ⏳ Not done | Add DNS records in Namecheap; until then use `onboarding@resend.dev` |
+| DATABASE_URL password | ⚠️ Wrong password | Reset in Supabase Dashboard → Settings → Database |
 | PostgREST schema cache | Intermittent | Restart project in Dashboard if new tables aren't writable |
+| Vercel API token | ❌ Expired | Generate new one in Vercel → Settings → Tokens (if needed for API access) |
+
+### 3 Steps to Go Live (manual)
+1. **Supabase SQL Editor** — paste & run the `handle_new_user()` trigger SQL above
+2. **Vercel Environment Variables** — add 5 keys: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NOTIFICATION_FROM_EMAIL`
+3. **Redeploy** on Vercel (Deployments → Redeploy last Production deployment)
 
 ---
 
@@ -578,6 +591,8 @@ Uses IIFE pattern for complex tab content:
 | 7A | Client Onboarding (5-step welcome wizard) | `5207feb3` |
 | 7B | Mobile Polish (all pages responsive 768/480px) | `5207feb3` |
 | Fixes | Auth race condition on all portal pages | `fee39e5a`, `d8dc0e7f` |
+| Handoff | HANDOFF.md added to repo | `dcda4e62` |
+| Polish | Mobile responsive fixes + audit log seed data | `3b642d33` |
 
 ---
 
@@ -602,6 +617,36 @@ Uses IIFE pattern for complex tab content:
 | `@testing-library/react` | ^16.3.2 | Component testing |
 | `jsdom` | ^29.1.1 | DOM environment for tests |
 | `eslint` / `eslint-config-next` | ^9 / ^15 | Linting |
+
+---
+
+## 14. Suggested Next Steps
+
+### High Priority (pre-launch)
+1. **Complete 3-step setup** — auth trigger, env vars, redeploy (see §11)
+2. **Re-seed data** — run `POST /api/seed?key=jr-seed-2026` after trigger is live to populate all tables + audit log
+3. **Verify Stripe checkout flow** — test with Stripe test card (`4242 4242 4242 4242`)
+4. **Verify Resend emails** — test via admin compose → sends notification to client
+5. **Domain email verification** — add Resend DNS records in Namecheap for `jamesroman.la` sender identity
+
+### Medium Priority (post-launch polish)
+6. **Real client accounts** — use admin invite flow to create production accounts
+7. **Custom 404 page** — branded error page matching the design system
+8. **Rate limiting** — add rate limits to public API routes (seed, auth setup)
+9. **File type validation** — restrict uploads to PDF, DOC, JPG, PNG
+10. **Session timeout** — auto-logout after 30 min idle
+
+### Feature Ideas
+11. **Client notifications** — push/email when documents are uploaded or invoices created
+12. **Dashboard analytics** — monthly trend charts (revenue, active engagements)
+13. **Multi-property support** — clients with multiple properties
+14. **Calendar integration** — sync milestones with Google Calendar
+15. **Two-factor auth** — SMS/TOTP for admin accounts
+16. **Dark/light mode toggle** — the foundation is dark-first but a light option is common request
+17. **Search** — global search across clients, documents, messages
+18. **Bulk operations** — multi-select delete/archive on admin lists
+19. **Client self-service** — allow clients to upload documents directly
+20. **Automated reminders** — overdue invoice follow-ups via Resend
 
 ---
 
