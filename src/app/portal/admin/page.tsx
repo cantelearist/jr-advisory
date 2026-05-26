@@ -1170,10 +1170,13 @@ export default function AdminPanel() {
               invoice_created:   { label: 'Invoice Created', color: '#4ade80', icon: '▦' },
               invoice_updated:   { label: 'Invoice Updated', color: '#60a5fa', icon: '▦' },
               message_sent:      { label: 'Message Sent', color: '#c9a96e', icon: '✉' },
-              document_uploaded: { label: 'Document Uploaded', color: '#a78bfa', icon: '▤' },
-              phase_change:      { label: 'Phase Changed', color: '#f59e0b', icon: '▸' },
-              login:             { label: 'Login', color: '#60a5fa', icon: '→' },
-              seed_reset:        { label: 'Data Reset', color: '#ef4444', icon: '⟲' },
+              document_uploaded:   { label: 'Document Uploaded', color: '#a78bfa', icon: '▤' },
+              document_downloaded: { label: 'Document Downloaded', color: '#818cf8', icon: '▤' },
+              payment_received:    { label: 'Payment Received', color: '#4ade80', icon: '$' },
+              nda_signed:          { label: 'NDA Signed', color: '#c9a96e', icon: '✎' },
+              phase_change:        { label: 'Phase Changed', color: '#f59e0b', icon: '▸' },
+              login:               { label: 'Login', color: '#60a5fa', icon: '→' },
+              seed_reset:          { label: 'Data Reset', color: '#ef4444', icon: '⟲' },
             };
             const actionFilter = 'all';
             const displayLog = auditLog.filter(() => actionFilter === 'all');

@@ -363,7 +363,7 @@ export default function PortalDocuments() {
                 </div>
 
                 <div className="vault__doc-info">
-                  <span className="vault__doc-name">{doc.name}</span>
+                  <span className="vault__doc-name" title={doc.name}>{doc.name}</span>
                   <span className="vault__doc-meta">
                     {doc.category} · {doc.size}
                   </span>
@@ -752,16 +752,32 @@ export default function PortalDocuments() {
           .vault__filters { flex-wrap: wrap; gap: 6px; }
           .vault__filters button { font-size: 9px; padding: 6px 10px; }
           .vault__doc {
-            flex-wrap: wrap; padding: 16px;
-            gap: 12px;
+            flex-wrap: wrap;
+            gap: 8px;
             padding: 16px;
+          }
+          .vault__doc-info {
+            flex: 1 1 calc(100% - 52px);
+            min-width: 0;
+          }
+          .vault__doc-name {
+            white-space: normal;
+            overflow: visible;
+            text-overflow: unset;
+            line-height: 1.4;
+            font-size: 13px;
+          }
+          .vault__doc-status {
+            order: 3;
           }
           .vault__doc-date {
             width: auto;
             text-align: left;
+            order: 4;
           }
           .vault__doc-action {
             opacity: 1 !important;
+            order: 5;
           }
           .viewer {
             padding: 16px;

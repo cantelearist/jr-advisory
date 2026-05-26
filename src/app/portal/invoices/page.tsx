@@ -94,12 +94,7 @@ export default function PortalInvoices() {
           </div>
 
           {/* Summary Cards */}
-          <div style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(3, 1fr)',
-            gap: 20,
-            marginBottom: 48,
-          }}>
+          <div className="inv-summary-grid">
             {[
               { label: 'TOTAL BILLED', value: formatCurrency(totalBilled), color: 'rgba(255,255,255,0.85)' },
               { label: 'PAID', value: formatCurrency(totalPaid), color: '#4ade80' },
@@ -160,19 +155,7 @@ export default function PortalInvoices() {
               </div>
             )}
             {filtered.map(inv => (
-              <div key={inv.id} style={{
-                background: 'rgba(255,255,255,0.02)',
-                border: '1px solid rgba(255,255,255,0.06)',
-                borderRadius: 10,
-                padding: '24px 28px',
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr auto auto auto',
-                alignItems: 'center',
-                gap: 20,
-                backdropFilter: 'blur(8px)',
-                transition: 'border-color 0.2s ease',
-                cursor: 'default',
-              }}
+              <div key={inv.id} className="inv-card"
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,169,110,0.2)')}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)')}
               >
@@ -278,6 +261,59 @@ export default function PortalInvoices() {
           </div>
         </div>
       </main>
+
+      <style jsx>{`
+        .inv-summary-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 20px;
+          margin-bottom: 48px;
+        }
+        .inv-card {
+          background: rgba(255,255,255,0.02);
+          border: 1px solid rgba(255,255,255,0.06);
+          border-radius: 10px;
+          padding: 24px 28px;
+          display: grid;
+          grid-template-columns: 1fr 1fr auto auto auto;
+          align-items: center;
+          gap: 20px;
+          backdrop-filter: blur(8px);
+          transition: border-color 0.2s ease;
+          cursor: default;
+        }
+        @media (max-width: 768px) {
+          .inv-summary-grid {
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+          }
+          .inv-summary-grid > :last-child {
+            grid-column: 1 / -1;
+          }
+          .inv-card {
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            padding: 20px 16px;
+          }
+          .inv-card > div:nth-child(2) {
+            grid-column: 1 / -1;
+          }
+          .inv-card > div:nth-child(4) {
+            order: -1;
+          }
+          .inv-card > div:nth-child(5) {
+            grid-column: 1 / -1;
+          }
+        }
+        @media (max-width: 480px) {
+          .inv-summary-grid {
+            grid-template-columns: 1fr;
+          }
+          .inv-summary-grid > :last-child {
+            grid-column: auto;
+          }
+        }
+      `}</style>
     </div>
   );
 }

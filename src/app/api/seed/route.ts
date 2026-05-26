@@ -347,6 +347,30 @@ export async function POST(request: Request) {
     const { error: tdErr } = await sb.from('todo').insert(todos);
     if (tdErr) throw new Error(`todos: ${tdErr.message}`);
 
+    /* ── Audit Log — seed with realistic recent activity ── */
+    const AL = (n: number) => `77000000-7700-4000-a000-00000000${pad(n)}`;
+    const auditEntries = [
+      { id: AL(1),  action: 'client_created',     entity_type: 'client',     entity_id: C(5), metadata: { client_name: 'Sofia Nakamura' },                    created_at: '2026-05-10T09:15:00Z' },
+      { id: AL(2),  action: 'engagement_created',  entity_type: 'engagement', entity_id: E(5), metadata: { client_name: 'Sofia Nakamura', phase: '1' },          created_at: '2026-05-10T09:18:00Z' },
+      { id: AL(3),  action: 'document_uploaded',   entity_type: 'document',   entity_id: D(1), metadata: { name: 'NDA — Whitfield', category: 'nda' },           created_at: '2026-05-11T14:22:00Z' },
+      { id: AL(4),  action: 'message_sent',        entity_type: 'message',    entity_id: M(7), metadata: { subject: 'Material Samples Submitted', to: 'Jonathan Mercer' }, created_at: '2026-05-12T10:30:00Z' },
+      { id: AL(5),  action: 'invoice_created',     entity_type: 'invoice',    entity_id: I(6), metadata: { invoice_number: 'JRA-2026-006', amount: 8500 },        created_at: '2026-05-13T08:45:00Z' },
+      { id: AL(6),  action: 'document_uploaded',   entity_type: 'document',   entity_id: D(6), metadata: { name: 'IEP Lab Results — Whitfield', category: 'lab-results' }, created_at: '2026-05-14T11:00:00Z' },
+      { id: AL(7),  action: 'message_sent',        entity_type: 'message',    entity_id: M(5), metadata: { subject: 'Walk-Through Confirmation', to: 'Catherine & David Park' }, created_at: '2026-05-15T09:12:00Z' },
+      { id: AL(8),  action: 'payment_received',    entity_type: 'invoice',    entity_id: I(4), metadata: { invoice_number: 'JRA-2026-004', amount: 37000, client: 'Jonathan Mercer' }, created_at: '2026-05-16T16:20:00Z' },
+      { id: AL(9),  action: 'document_uploaded',   entity_type: 'document',   entity_id: D(15), metadata: { name: 'Post-Remediation Air Quality Certificate', category: 'clearance' }, created_at: '2026-05-18T13:05:00Z' },
+      { id: AL(10), action: 'engagement_updated',  entity_type: 'engagement', entity_id: E(4), metadata: { client_name: 'Robert Harrington III', field: 'status', value: 'completed' }, created_at: '2026-05-18T13:10:00Z' },
+      { id: AL(11), action: 'message_sent',        entity_type: 'message',    entity_id: M(1), metadata: { subject: 'Engagement Complete', to: 'Robert Harrington III' }, created_at: '2026-05-18T14:00:00Z' },
+      { id: AL(12), action: 'invoice_created',     entity_type: 'invoice',    entity_id: I(8), metadata: { invoice_number: 'JRA-2026-008', amount: 6000 },        created_at: '2026-05-19T10:30:00Z' },
+      { id: AL(13), action: 'client_updated',      entity_type: 'client',     entity_id: C(3), metadata: { client_name: 'Catherine & David Park', field: 'status', value: 'active' }, created_at: '2026-05-20T08:00:00Z' },
+      { id: AL(14), action: 'document_downloaded', entity_type: 'document',   entity_id: D(3), metadata: { name: 'Vendor Proposal A — Pacific Remediation', downloaded_by: 'Alexandra Whitfield' }, created_at: '2026-05-21T15:40:00Z' },
+      { id: AL(15), action: 'nda_signed',          entity_type: 'nda',        entity_id: N(1), metadata: { client_name: 'Alexandra Whitfield' },                   created_at: '2026-05-22T11:15:00Z' },
+      { id: AL(16), action: 'payment_received',    entity_type: 'invoice',    entity_id: I(5), metadata: { invoice_number: 'JRA-2026-005', amount: 50500, client: 'Robert Harrington III' }, created_at: '2026-05-23T09:30:00Z' },
+    ];
+
+    const { error: alErr } = await sb.from('audit_log').insert(auditEntries);
+    if (alErr) throw new Error(`audit_log: ${alErr.message}`);
+
     /* ── Summary ── */
     const summary = {
       success: true,
@@ -359,6 +383,7 @@ export async function POST(request: Request) {
         timeline_events: timeline.length,
         nda_records: ndas.length,
         todos: todos.length,
+        audit_log: auditEntries.length,
       },
       total_billed: invoices.reduce((s, i) => s + i.amount, 0),
       total_collected: invoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0),
