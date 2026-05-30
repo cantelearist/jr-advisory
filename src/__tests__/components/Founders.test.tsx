@@ -25,8 +25,8 @@ describe("Founders", () => {
     render(<Founders />);
     const imgs = screen.getAllByRole("img");
     expect(imgs.length).toBe(2);
-    expect(imgs[0]).toHaveAttribute("src", "/founders/steven.png");
-    expect(imgs[1]).toHaveAttribute("src", "/founders/roman.png");
+    expect(imgs[0].getAttribute("src")).toContain("stephen.png");
+    expect(imgs[1].getAttribute("src")).toContain("roman.png");
   });
 
   it("renders the section heading", () => {

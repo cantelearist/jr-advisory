@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { Hero } from "@/components/marketing/Hero";
-import { SERVICE_AREAS } from "@/lib/constants";
+import { SERVICE_AREAS, FIRM_DESCRIPTION } from "@/lib/constants";
 
 describe("Hero", () => {
   it("renders without crashing", () => {
@@ -9,29 +9,27 @@ describe("Hero", () => {
     expect(screen.getByTestId("hero")).toBeInTheDocument();
   });
 
-  it("renders the headline 'Counsel.'", () => {
+  it("renders the headline with 'Respond.'", () => {
     render(<Hero />);
-    expect(screen.getByText("Counsel.")).toBeInTheDocument();
+    expect(screen.getByText(/Respond\./)).toBeInTheDocument();
   });
 
-  it("renders 'Not' in muted tone", () => {
+  it("renders 'Protect.' with accent shimmer", () => {
     render(<Hero />);
-    const notSpan = screen.getByText("Not");
-    expect(notSpan).toBeInTheDocument();
-    expect(notSpan.style.color).toMatch(/rgba\(236,\s*230,\s*214/);
-  });
-
-  it("renders 'contractors.' with accent shimmer", () => {
-    render(<Hero />);
-    const accent = screen.getByText("contractors.");
+    const accent = screen.getByText("Protect.");
     expect(accent).toBeInTheDocument();
     expect(accent.classList.contains("accent-shimmer")).toBe(true);
+  });
+
+  it("renders 'Restore.'", () => {
+    render(<Hero />);
+    expect(screen.getByText(/Restore\./)).toBeInTheDocument();
   });
 
   it("renders the firm description", () => {
     render(<Hero />);
     expect(
-      screen.getByText(/Independent, client-side advisory/)
+      screen.getByText(FIRM_DESCRIPTION)
     ).toBeInTheDocument();
   });
 
@@ -59,5 +57,12 @@ describe("Hero", () => {
     expect(
       screen.getByText("Private Engagement · MMXXVI")
     ).toBeInTheDocument();
+  });
+
+  it("includes parallax background wrapper", () => {
+    render(<Hero />);
+    const hero = screen.getByTestId("hero");
+    const parallaxBg = hero.querySelector(".hero-parallax-bg");
+    expect(parallaxBg).toBeInTheDocument();
   });
 });
