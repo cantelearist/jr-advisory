@@ -56,7 +56,7 @@ export function Counsel() {
           </div>
         </div>
 
-        <div className="practice-grid" data-reveal>
+        <div className="practice-grid stagger-grid" data-reveal>
           {COUNSEL_AREAS.map((area, idx) => (
             <div key={area.numeral}>
               <div

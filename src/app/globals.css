@@ -604,6 +604,136 @@ footer { padding: 64px 0 36px; border-top: 1px solid rgba(255,255,255,.08); marg
   border-radius: 2px;
 }
 
+/* ─── Scroll progress bar ─── */
+.scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--accent), #e2d4b0, var(--accent));
+  background-size: 200% 100%;
+  animation: shimmer 4s ease-in-out infinite;
+  z-index: 100;
+  transform-origin: left;
+  will-change: transform;
+  pointer-events: none;
+}
+
+/* ─── Skip to content (a11y) ─── */
+.skip-to-content {
+  position: fixed;
+  top: -100%;
+  left: 16px;
+  z-index: 200;
+  background: var(--accent);
+  color: #0b0d12;
+  padding: 12px 24px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 13px;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: top 0.3s ease;
+}
+.skip-to-content:focus {
+  top: 16px;
+}
+
+/* ─── Back to top button ─── */
+.back-to-top {
+  position: fixed;
+  bottom: 32px;
+  right: 32px;
+  width: 48px;
+  height: 48px;
+  border: 1px solid rgba(201,181,138,.3);
+  background: rgba(10,11,14,.85);
+  backdrop-filter: blur(12px);
+  color: var(--accent);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 90;
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity .5s cubic-bezier(.2,.6,.2,1),
+              transform .5s cubic-bezier(.2,.6,.2,1),
+              border-color .4s ease,
+              background .4s ease,
+              box-shadow .4s ease;
+  pointer-events: none;
+}
+.back-to-top.visible {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.back-to-top:hover {
+  border-color: var(--accent);
+  background: rgba(201,181,138,.08);
+  box-shadow: 0 0 32px rgba(201,181,138,.12);
+}
+.back-to-top svg {
+  transition: transform .4s cubic-bezier(.2,.6,.2,1);
+}
+.back-to-top:hover svg {
+  transform: translateY(-2px);
+}
+
+/* ─── Counter animation for stats ─── */
+.stat-counter {
+  display: inline-block;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ─── Staggered grid reveals ─── */
+.stagger-grid > * {
+  opacity: 0;
+  transform: translateY(calc(40px * var(--motion)));
+  transition:
+    opacity calc(1400ms * var(--motion)) cubic-bezier(.16,.6,.2,1),
+    transform calc(1400ms * var(--motion)) cubic-bezier(.16,.6,.2,1);
+}
+.stagger-grid.in > *:nth-child(1) { opacity: 1; transform: none; transition-delay: calc(100ms * var(--motion)); }
+.stagger-grid.in > *:nth-child(2) { opacity: 1; transform: none; transition-delay: calc(250ms * var(--motion)); }
+.stagger-grid.in > *:nth-child(3) { opacity: 1; transform: none; transition-delay: calc(400ms * var(--motion)); }
+.stagger-grid.in > *:nth-child(4) { opacity: 1; transform: none; transition-delay: calc(550ms * var(--motion)); }
+.stagger-grid.in > *:nth-child(5) { opacity: 1; transform: none; transition-delay: calc(700ms * var(--motion)); }
+.stagger-grid.in > *:nth-child(6) { opacity: 1; transform: none; transition-delay: calc(850ms * var(--motion)); }
+.stagger-grid.in > *:nth-child(7) { opacity: 1; transform: none; transition-delay: calc(1000ms * var(--motion)); }
+.stagger-grid.in > *:nth-child(8) { opacity: 1; transform: none; transition-delay: calc(1150ms * var(--motion)); }
+
+/* ─── Engagement phase hover — number glow ─── */
+.engagement-phase .phase-numeral {
+  transition: color .5s ease, text-shadow .5s ease, transform .5s cubic-bezier(.2,.6,.2,1);
+}
+.engagement-phase:hover .phase-numeral {
+  color: rgba(201,181,138,.45) !important;
+  text-shadow: 0 0 40px rgba(201,181,138,.15);
+  transform: translateY(-2px);
+}
+
+/* ─── Hero parallax layer ─── */
+.hero-parallax-bg {
+  will-change: transform;
+  transition: transform 0.05s linear;
+}
+
+/* ─── Active nav indicator ─── */
+.nav-link.active {
+  opacity: 1;
+  color: var(--accent);
+}
+
+/* ─── Founder card depth hover ─── */
+.founder-card {
+  transition: transform .6s cubic-bezier(.2,.6,.2,1);
+}
+.founder-card:hover {
+  transform: translateY(-4px);
+}
+
 /* ─── Noise texture overlay (luxury editorial) ─── */
 body::after {
   content: '';
@@ -803,6 +933,14 @@ body::after {
     padding: 1.25rem 1.25rem;
   }
 
+  /* Back to top — smaller on small phones */
+  .back-to-top {
+    bottom: 20px;
+    right: 20px;
+    width: 42px;
+    height: 42px;
+  }
+
   /* Buttons — full-width on small phones */
   .btn {
     font-size: 14px;
@@ -844,6 +982,19 @@ body::after {
   .accent-shimmer {
     animation: none;
     background-size: 100% 100%;
+  }
+
+  .stagger-grid > * {
+    opacity: 1;
+    transform: none;
+  }
+
+  .scroll-progress {
+    animation: none;
+  }
+
+  .back-to-top {
+    transition-duration: 0.01ms !important;
   }
 }
 

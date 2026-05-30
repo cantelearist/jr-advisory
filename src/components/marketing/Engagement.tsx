@@ -44,7 +44,7 @@ export function Engagement() {
         </div>
 
         <div
-          className="engagement-grid"
+          className="engagement-grid stagger-grid"
           data-reveal
           style={{
             display: "grid",
@@ -67,7 +67,7 @@ export function Engagement() {
               }}
             >
               <div
-                className="display"
+                className="display phase-numeral"
                 style={{
                   fontSize: 42,
                   letterSpacing: ".04em",

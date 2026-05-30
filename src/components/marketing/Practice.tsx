@@ -1,5 +1,68 @@
+"use client";
+
 import React from "react";
 import { PRACTICE_STATS } from "@/lib/constants";
+import { useCountUp } from "@/hooks/useCountUp";
+
+function NumericStat({
+  prefix,
+  target,
+  suffix,
+  accent,
+}: {
+  prefix: string;
+  target: number;
+  suffix: string;
+  accent?: boolean;
+}) {
+  const { ref, displayValue } = useCountUp(target, 1800);
+
+  return (
+    <div
+      ref={ref as React.RefObject<HTMLDivElement>}
+      className="display stat-counter"
+      style={{
+        fontSize: 42,
+        letterSpacing: ".03em",
+        lineHeight: 1,
+        ...(accent ? { color: "var(--accent)" } : undefined),
+      }}
+    >
+      {prefix}
+      {displayValue}
+      {suffix}
+    </div>
+  );
+}
+
+function StaticStat({ value, accent }: { value: string; accent?: boolean }) {
+  return (
+    <div
+      className="display"
+      style={{
+        fontSize: 42,
+        letterSpacing: ".03em",
+        lineHeight: 1,
+        ...(accent ? { color: "var(--accent)" } : undefined),
+      }}
+    >
+      {value}
+    </div>
+  );
+}
+
+function StatDisplay({ value, accent }: { value: string; accent?: boolean }) {
+  const numericMatch = value.match(/^(\$?)(\d+)/);
+  if (!numericMatch) {
+    return <StaticStat value={value} accent={accent} />;
+  }
+
+  const prefix = numericMatch[1] || "";
+  const num = parseInt(numericMatch[2], 10);
+  const suffix = value.slice(numericMatch[0].length);
+
+  return <NumericStat prefix={prefix} target={num} suffix={suffix} accent={accent} />;
+}
 
 export function Practice() {
   return (
@@ -48,19 +111,7 @@ export function Practice() {
                 <React.Fragment key={stat.label}>
                   {i > 0 && <div className="hr accent" />}
                   <div>
-                    <div
-                      className="display"
-                      style={{
-                        fontSize: 42,
-                        letterSpacing: ".03em",
-                        lineHeight: 1,
-                        ...(stat.accent
-                          ? { color: "var(--accent)" }
-                          : undefined),
-                      }}
-                    >
-                      {stat.value}
-                    </div>
+                    <StatDisplay value={stat.value} accent={stat.accent} />
                     <div
                       className="mono"
                       style={{ opacity: 0.55, marginTop: 8 }}

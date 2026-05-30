@@ -6,6 +6,7 @@ import { SERVICE_AREAS, FIRM_DESCRIPTION } from "@/lib/constants";
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
+  const bgRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const tm = setTimeout(() => {
@@ -16,19 +17,49 @@ export function Hero() {
     return () => clearTimeout(tm);
   }, []);
 
+  // Parallax — background moves at 30% of scroll speed
+  useEffect(() => {
+    // Respect reduced motion
+    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
+    if (mq.matches) return;
+
+    let ticking = false;
+    function onScroll() {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(() => {
+          if (bgRef.current) {
+            const y = window.scrollY * 0.3;
+            bgRef.current.style.transform = `translateY(${y}px)`;
+          }
+          ticking = false;
+        });
+      }
+    }
+
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
     <section
       ref={ref}
+      id="hero"
       data-testid="hero"
       style={{
         position: "relative",
         minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
+        overflow: "hidden",
       }}
     >
-      {/* Background plate */}
-      <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+      {/* Background plate with parallax */}
+      <div
+        ref={bgRef}
+        className="hero-parallax-bg"
+        style={{ position: "absolute", inset: "-20% 0 0 0", zIndex: 0, height: "120%" }}
+      >
         <Plate
           tag="PLATE I · COASTAL ESCARPMENT"
           label="01 / 06"
