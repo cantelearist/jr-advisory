@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import { FOUNDERS } from "@/lib/constants";
 
 export function Founders() {
@@ -40,13 +41,13 @@ export function Founders() {
             <div key={f.name} className="founder-card" data-reveal>
               <div className="founder-card-inner">
                 <div className="founder-portrait-wrap">
-                  <img
+                  <Image
                     src={`/founders/${f.name.toLowerCase()}.png`}
-                    alt={`${f.name} — Co-Founder`}
+                    alt={`${f.name} — Co-Founder, James Roman Advisory`}
                     className="founder-portrait"
                     width={420}
                     height={420}
-                    loading="lazy"
+                    sizes="(max-width: 900px) 320px, 420px"
                     style={f.portraitPosition ? { objectPosition: f.portraitPosition } : undefined}
                   />
                 </div>

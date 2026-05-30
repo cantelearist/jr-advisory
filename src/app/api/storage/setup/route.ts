@@ -7,6 +7,11 @@ import { createClient } from '@supabase/supabase-js';
 const SETUP_KEY = 'jr-storage-2026';
 
 export async function POST(req: NextRequest) {
+  /* Block in production */
+  if (process.env.VERCEL_ENV === 'production') {
+    return NextResponse.json({ error: 'Disabled in production' }, { status: 403 });
+  }
+
   const key = req.nextUrl.searchParams.get('key');
   if (key !== SETUP_KEY) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 403 });

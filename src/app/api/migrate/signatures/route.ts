@@ -3,6 +3,11 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 
 export async function POST(req: NextRequest) {
+  /* Block in production */
+  if (process.env.VERCEL_ENV === 'production') {
+    return NextResponse.json({ error: 'Disabled in production' }, { status: 403 });
+  }
+
   const key = req.nextUrl.searchParams.get('key');
   if (key !== 'jr-migrate-2026') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 

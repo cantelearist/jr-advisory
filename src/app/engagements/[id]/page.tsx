@@ -25,7 +25,12 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!matter) return { title: "Not Found" };
   return {
     title: `${matter.area} Engagement — ${FIRM_NAME}`,
-    description: matter.role,
+    description: `${matter.concern} — ${matter.role}`,
+    openGraph: {
+      title: `${matter.area} Engagement — ${FIRM_NAME}`,
+      description: `${matter.concern} — ${matter.role}`,
+      type: "article",
+    },
   };
 }
 

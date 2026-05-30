@@ -1,5 +1,12 @@
 import React from "react";
+import type { Metadata } from "next";
 import { LegalLayout } from "@/components/marketing/LegalLayout";
+
+export const metadata: Metadata = {
+  title: "Mutual Non-Disclosure Agreement",
+  description:
+    "Sample mutual NDA used by James Roman Advisory. Discretion is a contractual obligation, not a marketing claim.",
+};
 
 export default function NdaPage() {
   return (

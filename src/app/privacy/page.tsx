@@ -1,5 +1,12 @@
 import React from "react";
+import type { Metadata } from "next";
 import { LegalLayout } from "@/components/marketing/LegalLayout";
+
+export const metadata: Metadata = {
+  title: "Privacy Notice",
+  description:
+    "How James Roman Advisory collects, uses, and protects personal information. California resident rights under CCPA.",
+};
 
 export default function PrivacyPage() {
   return (
