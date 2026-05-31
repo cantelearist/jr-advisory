@@ -1,5 +1,12 @@
 import React from "react";
+import type { Metadata } from "next";
 import { LegalLayout } from "@/components/marketing/LegalLayout";
+
+export const metadata: Metadata = {
+  title: "Accessibility Statement",
+  description:
+    "James Roman Advisory accessibility commitment. WCAG 2.1 Level AA conformance target.",
+};
 
 export default function AccessibilityPage() {
   return (

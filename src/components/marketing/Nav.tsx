@@ -100,7 +100,12 @@ export function Nav() {
       </header>
 
       {/* Mobile menu overlay */}
-      <div className={`mobile-menu ${menuOpen ? "open" : ""}`}>
+      <div
+        className={`mobile-menu ${menuOpen ? "open" : ""}`}
+        role="dialog"
+        aria-modal={menuOpen}
+        aria-label="Navigation menu"
+      >
         <nav
           style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 36 }}
           aria-label="Mobile navigation"

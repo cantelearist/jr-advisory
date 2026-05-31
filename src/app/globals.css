@@ -332,22 +332,23 @@ a { color: inherit; text-decoration: none; }
 .nav-hamburger.open span:nth-child(3) { transform: rotate(-45deg) translate(4px, -5px); }
 
 .mobile-menu {
-  display: none;
   position: fixed;
   inset: 0;
   background: rgba(10,11,14,.97);
   backdrop-filter: blur(20px);
   z-index: 55;
+  display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 36px;
   opacity: 0;
-  transition: opacity .5s cubic-bezier(.2,.6,.2,1);
+  visibility: hidden;
+  transition: opacity .5s cubic-bezier(.2,.6,.2,1), visibility .5s;
 }
 .mobile-menu.open {
-  display: flex;
   opacity: 1;
+  visibility: visible;
 }
 .mobile-menu .nav-link {
   font-size: 15px;
@@ -785,4 +786,73 @@ body::after {
   .cities-sep {
     margin-right: clamp(10px, 1.5vw, 20px);
   }
+
+  /* Engagement phases — stack on small phones with better spacing */
+  .engagement-phase {
+    padding: 32px 20px !important;
+  }
+
+  /* Founders — smaller portraits on small phones */
+  .founder-portrait-wrap {
+    width: 260px !important;
+    height: 260px !important;
+  }
+
+  /* Cookie banner tighter padding */
+  .cookie-banner {
+    padding: 1.25rem 1.25rem;
+  }
+
+  /* Buttons — full-width on small phones */
+  .btn {
+    font-size: 14px;
+    padding: 14px 22px;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   ACCESSIBILITY — REDUCED MOTION
+   ═══════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  :root { --motion: 0; }
+
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  [data-reveal] {
+    opacity: 1;
+    transform: none;
+  }
+
+  .stage > * {
+    opacity: 1;
+    transform: none;
+  }
+
+  .mask-reveal::after {
+    transform: scaleX(0);
+  }
+
+  .drift {
+    animation: none;
+  }
+
+  .accent-shimmer {
+    animation: none;
+    background-size: 100% 100%;
+  }
+}
+
+/* ═══════════════════════════════════════════
+   PRINT STYLES
+   ═══════════════════════════════════════════ */
+@media print {
+  body::after { display: none; }
+  .cookie-banner, .nav-hamburger, .mobile-menu { display: none !important; }
+  body { background: white; color: #111; }
+  .accent-shimmer { -webkit-text-fill-color: #111; }
 }

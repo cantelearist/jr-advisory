@@ -27,6 +27,14 @@ const TD = (n: number) => `b0000000-b000-4000-a000-00000000${pad(n)}`; // todos
 
 export async function POST(request: Request) {
   try {
+    /* Block in production — seed endpoint should never run against live data */
+    if (process.env.VERCEL_ENV === 'production') {
+      return NextResponse.json(
+        { error: 'Seed endpoint is disabled in production' },
+        { status: 403 }
+      );
+    }
+
     /* Auth check — require secret or service key match */
     const { searchParams } = new URL(request.url);
     const key = searchParams.get('key');

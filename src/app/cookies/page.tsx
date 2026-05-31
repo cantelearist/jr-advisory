@@ -1,5 +1,12 @@
 import React from "react";
+import type { Metadata } from "next";
 import { LegalLayout } from "@/components/marketing/LegalLayout";
+
+export const metadata: Metadata = {
+  title: "Cookie Policy",
+  description:
+    "Cookie and local-storage policy for jamesroman.la. One essential cookie, no analytics or third-party trackers without consent.",
+};
 
 export default function CookiePolicyPage() {
   return (

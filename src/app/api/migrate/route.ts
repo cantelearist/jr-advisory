@@ -47,6 +47,11 @@ async function runSQL(sql: string): Promise<{ success: boolean; error?: string }
 }
 
 export async function POST(request: Request) {
+  /* Block in production */
+  if (process.env.VERCEL_ENV === 'production') {
+    return NextResponse.json({ error: 'Migrate endpoint is disabled in production' }, { status: 403 });
+  }
+
   const { searchParams } = new URL(request.url);
   const key = searchParams.get('key');
   if (key !== 'jr-migrate-2026') {

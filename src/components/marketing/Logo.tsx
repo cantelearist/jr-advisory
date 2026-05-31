@@ -1,4 +1,5 @@
 import React from "react";
+import Image from "next/image";
 import Link from "next/link";
 
 export function Logo({ height = 38 }: { height?: number }) {
@@ -9,12 +10,14 @@ export function Logo({ height = 38 }: { height?: number }) {
     <Link
       href="/"
       style={{ display: "inline-flex", alignItems: "center" }}
+      aria-label="James Roman Advisory — Home"
     >
-      <img
+      <Image
         src="/images/logo.png"
         alt="James Roman Advisory"
         width={width}
         height={height}
+        priority
         style={{
           height,
           width: "auto",
