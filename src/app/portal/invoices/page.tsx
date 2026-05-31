@@ -1,11 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import PortalNav from '@/components/portal/PortalNav';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/portal/AuthProvider';
 import { fetchPortalData } from '@/lib/portal-data';
+import LoadingSkeleton from '@/components/portal/client/LoadingSkeleton';
 import type { Invoice } from '@/lib/database.types';
+import '@/components/portal/client/portal.css';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
@@ -31,6 +33,8 @@ export default function PortalInvoices() {
   const [loaded, setLoaded] = useState(false);
   const [filter, setFilter] = useState<string>('all');
   const [payingId, setPayingId] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [exportingId, setExportingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchPortalData().then(data => {
@@ -39,9 +43,19 @@ export default function PortalInvoices() {
     });
   }, []);
 
-  const filtered = filter === 'all'
+  const preFiltered = filter === 'all'
     ? invoices
     : invoices.filter(i => i.status === filter);
+
+  const filtered = useMemo(() => {
+    if (!searchQuery.trim()) return preFiltered;
+    const q = searchQuery.toLowerCase();
+    return preFiltered.filter(i =>
+      i.invoice_number.toLowerCase().includes(q) ||
+      i.description.toLowerCase().includes(q) ||
+      (i.notes && i.notes.toLowerCase().includes(q))
+    );
+  }, [preFiltered, searchQuery]);
 
   const totalBilled = invoices.reduce((sum, i) => sum + Number(i.amount), 0);
   const totalPaid = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + Number(i.amount), 0);
@@ -78,6 +92,16 @@ export default function PortalInvoices() {
   };
 
   const canPay = (inv: Invoice) => inv.status === 'sent' || inv.status === 'overdue';
+
+  const handleExport = async (invoiceId: string) => {
+    setExportingId(invoiceId);
+    try {
+      // Open the branded HTML invoice in a new tab for print/PDF
+      window.open(`/api/export/invoice?id=${invoiceId}`, '_blank');
+    } finally {
+      setTimeout(() => setExportingId(null), 500);
+    }
+  };
 
   return (
     <div className="portal-page">
@@ -117,6 +141,23 @@ export default function PortalInvoices() {
             ))}
           </div>
 
+          {/* Search */}
+          <div style={{ marginBottom: 20 }}>
+            <div className="portal-search" style={{ maxWidth: 360 }}>
+              <span className="portal-search__icon">⌕</span>
+              <input
+                type="text"
+                className="portal-search__input"
+                placeholder="Search invoices…"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+              {searchQuery && (
+                <button className="portal-search__clear" onClick={() => setSearchQuery('')}>✕</button>
+              )}
+            </div>
+          </div>
+
           {/* Filters */}
           <div style={{ display: 'flex', gap: 12, marginBottom: 32, flexWrap: 'wrap' }}>
             {['all', 'paid', 'sent', 'draft', 'overdue'].map(f => (
@@ -145,13 +186,10 @@ export default function PortalInvoices() {
           {/* Invoice List */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {filtered.length === 0 && (
-              <div style={{
-                textAlign: 'center',
-                padding: 64,
-                color: 'rgba(255,255,255,0.3)',
-                fontStyle: 'italic',
-              }}>
-                No invoices to display.
+              <div className="portal-empty" style={{ padding: '48px 20px' }}>
+                <div className="portal-empty__icon">⎙</div>
+                <h3 className="portal-empty__title">{searchQuery ? 'No matches' : 'No invoices to display'}</h3>
+                <p className="portal-empty__sub">{searchQuery ? 'Try a different search term' : 'Invoices will appear here when created'}</p>
               </div>
             )}
             {filtered.map(inv => (
@@ -215,8 +253,28 @@ export default function PortalInvoices() {
                   </span>
                 </div>
 
-                {/* Pay button */}
-                <div style={{ minWidth: 100 }}>
+                {/* Actions */}
+                <div style={{ display: 'flex', gap: 8, minWidth: 160, alignItems: 'center' }}>
+                  {/* Export/Print */}
+                  <button
+                    onClick={() => handleExport(inv.id)}
+                    disabled={exportingId === inv.id}
+                    title="View & Print Invoice"
+                    style={{
+                      padding: '10px 14px',
+                      background: 'rgba(255,255,255,0.03)',
+                      border: '1px solid rgba(255,255,255,0.08)',
+                      borderRadius: 8,
+                      color: 'rgba(255,255,255,0.5)',
+                      fontSize: 13,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      flexShrink: 0,
+                    }}
+                  >
+                    ⎙
+                  </button>
+                  {/* Pay */}
                   {canPay(inv) ? (
                     <button
                       onClick={() => handlePay(inv.id)}
@@ -233,14 +291,21 @@ export default function PortalInvoices() {
                         letterSpacing: 1,
                         transition: 'all 0.2s ease',
                         opacity: payingId === inv.id ? 0.6 : 1,
-                        width: '100%',
+                        flex: 1,
                       }}
                     >
                       {payingId === inv.id ? 'LOADING…' : 'PAY NOW'}
                     </button>
-                  ) : (
-                    <div /> // Empty placeholder for grid alignment
-                  )}
+                  ) : inv.status === 'paid' ? (
+                    <span style={{
+                      fontSize: 11,
+                      color: 'rgba(74,222,128,0.5)',
+                      letterSpacing: 1,
+                      fontFamily: "'JetBrains Mono', monospace",
+                    }}>
+                      ✓ PAID
+                    </span>
+                  ) : null}
                 </div>
               </div>
             ))}
