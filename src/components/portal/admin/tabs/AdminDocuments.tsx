@@ -1,13 +1,15 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import type { Client, Engagement, Document as DBDocument } from '@/lib/database.types';
 import DocumentUpload from '@/components/portal/admin/DocumentUpload';
-import { useState } from 'react';
 
 const CAT_LABELS: Record<string, string> = {
   nda: 'NDAs', 'lab-results': 'Lab Results', proposals: 'Proposals',
   clearance: 'Clearance', invoices: 'Invoices', reports: 'Reports',
 };
+
+const CAT_FILTERS = ['all', 'nda', 'lab-results', 'proposals', 'clearance', 'invoices', 'reports'] as const;
 
 interface Props {
   clients: Client[];
@@ -18,6 +20,29 @@ interface Props {
 
 export default function AdminDocuments({ clients, engagements, documents, onReload }: Props) {
   const [showUpload, setShowUpload] = useState(false);
+  const [catFilter, setCatFilter] = useState<typeof CAT_FILTERS[number]>('all');
+  const [search, setSearch] = useState('');
+
+  const filtered = useMemo(() => {
+    let result = documents;
+
+    if (catFilter !== 'all') {
+      result = result.filter(d => d.category === catFilter);
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      result = result.filter(d => {
+        const client = clients.find(c => c.id === d.client_id);
+        return (
+          d.name.toLowerCase().includes(q) ||
+          (client?.name.toLowerCase().includes(q) ?? false)
+        );
+      });
+    }
+
+    return result;
+  }, [documents, catFilter, search, clients]);
 
   return (
     <>
@@ -35,12 +60,43 @@ export default function AdminDocuments({ clients, engagements, documents, onRelo
         {Object.entries(CAT_LABELS).map(([cat, label]) => {
           const count = documents.filter(d => d.category === cat).length;
           return (
-            <div key={cat} className="admin-kpi" style={{ textAlign: 'center', padding: '16px 12px' }}>
+            <div
+              key={cat}
+              className={`admin-kpi admin-kpi--clickable ${catFilter === cat ? 'admin-kpi--selected' : ''}`}
+              style={{ textAlign: 'center', padding: '16px 12px', cursor: 'pointer' }}
+              onClick={() => setCatFilter(catFilter === cat ? 'all' : cat as typeof CAT_FILTERS[number])}
+            >
               <div style={{ fontFamily: "'Cormorant Garamond', serif", fontSize: 28, color: 'var(--admin-accent)' }}>{count}</div>
               <div style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, letterSpacing: '0.15em', color: 'var(--admin-text-dim)', marginTop: 4 }}>{label}</div>
             </div>
           );
         })}
+      </div>
+
+      {/* Search */}
+      <div className="admin-toolbar">
+        <div className="admin-search">
+          <span className="admin-search__icon">⌕</span>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search documents…"
+            className="admin-search__input"
+          />
+          {search && (
+            <button className="admin-search__clear" onClick={() => setSearch('')}>✕</button>
+          )}
+        </div>
+        {catFilter !== 'all' && (
+          <button
+            className="admin-btn admin-btn--ghost"
+            onClick={() => setCatFilter('all')}
+            style={{ fontSize: 10, padding: '6px 14px' }}
+          >
+            ✕ Clear filter: {CAT_LABELS[catFilter]}
+          </button>
+        )}
       </div>
 
       {/* Document table */}
@@ -57,9 +113,11 @@ export default function AdminDocuments({ clients, engagements, documents, onRelo
             </tr>
           </thead>
           <tbody>
-            {documents.length === 0 ? (
-              <tr><td colSpan={6} className="admin-empty">No documents yet — upload your first file above</td></tr>
-            ) : documents.map(doc => {
+            {filtered.length === 0 ? (
+              <tr><td colSpan={6} className="admin-empty">
+                {search ? `No documents matching "${search}"` : documents.length === 0 ? 'No documents yet — upload your first file above' : 'No documents in this category'}
+              </td></tr>
+            ) : filtered.map(doc => {
               const client = clients.find(c => c.id === doc.client_id);
               const catLabel = CAT_LABELS[doc.category] || doc.category;
               const hasFile = !!doc.file_path;

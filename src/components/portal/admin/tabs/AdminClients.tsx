@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Client, Engagement } from '@/lib/database.types';
 
@@ -10,16 +11,43 @@ const STATUS_COLORS: Record<string, string> = {
   archived: 'rgba(255,255,255,0.2)',
 };
 
+const STATUS_FILTERS = ['all', 'active', 'pending', 'completed', 'archived'] as const;
+
 interface Props {
   clients: Client[];
   engagements: Engagement[];
   inviteStatus: Record<string, string>;
   onInvite: (clientId: string) => void;
   onNewClient: () => void;
+  onEditClient?: (client: Client) => void;
 }
 
-export default function AdminClients({ clients, engagements, inviteStatus, onInvite, onNewClient }: Props) {
+export default function AdminClients({ clients, engagements, inviteStatus, onInvite, onNewClient, onEditClient }: Props) {
   const router = useRouter();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<typeof STATUS_FILTERS[number]>('all');
+
+  const filtered = useMemo(() => {
+    let result = clients;
+
+    // Status filter
+    if (statusFilter !== 'all') {
+      result = result.filter(c => c.status === statusFilter);
+    }
+
+    // Search filter (name, email, property, area)
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      result = result.filter(c =>
+        c.name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        c.property.toLowerCase().includes(q) ||
+        c.area.toLowerCase().includes(q)
+      );
+    }
+
+    return result;
+  }, [clients, search, statusFilter]);
 
   return (
     <>
@@ -32,6 +60,47 @@ export default function AdminClients({ clients, engagements, inviteStatus, onInv
         <button onClick={onNewClient} className="admin-btn admin-btn--primary">+ New Client</button>
       </div>
 
+      {/* Search + Filter Bar */}
+      <div className="admin-toolbar">
+        <div className="admin-search">
+          <span className="admin-search__icon">⌕</span>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search clients…"
+            className="admin-search__input"
+          />
+          {search && (
+            <button className="admin-search__clear" onClick={() => setSearch('')}>✕</button>
+          )}
+        </div>
+        <div className="admin-filters">
+          {STATUS_FILTERS.map(s => (
+            <button
+              key={s}
+              className={`admin-filter-pill ${statusFilter === s ? 'admin-filter-pill--active' : ''}`}
+              onClick={() => setStatusFilter(s)}
+            >
+              {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+              {s !== 'all' && (
+                <span className="admin-filter-pill__count">
+                  {clients.filter(c => c.status === s).length}
+                </span>
+              )}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Results count */}
+      {(search || statusFilter !== 'all') && (
+        <div className="admin-results-count">
+          {filtered.length} result{filtered.length !== 1 ? 's' : ''}
+          {search && <> for &ldquo;{search}&rdquo;</>}
+        </div>
+      )}
+
       <div className="admin-card" style={{ overflow: 'hidden' }}>
         <table className="admin-table">
           <thead>
@@ -41,10 +110,17 @@ export default function AdminClients({ clients, engagements, inviteStatus, onInv
               <th>Area</th>
               <th>Status</th>
               <th>Access</th>
+              <th style={{ width: 40 }}></th>
             </tr>
           </thead>
           <tbody>
-            {clients.map(client => {
+            {filtered.length === 0 ? (
+              <tr>
+                <td colSpan={6} className="admin-empty">
+                  {search ? `No clients matching "${search}"` : 'No clients in this category'}
+                </td>
+              </tr>
+            ) : filtered.map(client => {
               const eng = engagements.find(e => e.client_id === client.id);
               const sc = STATUS_COLORS[client.status] || 'rgba(255,255,255,0.4)';
               return (
@@ -84,6 +160,18 @@ export default function AdminClients({ clients, engagements, inviteStatus, onInv
                       <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 9, color: 'var(--admin-green)', letterSpacing: '0.08em' }}>
                         HAS LOGIN
                       </span>
+                    )}
+                  </td>
+                  <td>
+                    {onEditClient && (
+                      <button
+                        onClick={(e) => { e.stopPropagation(); onEditClient(client); }}
+                        className="admin-btn admin-btn--ghost"
+                        style={{ fontSize: 11, padding: '4px 8px', minWidth: 0 }}
+                        title="Edit client"
+                      >
+                        ✎
+                      </button>
                     )}
                   </td>
                 </tr>
