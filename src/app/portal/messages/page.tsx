@@ -2,11 +2,13 @@
 
 /* ── Messages — Client & Admin View with Supabase Realtime ── */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import dynamic from 'next/dynamic';
 import PortalNav from '@/components/portal/PortalNav';
 import { useAuth } from '@/components/portal/AuthProvider';
 import type { Message, Client } from '@/lib/database.types';
+import '@/components/portal/client/portal.css';
+import LoadingSkeleton from '@/components/portal/client/LoadingSkeleton';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
@@ -39,6 +41,7 @@ export default function MessagesPage() {
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
   const [liveIndicator, setLiveIndicator] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Fetch messages
   const fetchMessages = useCallback(async (clientId?: string) => {
@@ -166,18 +169,27 @@ export default function MessagesPage() {
     return acc;
   }, {} as Record<string, Message[]>);
 
-  const sortedThreadKeys = Object.keys(threads).sort((a, b) => {
+  const allThreadKeys = Object.keys(threads).sort((a, b) => {
     const latestA = new Date(threads[a][0].created_at).getTime();
     const latestB = new Date(threads[b][0].created_at).getTime();
     return latestB - latestA;
   });
 
-  if (loading) {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0a0a0a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: 14 }}>Loading…</div>
-      </div>
+  /* Search filter: match thread subject or any message body */
+  const sortedThreadKeys = useMemo(() => {
+    if (!searchQuery.trim()) return allThreadKeys;
+    const q = searchQuery.toLowerCase();
+    return allThreadKeys.filter(key =>
+      key.toLowerCase().includes(q) ||
+      threads[key].some(m =>
+        m.body.toLowerCase().includes(q) ||
+        m.sender_name.toLowerCase().includes(q)
+      )
     );
+  }, [allThreadKeys, threads, searchQuery]);
+
+  if (loading) {
+    return <LoadingSkeleton label="LOADING MESSAGES" />;
   }
 
   return (
@@ -238,9 +250,27 @@ export default function MessagesPage() {
           <div style={{ display: 'grid', gridTemplateColumns: selectedMsg ? '380px 1fr' : '1fr', gap: 24, minHeight: 500 }}>
             {/* Thread list */}
             <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 12, overflow: 'hidden' }}>
+              {/* Search bar */}
+              <div style={{ padding: '12px 16px', borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
+                <div className="portal-search" style={{ maxWidth: '100%' }}>
+                  <span className="portal-search__icon">⌕</span>
+                  <input
+                    type="text"
+                    className="portal-search__input"
+                    placeholder="Search messages…"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                  />
+                  {searchQuery && (
+                    <button className="portal-search__clear" onClick={() => setSearchQuery('')}>✕</button>
+                  )}
+                </div>
+              </div>
               {sortedThreadKeys.length === 0 ? (
-                <div style={{ padding: 40, textAlign: 'center', color: 'rgba(255,255,255,0.3)', fontSize: 14 }}>
-                  No messages yet
+                <div className="portal-empty" style={{ padding: '40px 20px' }}>
+                  <div className="portal-empty__icon">✉</div>
+                  <h3 className="portal-empty__title">{searchQuery ? 'No matches' : 'No messages yet'}</h3>
+                  <p className="portal-empty__sub">{searchQuery ? 'Try a different search term' : 'Start a conversation'}</p>
                 </div>
               ) : (
                 sortedThreadKeys.map(threadKey => {

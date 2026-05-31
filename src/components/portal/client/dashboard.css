@@ -1,0 +1,372 @@
+/* ═══════════════════════════════════════════════════════
+   JR Advisory — Client Dashboard Components
+   Styles for PhaseTracker, ActionAlert, TodoList, StatsGrid
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Section Headers ── */
+.dash__section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.dash__section-label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.35em;
+  color: rgba(255,255,255,0.3);
+}
+
+.dash__section-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.15);
+  letter-spacing: 0.05em;
+}
+
+/* ── Phase Tracker ── */
+.dash__phases {
+  margin-bottom: 60px;
+  padding: 40px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  backdrop-filter: blur(10px);
+  opacity: 0;
+  transform: translateY(30px);
+  animation: dashReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.dash__phase-track {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  position: relative;
+}
+
+.dash__phase {
+  position: relative;
+  text-align: center;
+  padding: 20px 0;
+}
+
+.dash__phase-num {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 32px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.15);
+  margin-bottom: 12px;
+  transition: color 0.5s ease;
+}
+
+.dash__phase--complete .dash__phase-num { color: rgba(201,169,110,0.6); }
+.dash__phase--active .dash__phase-num { color: #c9a96e; font-weight: 400; }
+
+.dash__phase-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  color: rgba(255,255,255,0.2);
+  text-transform: uppercase;
+}
+
+.dash__phase--active .dash__phase-label { color: rgba(255,255,255,0.7); }
+
+.dash__phase-pulse {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: rgba(201,169,110,0.1);
+  animation: dashPulse 2.5s ease-in-out infinite;
+}
+
+.dash__phase-connector {
+  position: absolute;
+  top: 36px;
+  right: -10%;
+  width: 20%;
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+}
+
+.dash__phase-connector--done { background: rgba(201,169,110,0.25); }
+
+.dash__milestone {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: rgba(255,255,255,0.35);
+  letter-spacing: 0.05em;
+}
+
+.dash__milestone-icon { color: #c9a96e; }
+
+/* ── Action Alert ── */
+.dash__alert {
+  margin-bottom: 40px;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: dashReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.dash__alert-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 24px 28px;
+  background: rgba(239,68,68,0.04);
+  border: 1px solid rgba(239,68,68,0.15);
+  backdrop-filter: blur(10px);
+}
+
+.dash__alert-icon {
+  font-size: 18px;
+  color: #ef4444;
+  flex-shrink: 0;
+  line-height: 1.5;
+}
+
+.dash__alert-content { flex: 1; }
+
+.dash__alert-title {
+  display: block;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.25em;
+  color: #ef4444;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+
+.dash__alert-item {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  margin: 4px 0;
+  line-height: 1.5;
+}
+
+/* ── Todo List ── */
+.dash__todos {
+  margin-bottom: 48px;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: dashReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.dash__todo-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dash__todo-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 24px;
+  border-left: 3px solid rgba(255,255,255,0.1);
+  background: rgba(255,255,255,0.02);
+  transition: all 0.3s ease;
+}
+
+.dash__todo-item:hover {
+  padding-left: 28px;
+  background: rgba(255,255,255,0.03);
+}
+
+.dash__todo-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dash__todo-title {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: rgba(255,255,255,0.8);
+  letter-spacing: 0.02em;
+}
+
+.dash__todo-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: rgba(255,255,255,0.3);
+  letter-spacing: 0.02em;
+}
+
+.dash__todo-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash__todo-due {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.05em;
+}
+
+.dash__todo-due--overdue { color: #ef4444; }
+
+/* ── Stats Grid ── */
+.dash__grid {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 32px;
+  margin-bottom: 60px;
+  opacity: 0;
+  transform: translateY(30px);
+  animation: dashReveal 1.2s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+.dash__stats {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash__stat {
+  padding: 28px 32px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  border-bottom: none;
+  transition: all 0.4s ease;
+  text-decoration: none;
+  color: inherit;
+  cursor: pointer;
+}
+
+.dash__stat:last-child { border-bottom: 1px solid rgba(255,255,255,0.04); }
+
+.dash__stat:hover {
+  background: rgba(201,169,110,0.03);
+  border-color: rgba(201,169,110,0.1);
+}
+
+.dash__stat-value {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 42px;
+  font-weight: 300;
+  color: #fff;
+  line-height: 1;
+  margin-bottom: 8px;
+}
+
+.dash__stat-label {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: rgba(255,255,255,0.4);
+}
+
+.dash__stat-sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: rgba(255,255,255,0.15);
+  margin-top: 4px;
+  letter-spacing: 0.05em;
+}
+
+/* ── Activity Feed ── */
+.dash__activity {
+  padding: 32px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+}
+
+.dash__activity-list {
+  display: flex;
+  flex-direction: column;
+}
+
+.dash__activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  padding: 18px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.03);
+  transition: all 0.3s ease;
+  text-decoration: none;
+  color: inherit;
+}
+
+.dash__activity-item:hover { padding-left: 8px; }
+.dash__activity-item:last-child { border-bottom: none; }
+
+.dash__activity-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.15);
+}
+
+.dash__activity-dot[data-type="document"] { background: #c9a96e; }
+.dash__activity-dot[data-type="message"]  { background: #6ea9c9; }
+
+.dash__activity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+}
+
+.dash__activity-action {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+  letter-spacing: 0.02em;
+}
+
+.dash__activity-detail {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  letter-spacing: 0.02em;
+}
+
+.dash__activity-date {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: rgba(255,255,255,0.15);
+  letter-spacing: 0.1em;
+  white-space: nowrap;
+  margin-top: 2px;
+}
+
+/* ── Animations ── */
+@keyframes dashReveal {
+  from { opacity: 0; transform: translateY(30px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes dashPulse {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+  50% { transform: translateX(-50%) scale(2); opacity: 0; }
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .dash__grid { grid-template-columns: 1fr; }
+  .dash__stats { flex-direction: row; }
+  .dash__stat { flex: 1; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  .dash__phase-track { grid-template-columns: repeat(2, 1fr); gap: 16px; }
+  .dash__phase-connector { display: none; }
+}
+
+@media (max-width: 480px) {
+  .dash__stats { flex-direction: column; }
+}

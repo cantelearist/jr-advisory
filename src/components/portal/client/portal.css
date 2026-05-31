@@ -1,0 +1,303 @@
+/* ═══════════════════════════════════════════════════════
+   JR Advisory — Client Portal
+   Design: Dark luxury, gold accents, consistent with
+   the admin dashboard's "Cinematic Precision" aesthetic.
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Design Tokens (shared with admin) ── */
+:root {
+  --portal-bg: #000;
+  --portal-panel: rgba(255,255,255,0.02);
+  --portal-panel-hover: rgba(255,255,255,0.03);
+  --portal-border: rgba(255,255,255,0.04);
+  --portal-border-hover: rgba(255,255,255,0.08);
+  --portal-accent: #c9a96e;
+  --portal-accent-dim: rgba(201,169,110,0.5);
+  --portal-accent-bg: rgba(201,169,110,0.05);
+  --portal-accent-border: rgba(201,169,110,0.15);
+  --portal-text: #fff;
+  --portal-text-muted: rgba(255,255,255,0.4);
+  --portal-text-dim: rgba(255,255,255,0.2);
+  --portal-text-faint: rgba(255,255,255,0.15);
+  --portal-green: #4ade80;
+  --portal-red: #ef4444;
+  --portal-blue: #6ea9c9;
+  --portal-lime: #a9c96e;
+  --portal-radius: 0;
+  --portal-font-serif: 'Cormorant Garamond', Georgia, serif;
+  --portal-font-sans: 'Inter', sans-serif;
+  --portal-font-mono: 'JetBrains Mono', 'Courier New', monospace;
+}
+
+/* ── Loading Skeleton ── */
+.portal-skeleton {
+  min-height: 100vh;
+  background: var(--portal-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.portal-skeleton__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+.portal-skeleton__label {
+  font-family: var(--portal-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.4em;
+  color: var(--portal-accent-dim);
+  text-transform: uppercase;
+}
+
+.portal-skeleton__bar {
+  width: 120px;
+  height: 2px;
+  background: rgba(201,169,110,0.1);
+  border-radius: 1px;
+  overflow: hidden;
+  position: relative;
+}
+
+.portal-skeleton__bar::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  height: 100%;
+  width: 40%;
+  background: var(--portal-accent);
+  opacity: 0.4;
+  animation: skeletonSlide 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonSlide {
+  0% { left: -40%; }
+  100% { left: 100%; }
+}
+
+/* ── Search Bar ── */
+.portal-search {
+  position: relative;
+  flex: 1;
+  max-width: 360px;
+}
+
+.portal-search__icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--portal-text-dim);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+.portal-search__input {
+  width: 100%;
+  padding: 10px 40px 10px 38px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid var(--portal-border);
+  color: var(--portal-text);
+  font-family: var(--portal-font-sans);
+  font-size: 13px;
+  letter-spacing: 0.02em;
+  transition: border-color 0.3s ease;
+  outline: none;
+}
+
+.portal-search__input::placeholder {
+  color: var(--portal-text-dim);
+}
+
+.portal-search__input:focus {
+  border-color: var(--portal-accent-border);
+}
+
+.portal-search__clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--portal-text-dim);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.portal-search__clear:hover {
+  color: var(--portal-text-muted);
+}
+
+/* ── Filter Pills ── */
+.portal-filters {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.portal-filter {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: var(--portal-panel);
+  border: 1px solid var(--portal-border);
+  color: rgba(255,255,255,0.35);
+  font-family: var(--portal-font-sans);
+  font-size: 11px;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.4s ease;
+}
+
+.portal-filter:hover {
+  border-color: var(--portal-border-hover);
+  color: rgba(255,255,255,0.6);
+}
+
+.portal-filter--active {
+  border-color: var(--portal-accent-border);
+  color: var(--portal-accent);
+  background: var(--portal-accent-bg);
+}
+
+.portal-filter__count {
+  font-size: 9px;
+  opacity: 0.5;
+}
+
+/* ── Toolbar (search + filters row) ── */
+.portal-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 32px;
+  flex-wrap: wrap;
+}
+
+.portal-toolbar .portal-search {
+  min-width: 200px;
+}
+
+/* ── Results Count ── */
+.portal-results-count {
+  font-family: var(--portal-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: var(--portal-text-dim);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+/* ── Empty State ── */
+.portal-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 40px;
+  text-align: center;
+}
+
+.portal-empty__icon {
+  font-size: 32px;
+  color: var(--portal-text-dim);
+  margin-bottom: 20px;
+  opacity: 0.5;
+}
+
+.portal-empty__title {
+  font-family: var(--portal-font-serif);
+  font-size: 22px;
+  font-weight: 300;
+  color: rgba(255,255,255,0.5);
+  margin: 0 0 8px;
+}
+
+.portal-empty__sub {
+  font-family: var(--portal-font-sans);
+  font-size: 13px;
+  color: var(--portal-text-dim);
+  letter-spacing: 0.05em;
+}
+
+/* ── Shared Animations ── */
+@keyframes portalReveal {
+  from { opacity: 0; transform: translateY(20px); filter: blur(4px); }
+  to { opacity: 1; transform: translateY(0); filter: blur(0); }
+}
+
+@keyframes portalFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes portalPulse {
+  0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+  50% { transform: translateX(-50%) scale(2); opacity: 0; }
+}
+
+/* ── KPI Card ── */
+.portal-kpi {
+  background: var(--portal-panel);
+  border: 1px solid var(--portal-border);
+  padding: 28px 24px;
+  backdrop-filter: blur(12px);
+  transition: all 0.4s ease;
+}
+
+.portal-kpi:hover {
+  background: var(--portal-accent-bg);
+  border-color: rgba(201,169,110,0.1);
+}
+
+.portal-kpi__label {
+  font-family: var(--portal-font-mono);
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: var(--portal-text-muted);
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+.portal-kpi__value {
+  font-family: var(--portal-font-serif);
+  font-size: 36px;
+  font-weight: 300;
+  color: var(--portal-text);
+  line-height: 1;
+  margin-bottom: 6px;
+}
+
+.portal-kpi__sub {
+  font-family: var(--portal-font-sans);
+  font-size: 10px;
+  color: var(--portal-text-faint);
+  letter-spacing: 0.05em;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .portal-toolbar {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .portal-search {
+    max-width: 100%;
+  }
+  .portal-filters {
+    gap: 6px;
+  }
+  .portal-filter {
+    font-size: 9px;
+    padding: 8px 12px;
+  }
+}
