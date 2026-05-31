@@ -12,13 +12,15 @@ const STATUS_STYLES: Record<string, { bg: string; color: string; label: string }
 };
 
 export interface DocItem {
-  id: number;
+  id: string;
   name: string;
   category: string;
   date: string;
   size: string;
   status: string;
   rawCategory: string;
+  filePath?: string | null;
+  mimeType?: string | null;
 }
 
 interface DocumentListProps {
@@ -27,7 +29,7 @@ interface DocumentListProps {
 }
 
 export default function DocumentList({ documents, onViewDocument }: DocumentListProps) {
-  const [hoveredDoc, setHoveredDoc] = useState<number | null>(null);
+  const [hoveredDoc, setHoveredDoc] = useState<string | null>(null);
 
   if (documents.length === 0) {
     return (

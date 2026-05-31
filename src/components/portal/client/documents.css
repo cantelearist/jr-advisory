@@ -214,6 +214,180 @@
   letter-spacing: 0.05em;
 }
 
+/* ── Viewer Action Buttons ── */
+.viewer__action-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(255,255,255,0.1);
+  color: rgba(255,255,255,0.6);
+  padding: 8px 16px;
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.viewer__action-btn:hover {
+  background: rgba(255,255,255,0.1);
+  color: #fff;
+  border-color: rgba(255,255,255,0.2);
+}
+
+.viewer__action-btn--primary {
+  background: rgba(201,169,110,0.1);
+  border-color: rgba(201,169,110,0.3);
+  color: #c9a96e;
+}
+
+.viewer__action-btn--primary:hover {
+  background: rgba(201,169,110,0.2);
+  border-color: rgba(201,169,110,0.5);
+  color: #dbb978;
+}
+
+.viewer__action-btn:disabled {
+  opacity: 0.5;
+  cursor: wait;
+}
+
+/* ── Upload Fields ── */
+.upload-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.upload-field__label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.25em;
+  color: rgba(255,255,255,0.3);
+  text-transform: uppercase;
+}
+
+.upload-field__input {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  padding: 12px 16px;
+  color: #fff;
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
+  -webkit-appearance: none;
+  border-radius: 0;
+}
+
+.upload-field__input:focus {
+  border-color: rgba(201,169,110,0.4);
+}
+
+.upload-field__input option {
+  background: #111;
+  color: #fff;
+}
+
+/* ── Drag-and-Drop Zone ── */
+.upload-dropzone {
+  border: 1px dashed rgba(255,255,255,0.12);
+  padding: 28px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.upload-dropzone:hover {
+  border-color: rgba(201,169,110,0.3);
+  background: rgba(201,169,110,0.02);
+}
+
+.upload-dropzone--active {
+  border-color: rgba(201,169,110,0.5);
+  background: rgba(201,169,110,0.05);
+  border-style: solid;
+}
+
+.upload-dropzone--has-file {
+  border-style: solid;
+  border-color: rgba(201,169,110,0.2);
+}
+
+.upload-dropzone__empty {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+}
+
+.upload-dropzone__icon {
+  font-size: 24px;
+  color: rgba(201,169,110,0.5);
+}
+
+.upload-dropzone__text {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+}
+
+.upload-dropzone__hint {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  color: rgba(255,255,255,0.15);
+  letter-spacing: 0.05em;
+}
+
+.upload-dropzone__file {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+
+.upload-dropzone__file-icon {
+  font-size: 28px;
+}
+
+.upload-dropzone__file-name {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.7);
+}
+
+.upload-dropzone__file-size {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.25);
+  margin-top: 2px;
+}
+
+.upload-dropzone__remove {
+  margin-left: auto;
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.3);
+  font-size: 16px;
+  cursor: pointer;
+  padding: 4px 8px;
+  transition: color 0.2s;
+}
+
+.upload-dropzone__remove:hover {
+  color: #ef4444;
+}
+
+/* ── Upload Messages ── */
+.upload-msg {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  margin: 0;
+  letter-spacing: 0.03em;
+}
+
+.upload-msg--error { color: #ef4444; }
+.upload-msg--success { color: #4ade80; }
+
 /* ── Animations ── */
 @keyframes vaultReveal {
   from { opacity: 0; transform: translateY(20px); }

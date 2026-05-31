@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import dynamic from 'next/dynamic';
 import PortalNav from '@/components/portal/PortalNav';
 import { useAuth } from '@/components/portal/AuthProvider';
@@ -9,11 +9,18 @@ import LoadingSkeleton from '@/components/portal/client/LoadingSkeleton';
 import DocumentSearch from '@/components/portal/client/DocumentSearch';
 import DocumentList, { type DocItem } from '@/components/portal/client/DocumentList';
 import DocumentViewer from '@/components/portal/client/DocumentViewer';
+import ClientUpload from '@/components/portal/client/ClientUpload';
 import type { Document as DBDocument } from '@/lib/database.types';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
 const CATEGORIES = ['All', 'NDA', 'Lab Results', 'Proposals', 'Clearance', 'Invoices', 'Reports'];
+
+function formatFileSize(bytes: number): string {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1048576) return `${(bytes / 1024).toFixed(1)} KB`;
+  return `${(bytes / 1048576).toFixed(1)} MB`;
+}
 
 const CATEGORY_MAP: Record<string, string> = {
   nda: 'NDA', 'lab-results': 'Lab Results', proposals: 'Proposals',
@@ -25,30 +32,39 @@ const STATUS_MAP: Record<string, string> = {
 };
 
 export default function PortalDocuments() {
-  const { supabase } = useAuth();
+  const { supabase, clientRecord } = useAuth();
   const [clientDocs, setClientDocs] = useState<DBDocument[]>([]);
+  const [engagementId, setEngagementId] = useState('');
+  const [clientId, setClientId] = useState('');
   const [loaded, setLoaded] = useState(false);
   const [activeCategory, setActiveCategory] = useState('All');
   const [searchQuery, setSearchQuery] = useState('');
   const [viewingDoc, setViewingDoc] = useState<DocItem | null>(null);
+  const [showUpload, setShowUpload] = useState(false);
 
-  useEffect(() => {
+  const loadDocs = useCallback(() => {
     fetchPortalData().then(data => {
       if (data.documents.length > 0) setClientDocs(data.documents);
+      if (data.engagement) setEngagementId(data.engagement.id);
+      if (data.client) setClientId(data.client.id);
       setLoaded(true);
     });
   }, []);
 
+  useEffect(() => { loadDocs(); }, [loadDocs]);
+
   /* Map DB docs to display items */
   const documents: DocItem[] = useMemo(() =>
-    clientDocs.map((d, i) => ({
-      id: i + 1,
+    clientDocs.map((d) => ({
+      id: d.id,
       name: d.name,
       category: CATEGORY_MAP[d.category] || d.category,
       rawCategory: d.category,
       date: new Date(d.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
-      size: d.file_size || '—',
+      size: d.file_size ? formatFileSize(Number(d.file_size)) : '—',
       status: STATUS_MAP[d.status] || d.status,
+      filePath: d.file_path,
+      mimeType: d.mime_type,
     })),
     [clientDocs]
   );
@@ -92,6 +108,14 @@ export default function PortalDocuments() {
           <p className="vault__sub">
             {documents.length} documents · Encrypted at rest · Signed URLs
           </p>
+          {engagementId && clientId && (
+            <button
+              className="vault__upload-btn"
+              onClick={() => setShowUpload(true)}
+            >
+              ↑ Upload Document
+            </button>
+          )}
         </section>
 
         {/* Search + Category Filters */}
@@ -116,6 +140,16 @@ export default function PortalDocuments() {
       {/* Document Viewer Modal */}
       {viewingDoc && (
         <DocumentViewer document={viewingDoc} onClose={() => setViewingDoc(null)} />
+      )}
+
+      {/* Upload Modal */}
+      {showUpload && engagementId && clientId && (
+        <ClientUpload
+          engagementId={engagementId}
+          clientId={clientId}
+          onUploadComplete={loadDocs}
+          onClose={() => setShowUpload(false)}
+        />
       )}
 
       <style jsx>{`
@@ -150,6 +184,22 @@ export default function PortalDocuments() {
         @keyframes vaultReveal {
           from { opacity: 0; transform: translateY(20px); }
           to { opacity: 1; transform: translateY(0); }
+        }
+        .vault__upload-btn {
+          margin-top: 20px;
+          background: rgba(201,169,110,0.1);
+          border: 1px solid rgba(201,169,110,0.25);
+          color: #c9a96e;
+          padding: 10px 24px;
+          font-family: 'Inter', sans-serif;
+          font-size: 12px;
+          letter-spacing: 0.12em;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .vault__upload-btn:hover {
+          background: rgba(201,169,110,0.18);
+          border-color: rgba(201,169,110,0.4);
         }
         @media (max-width: 768px) {
           .vault__main { padding: 100px 16px 40px; }
