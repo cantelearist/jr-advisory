@@ -1,11 +1,14 @@
 'use client';
 
+import { useState, useMemo } from 'react';
 import type { Client, Invoice } from '@/lib/database.types';
 
 const STATUS_COLORS: Record<string, string> = {
   paid: '#4ade80', sent: '#c9a96e', draft: 'rgba(255,255,255,0.4)',
   overdue: '#ef4444', cancelled: 'rgba(255,255,255,0.2)',
 };
+
+const STATUS_FILTERS = ['all', 'overdue', 'sent', 'paid', 'draft', 'cancelled'] as const;
 
 interface Props {
   clients: Client[];
@@ -15,7 +18,33 @@ interface Props {
 }
 
 export default function AdminInvoices({ clients, invoices, onNewInvoice, onOpenInvoice }: Props) {
+  const [statusFilter, setStatusFilter] = useState<typeof STATUS_FILTERS[number]>('all');
+  const [search, setSearch] = useState('');
+
   const fmt = (n: number) => new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
+
+  const filtered = useMemo(() => {
+    let result = invoices;
+
+    if (statusFilter !== 'all') {
+      result = result.filter(i => i.status === statusFilter);
+    }
+
+    if (search.trim()) {
+      const q = search.toLowerCase().trim();
+      result = result.filter(i => {
+        const client = clients.find(c => c.id === i.client_id);
+        return (
+          i.invoice_number.toLowerCase().includes(q) ||
+          i.description.toLowerCase().includes(q) ||
+          (client?.name.toLowerCase().includes(q) ?? false)
+        );
+      });
+    }
+
+    return result;
+  }, [invoices, statusFilter, search, clients]);
+
   const totalRevenue = invoices.reduce((s, i) => s + Number(i.amount), 0);
   const paidRevenue = invoices.filter(i => i.status === 'paid').reduce((s, i) => s + Number(i.amount), 0);
   const outstanding = invoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((s, i) => s + Number(i.amount), 0);
@@ -45,9 +74,46 @@ export default function AdminInvoices({ clients, invoices, onNewInvoice, onOpenI
         ))}
       </div>
 
+      {/* Search + Filter */}
+      <div className="admin-toolbar">
+        <div className="admin-search">
+          <span className="admin-search__icon">⌕</span>
+          <input
+            type="text"
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="Search invoices…"
+            className="admin-search__input"
+          />
+          {search && (
+            <button className="admin-search__clear" onClick={() => setSearch('')}>✕</button>
+          )}
+        </div>
+        <div className="admin-filters">
+          {STATUS_FILTERS.map(s => {
+            const count = s === 'all' ? invoices.length : invoices.filter(i => i.status === s).length;
+            if (s !== 'all' && count === 0) return null;
+            return (
+              <button
+                key={s}
+                className={`admin-filter-pill ${statusFilter === s ? 'admin-filter-pill--active' : ''}`}
+                onClick={() => setStatusFilter(s)}
+              >
+                {s === 'all' ? 'All' : s.charAt(0).toUpperCase() + s.slice(1)}
+                <span className="admin-filter-pill__count">{count}</span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Invoice list */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {invoices.map(inv => {
+        {filtered.length === 0 ? (
+          <div className="admin-empty">
+            {search ? `No invoices matching "${search}"` : 'No invoices in this category'}
+          </div>
+        ) : filtered.map(inv => {
           const client = clients.find(c => c.id === inv.client_id);
           const sc = STATUS_COLORS[inv.status] || 'rgba(255,255,255,0.4)';
           return (

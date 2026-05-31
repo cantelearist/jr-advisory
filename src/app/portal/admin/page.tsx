@@ -12,7 +12,7 @@ import {
   createEngagement, updateEngagement,
   createInvoice, updateInvoice,
 } from '@/lib/data';
-import type { Client, Engagement, Invoice, Document as DBDocument, AuditLogEntry, Todo } from '@/lib/database.types';
+import type { Client, Engagement, Invoice, Document as DBDocument, AuditLogEntry, Todo, Message } from '@/lib/database.types';
 import ClientModal, { type ClientFormData } from '@/components/portal/admin/ClientModal';
 import EngagementModal, { type EngagementFormData } from '@/components/portal/admin/EngagementModal';
 import InvoiceModal, { type InvoiceFormData } from '@/components/portal/admin/InvoiceModal';
@@ -41,6 +41,7 @@ export default function AdminPanel() {
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [documents, setDocuments] = useState<DBDocument[]>([]);
+  const [messages, setMessages] = useState<Message[]>([]);
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [loaded, setLoaded] = useState(false);
@@ -64,6 +65,7 @@ export default function AdminPanel() {
       setEngagements(data.engagements);
       setInvoices(data.invoices);
       setDocuments(data.documents || []);
+      setMessages(data.messages || []);
       setAuditLog(data.auditLog || []);
       setTodos((data.todos || []) as Todo[]);
     } catch {
@@ -79,6 +81,8 @@ export default function AdminPanel() {
   const urgentTodos = todos.filter(t => t.status !== 'done' && (t.priority === 'urgent' || t.priority === 'high'));
   const overdueTodos = todos.filter(t => t.status !== 'done' && t.due_date && new Date(t.due_date) < new Date());
   const overdueInvoices = invoices.filter(i => i.status === 'overdue');
+  const unreadMessages = messages.filter(m => !m.read).length;
+  const pendingDocs = documents.filter(d => d.status === 'pending-review').length;
   const alertCount = urgentTodos.length + overdueTodos.length + overdueInvoices.length;
 
   /* ── Todo handlers ── */
@@ -231,6 +235,7 @@ export default function AdminPanel() {
             inviteStatus={inviteStatus}
             onInvite={handleInvite}
             onNewClient={() => setClientModal({ open: true, client: null })}
+            onEditClient={(client) => setClientModal({ open: true, client })}
           />
         );
       case 'engagements':
@@ -285,7 +290,13 @@ export default function AdminPanel() {
           activeTab={tab}
           onTabChange={setTab}
           alertCount={alertCount}
-          unreadMessages={0}
+          unreadMessages={unreadMessages}
+          badges={{
+            overview: alertCount,
+            messages: unreadMessages,
+            invoices: overdueInvoices.length,
+            documents: pendingDocs,
+          }}
         />
 
         <div className="admin-content" style={{
