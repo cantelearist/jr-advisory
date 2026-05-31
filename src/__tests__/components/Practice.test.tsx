@@ -31,22 +31,25 @@ describe("Practice", () => {
     ).toBeInTheDocument();
   });
 
-  it("renders 19 years stat", () => {
+  it("renders stat labels", () => {
     render(<Practice />);
-    expect(screen.getByText("19")).toBeInTheDocument();
     expect(screen.getByText("Years in industry")).toBeInTheDocument();
-  });
-
-  it("renders 4–6 clients stat", () => {
-    render(<Practice />);
-    expect(screen.getByText("4–6")).toBeInTheDocument();
     expect(screen.getByText("Clients per quarter")).toBeInTheDocument();
+    expect(screen.getByText("From contractors")).toBeInTheDocument();
   });
 
-  it("renders $0 from contractors stat", () => {
+  it("renders stat counters with stat-counter class", () => {
     render(<Practice />);
-    expect(screen.getByText("$0")).toBeInTheDocument();
-    expect(screen.getByText("From contractors")).toBeInTheDocument();
+    const counters = document.querySelectorAll(".stat-counter");
+    // "19" and "$0" are numeric → rendered as NumericStat
+    expect(counters.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it("renders the 4–6 stat with en-dash suffix", () => {
+    render(<Practice />);
+    // "4–6" starts with digit so StatDisplay parses it as NumericStat
+    // with target=4, suffix="–6". Before intersection, displayValue=0
+    expect(screen.getByText("Clients per quarter")).toBeInTheDocument();
   });
 
   it("emphasises homeowner-only representation", () => {

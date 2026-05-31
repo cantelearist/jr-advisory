@@ -15,6 +15,8 @@ import {
   Contact,
   SiteFooter,
   CookieBanner,
+  ScrollProgress,
+  BackToTop,
 } from "@/components/marketing";
 
 const jsonLd = {
@@ -70,17 +72,25 @@ export default function HomePage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
+      {/* Skip to content — a11y */}
+      <a href="#practice" className="skip-to-content">
+        Skip to content
+      </a>
+      <ScrollProgress />
       <Nav />
       <Hero />
-      <Practice />
-      <Counsel />
-      <Engagement />
-      <Discretion />
-      <Matters />
-      <Founders />
-      <Contact />
+      <main id="main-content">
+        <Practice />
+        <Counsel />
+        <Engagement />
+        <Discretion />
+        <Matters />
+        <Founders />
+        <Contact />
+      </main>
       <SiteFooter />
       <CookieBanner />
+      <BackToTop />
     </div>
   );
 }

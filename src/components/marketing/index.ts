@@ -12,3 +12,5 @@ export { ClientOffice } from "./ClientOffice";
 export { Contact } from "./Contact";
 export { SiteFooter } from "./SiteFooter";
 export { CookieBanner } from "./CookieBanner";
+export { ScrollProgress } from "./ScrollProgress";
+export { BackToTop } from "./BackToTop";

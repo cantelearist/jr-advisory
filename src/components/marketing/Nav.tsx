@@ -3,10 +3,16 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { Logo } from "./Logo";
 import { NAV_ITEMS } from "@/lib/constants";
+import { useActiveSection } from "@/hooks/useActiveSection";
+
+const SECTION_IDS = NAV_ITEMS.map((item) =>
+  item.href.replace("#", "")
+);
 
 export function Nav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const activeId = useActiveSection(SECTION_IDS);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 40);
@@ -59,11 +65,18 @@ export function Nav() {
             style={{ display: "flex", gap: 36, justifyContent: "center" }}
             aria-label="Main navigation"
           >
-            {NAV_ITEMS.map(({ label, href }) => (
-              <a key={label} href={href} className="nav-link">
-                {label}
-              </a>
-            ))}
+            {NAV_ITEMS.map(({ label, href }) => {
+              const sectionId = href.replace("#", "");
+              return (
+                <a
+                  key={label}
+                  href={href}
+                  className={`nav-link ${activeId === sectionId ? "active" : ""}`}
+                >
+                  {label}
+                </a>
+              );
+            })}
           </nav>
 
           <div style={{ justifySelf: "end", display: "flex", alignItems: "center", gap: 16 }}>
@@ -110,13 +123,20 @@ export function Nav() {
           style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 36 }}
           aria-label="Mobile navigation"
         >
-          {NAV_ITEMS.map(({ label, href }) => (
-            <a key={label} href={href} className="nav-link" onClick={closeMenu}
-              style={{ fontSize: 17, letterSpacing: ".28em" }}
-            >
-              {label}
-            </a>
-          ))}
+          {NAV_ITEMS.map(({ label, href }) => {
+            const sectionId = href.replace("#", "");
+            return (
+              <a
+                key={label}
+                href={href}
+                className={`nav-link ${activeId === sectionId ? "active" : ""}`}
+                onClick={closeMenu}
+                style={{ fontSize: 17, letterSpacing: ".28em" }}
+              >
+                {label}
+              </a>
+            );
+          })}
           <div className="hr" style={{ width: 60, margin: "8px 0" }} />
           <a href="#contact" className="btn ghost" onClick={closeMenu}>
             Private Inquiry <span className="arr">→</span>
