@@ -1,7 +1,7 @@
 # JR Advisory — Technical Handoff
 
 > **James Roman Advisory** · Private client portal for hazmat remediation oversight
-> Last updated: June 1, 2026 · Commit `482ce52`+
+> Last updated: June 1, 2026 · Commit `34bb62e`+
 
 ---
 
@@ -365,20 +365,25 @@ useEffect(() => {
 
 ### Optional (feature-dependent)
 
-| Variable | Where | Purpose |
-|---|---|---|
-| `STRIPE_SECRET_KEY` | Stripe Dashboard → API keys | Payment processing |
-| `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Webhooks | Webhook verification |
-| `RESEND_API_KEY` | Resend Dashboard | Email notifications |
-| `NOTIFICATION_FROM_EMAIL` | Your domain | Sender email for notifications |
-| `DATABASE_URL` | Supabase Dashboard → Settings → Database | Direct Postgres (for trigger fix route only) |
+| Variable | Where | Purpose | Status |
+|---|---|---|---|
+| `STRIPE_SECRET_KEY` | Stripe Dashboard → API keys | Payment processing | ✅ Set |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe Dashboard → API keys | Client-side Stripe | ✅ Set |
+| `STRIPE_WEBHOOK_SECRET` | Stripe Dashboard → Webhooks | Webhook verification | ✅ Set |
+| `RESEND_API_KEY` | Resend Dashboard | Email notifications | ✅ Set |
+| `NOTIFICATION_FROM_EMAIL` | Your domain | Sender email for notifications | ✅ `concierge@jamesroman.la` |
+| `NEXT_PUBLIC_SITE_URL` | Your domain | Absolute URLs in emails/OG | ✅ Set |
+| `DATABASE_URL` | Supabase Dashboard → Settings → Database | Direct Postgres (optional) | Not set |
+| `NOTIFICATION_SECRET` | Self-generated | External notification trigger | Not set (optional) |
 
 ### Currently Connected
 - ✅ Supabase (all 3 keys — both Vercel projects, all envs)
 - ✅ Database password: set (used during migration, June 1 2026)
-- ⏳ Stripe — keys obtained, need to add to Vercel env vars: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`
-- ⏳ Resend — key obtained (`re_FY8Qzkak_...`), need to add `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` to Vercel
-- ⏳ DATABASE_URL — not set on Vercel (only needed for `/api/fix-trigger` route)
+- ✅ Stripe — `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` set on Vercel (June 1 2026)
+- ✅ Resend — `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` (`concierge@jamesroman.la`) set on Vercel (June 1 2026)
+- ✅ `NEXT_PUBLIC_SITE_URL` — set to `https://www.jamesroman.la` (June 1 2026)
+- ⏳ DATABASE_URL — not set on Vercel (only needed for `/api/fix-trigger` route, optional)
+- ⏳ Resend domain verification — DNS records not yet added in Namecheap for `jamesroman.la` sender identity
 
 ### Stripe Webhook
 - Webhook ID: `we_1TbAcV9fhKrRctJYo3Fpjr8G`
@@ -540,20 +545,17 @@ Uses IIFE pattern for complex tab content:
    - Set all environment variables
    - Build command is automatic via `vercel.json`
 
-### Optional: Stripe Integration
-1. Create Stripe account
-2. Add `STRIPE_SECRET_KEY` to Vercel env vars
-3. Add webhook endpoint: `https://www.jamesroman.la/api/payments/webhook`
-4. Add `STRIPE_WEBHOOK_SECRET` to Vercel env vars
-5. Add Stripe columns to invoices table:
-   ```sql
-   ALTER TABLE invoices ADD COLUMN stripe_session_id text;
-   ALTER TABLE invoices ADD COLUMN stripe_payment_id text;
-   ```
+### Stripe Integration ✅
+1. ~~Create Stripe account~~ ✅
+2. ~~Add `STRIPE_SECRET_KEY` to Vercel env vars~~ ✅
+3. ~~Add webhook endpoint: `https://www.jamesroman.la/api/payments/webhook`~~ ✅ Configured (webhook ID: `we_1TbAcV9fhKrRctJYo3Fpjr8G`)
+4. ~~Add `STRIPE_WEBHOOK_SECRET` to Vercel env vars~~ ✅
+5. Stripe columns on invoices table: included in `002_missing_tables.sql` migration ✅
 
-### Optional: Email Notifications (Resend)
-1. Create Resend account, verify domain
-2. Add `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` to Vercel env vars
+### Email Notifications (Resend) — partially complete
+1. ~~Create Resend account~~ ✅
+2. ~~Add `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` to Vercel env vars~~ ✅ (`concierge@jamesroman.la`)
+3. ⏳ Verify `jamesroman.la` domain in Resend — add DNS records in Namecheap
 
 ---
 
@@ -561,20 +563,23 @@ Uses IIFE pattern for complex tab content:
 
 | Issue | Status | Fix |
 |---|---|---|
-| Database tables | ✅ All 10 live | Migrated June 1, 2026 — all tables, enums, indexes, RLS policies created |
+| Database tables | ✅ All 13 live | Migrated June 1, 2026 — all tables, enums, indexes, RLS policies created |
 | Auth trigger (`handle_new_user`) | ✅ Live | Created June 1, 2026 via SQL Editor |
-| Stripe env vars | ⏳ Keys ready, not deployed | Add 3 vars to Vercel env vars, then redeploy |
-| Resend env vars | ⏳ Key ready, not deployed | Add `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` to Vercel |
-| Resend domain verification | ⏳ Not done | Add DNS records in Namecheap; until then use `onboarding@resend.dev` |
+| Stripe env vars | ✅ Deployed | `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET` set June 1 2026 |
+| Resend env vars | ✅ Deployed | `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` (`concierge@jamesroman.la`) set June 1 2026 |
+| `NEXT_PUBLIC_SITE_URL` | ✅ Set | `https://www.jamesroman.la` — June 1 2026 |
+| Resend domain verification | ⏳ Not done | Add DNS records in Namecheap for `jamesroman.la`; until then use `onboarding@resend.dev` |
 | favicon.ico | ✅ Fixed | Generated `.ico` from SVG; both `.svg` and `.ico` in `/public` |
-| `/login` route | ✅ Fixed | `/login` now redirects to `/portal` |
+| `/login` route | ✅ Fixed | `/login` now redirects to `/portal` (307) |
 | PostgREST schema cache | Intermittent | Restart project in Dashboard if new tables aren't writable |
 | Vercel API token | ❌ Expired | Generate new one in Vercel → Settings → Tokens (if needed for API access) |
 
-### 2 Steps to Go Live (manual)
+### Remaining Steps
 1. ~~Supabase SQL Editor — auth trigger~~ ✅ Done
-2. **Vercel Environment Variables** — add 5 keys: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NOTIFICATION_FROM_EMAIL`
-3. **Redeploy** on Vercel (Deployments → Redeploy last Production deployment)
+2. ~~Vercel Environment Variables~~ ✅ Done — all 8 keys set (June 1 2026)
+3. ~~Redeploy~~ ✅ Done
+4. **Resend domain verification** — add DNS records in Namecheap so emails from `concierge@jamesroman.la` are deliverable
+5. **Test Stripe checkout** — test with `4242 4242 4242 4242` to verify end-to-end payment flow
 
 ---
 
@@ -604,7 +609,9 @@ Uses IIFE pattern for complex tab content:
 | 5C-Wire | Integration Wiring (Supabase ↔ API routes) | `e2afc05` |
 | 5D-Hard | Polish & Hardening (error handling, edge cases) | `fecab85` |
 | DB-Fix | RLS policy fix — uuid extension, WITH CHECK on all policies | `21e1cf9` |
-| DB-Migrate | All 10 tables live — `002_missing_tables.sql` applied via SQL Editor | `4d2e1b1` |
+| DB-Migrate | All 13 tables live — `002_missing_tables.sql` applied via SQL Editor | `4d2e1b1` |
+| Auth-Trigger | `handle_new_user` trigger live — profiles auto-created on signup | `34bb62e` |
+| Env-Vars | All 8 integration env vars set on Vercel — Stripe, Resend, Site URL | — |
 
 ---
 
@@ -632,80 +639,83 @@ Uses IIFE pattern for complex tab content:
 
 ---
 
-## 14. Latest Test Results (June 1, 2026)
+## 14. Latest Test Results (June 1, 2026 — post-integration wiring)
+
+### Health Check (`/api/health`)
+```
+Status: HEALTHY
+Supabase:  ✅ connected (277ms latency)
+Stripe:    ✅ API key + webhook secret configured
+Resend:    ✅ API key configured
+Database:  ✅ 13/13 tables present
+Env vars:  ✅ 8/9 set (NOTIFICATION_SECRET optional)
+```
 
 ### Public Pages
 | Route | Status | Notes |
 |---|---|---|
-| `/` (homepage) | ✅ 200 | 95ms total load |
-| `/portal` (login) | ✅ 200 | 191ms |
-| `/portal/dashboard` | ✅ 307→login | Auth redirect working |
-| `/privacy` | ✅ 200 | |
-| `/accessibility` | ✅ 200 | |
-| `/cookies` | ✅ 200 | |
-| `/nda` | ✅ 200 | |
-| `/sitemap.xml` | ✅ 200 | |
-| `/terms` | ✅ 307 | Redirect (expected) |
-| `/disclaimer` | ✅ 307 | Redirect (expected) |
+| `/` (homepage) | ✅ 200 | Marketing site loads |
+| `/portal` (login) | ✅ 200 | Portal login page |
+| `/login` | ✅ 307→`/portal` | Redirect working |
+| `/favicon.ico` | ✅ 200 | Gold JR favicon |
 
-### Portal Pages (all 307→login when unauthenticated — correct)
-`/portal/documents`, `/portal/invoices`, `/portal/messages`, `/portal/timeline`, `/portal/welcome`, `/portal/admin`
+### API Security (unauthenticated requests)
+| Route | Expected | Actual | Result |
+|---|---|---|---|
+| `GET /api/portal/data` | 401 | 401 | ✅ |
+| `GET /api/admin` | 401 | 401 | ✅ |
+| `GET /api/messages/list` | 401 | 401 | ✅ |
+| `GET /api/signatures/list` | 401 | 401 | ✅ |
+| `GET /api/payments/checkout` | 405 | 405 | ✅ (POST only) |
+| `GET /api/notifications/list` | 401 | 401 | ✅ |
 
-### API Routes
-| Route | Status | Notes |
-|---|---|---|
-| `/api/health` | ✅ 401 | Key-protected (working) |
-| `/api/todos` | ✅ 401 | Session-protected |
-| `/api/admin` | ✅ 401 | Key-protected |
-| `/auth/callback` | ✅ 307 | Redirect (expected) |
+### Production Guards (dangerous endpoints blocked)
+| Route | Expected | Actual | Result |
+|---|---|---|---|
+| `POST /api/seed` | 403 | 403 | ✅ |
+| `POST /api/auth/setup` | 403 | 403 | ✅ |
 
-### Database (all 10 tables verified via Supabase REST API)
+### Database (all 13 tables verified via `/api/health`)
 ```
-✅ profiles           ✅ clients
-✅ engagements         ✅ documents
-✅ invoices            ✅ timeline_events
-✅ todo                ✅ signature_requests
-✅ notifications       ✅ site_content
+✅ profiles            ✅ clients             ✅ engagements
+✅ documents            ✅ messages             ✅ timeline_events
+✅ invoices             ✅ audit_log            ✅ nda_records
+✅ todo                 ✅ signature_requests   ✅ notifications
+✅ site_content
 ```
 
-### Security Headers
+### Security Headers (all 6 present)
 | Header | Value |
 |---|---|
-| `Content-Security-Policy` | ✅ Full policy (self + Stripe + Supabase + Vercel) |
+| `Content-Security-Policy` | ✅ Full policy (self + Stripe + Supabase + Vercel + Google Fonts) |
 | `Strict-Transport-Security` | ✅ `max-age=31536000; includeSubDomains; preload` |
 | `X-Content-Type-Options` | ✅ `nosniff` |
 | `X-Frame-Options` | ✅ `DENY` |
+| `Referrer-Policy` | ✅ `strict-origin-when-cross-origin` |
+| `Permissions-Policy` | ✅ `camera=(), microphone=(), geolocation=(), interest-cohort=()` |
 
-### Performance
-| Page | TTFB | Total |
-|---|---|---|
-| Homepage | 89ms | 95ms |
-| Login | 44ms | 45ms |
-
-### Supabase Auth
-✅ Reachable — providers available (Apple, Azure, Bitbucket, Discord, + more)
-
-### Minor Issues Found
-- ~~`favicon.ico` → 404~~ ✅ Fixed — generated `favicon.ico` from SVG (32×32, gold JR on black)
-- ~~`/login` → 404~~ ✅ Fixed — added `/login` page that redirects to `/portal`
+### Resolved Issues
+- ~~`favicon.ico` → 404~~ ✅ Fixed
+- ~~`/login` → 404~~ ✅ Fixed — redirects to `/portal`
+- ~~Stripe env vars not deployed~~ ✅ Set on Vercel
+- ~~Resend env vars not deployed~~ ✅ Set on Vercel
+- ~~`NEXT_PUBLIC_SITE_URL` missing~~ ✅ Set on Vercel
 
 ---
 
 ## 15. Suggested Next Steps
 
 ### High Priority (pre-launch)
-1. **Complete 3-step setup** — auth trigger, env vars, redeploy (see §11)
-2. **Re-seed data** — run `POST /api/seed?key=jr-seed-2026` after trigger is live to populate all tables + audit log
+1. ~~Complete 3-step setup — auth trigger, env vars, redeploy~~ ✅ Done
+2. **Re-seed data** — run `POST /api/seed?key=jr-seed-2026` on test to populate all tables + audit log
 3. **Verify Stripe checkout flow** — test with Stripe test card (`4242 4242 4242 4242`)
 4. **Verify Resend emails** — test via admin compose → sends notification to client
 5. **Domain email verification** — add Resend DNS records in Namecheap for `jamesroman.la` sender identity
 
 ### Medium Priority (post-launch polish)
 6. **Real client accounts** — use admin invite flow to create production accounts
-7. **Custom 404 page** — branded error page matching the design system
-8. **Rate limiting** — add rate limits to public API routes (seed, auth setup)
-9. **File type validation** — restrict uploads to PDF, DOC, JPG, PNG
-10. **Session timeout** — auto-logout after 30 min idle
+7. **File type validation** — restrict uploads to PDF, DOC, JPG, PNG
+8. **Session timeout** — auto-logout after 30 min idle
 
 ### Feature Ideas
 11. **Client notifications** — push/email when documents are uploaded or invoices created
