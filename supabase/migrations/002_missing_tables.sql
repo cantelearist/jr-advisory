@@ -1,14 +1,12 @@
 /* ──────────────────────────────────────────────────────
-   JR Advisory — Missing Tables Migration
-   Phase 5B: Creates todo, signature_requests, notifications, site_content
-   Run in Supabase SQL Editor after 001_initial_schema.sql
+   JR Advisory — Missing Tables Migration (RETRY-SAFE)
+   Wraps everything in DROP IF EXISTS → CREATE
    ────────────────────────────────────────────────────── */
 
 /* ══════════════════════════════════════════════════════
    1. ENUMS (add if not already present)
    ══════════════════════════════════════════════════════ */
 
-/* Add 'payment' to timeline_type enum if not present */
 DO $$ BEGIN
   ALTER TYPE timeline_type ADD VALUE IF NOT EXISTS 'payment';
 EXCEPTION WHEN others THEN NULL;
@@ -68,18 +66,18 @@ CREATE INDEX IF NOT EXISTS idx_todo_due_date    ON todo(due_date);
 
 ALTER TABLE todo ENABLE ROW LEVEL SECURITY;
 
--- Admins can do everything with todos
+DROP POLICY IF EXISTS "Admins full access to todos" ON todo;
 CREATE POLICY "Admins full access to todos"
   ON todo FOR ALL USING (is_admin());
 
--- Clients can see only todos marked visible_to_client for their own engagements
+DROP POLICY IF EXISTS "Clients see visible todos" ON todo;
 CREATE POLICY "Clients see visible todos"
   ON todo FOR SELECT USING (
     visible_to_client = true
     AND client_id IN (SELECT my_client_ids())
   );
 
--- updated_at trigger
+DROP TRIGGER IF EXISTS set_updated_at ON todo;
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON todo
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
@@ -96,7 +94,7 @@ CREATE TABLE IF NOT EXISTS signature_requests (
   signer_email      text NOT NULL DEFAULT '',
   message           text,
   status            signature_status NOT NULL DEFAULT 'pending',
-  signature_data    text,            -- Base64-encoded signature image or decline reason
+  signature_data    text,
   signed_at         timestamptz,
   ip_address        inet,
   created_at        timestamptz NOT NULL DEFAULT now(),
@@ -109,17 +107,17 @@ CREATE INDEX IF NOT EXISTS idx_sig_req_status   ON signature_requests(status);
 
 ALTER TABLE signature_requests ENABLE ROW LEVEL SECURITY;
 
--- Admins can manage all signature requests
+DROP POLICY IF EXISTS "Admins full access to signatures" ON signature_requests;
 CREATE POLICY "Admins full access to signatures"
   ON signature_requests FOR ALL USING (is_admin());
 
--- Clients can view their own signature requests
+DROP POLICY IF EXISTS "Clients see own signatures" ON signature_requests;
 CREATE POLICY "Clients see own signatures"
   ON signature_requests FOR SELECT USING (
     client_id IN (SELECT my_client_ids())
   );
 
--- Clients can update their own pending signature requests (to sign/decline)
+DROP POLICY IF EXISTS "Clients can sign own requests" ON signature_requests;
 CREATE POLICY "Clients can sign own requests"
   ON signature_requests FOR UPDATE USING (
     client_id IN (SELECT my_client_ids())
@@ -128,7 +126,7 @@ CREATE POLICY "Clients can sign own requests"
     status IN ('signed', 'declined')
   );
 
--- updated_at trigger
+DROP TRIGGER IF EXISTS set_updated_at ON signature_requests;
 CREATE TRIGGER set_updated_at BEFORE UPDATE ON signature_requests
   FOR EACH ROW EXECUTE FUNCTION update_updated_at();
 
@@ -139,11 +137,11 @@ CREATE TRIGGER set_updated_at BEFORE UPDATE ON signature_requests
 
 CREATE TABLE IF NOT EXISTS notifications (
   id                uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-  target            text NOT NULL,     -- 'firm' for admin, or client_id UUID string
+  target            text NOT NULL,
   type              notification_type NOT NULL,
   title             text NOT NULL,
   body              text,
-  link              text,              -- Portal page link e.g. '/portal/messages'
+  link              text,
   read              boolean NOT NULL DEFAULT false,
   metadata          jsonb,
   created_at        timestamptz NOT NULL DEFAULT now()
@@ -156,31 +154,31 @@ CREATE INDEX IF NOT EXISTS idx_notif_target_read ON notifications(target, read);
 
 ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
 
--- Admins can see all notifications targeted to 'firm'
+DROP POLICY IF EXISTS "Admins see firm notifications" ON notifications;
 CREATE POLICY "Admins see firm notifications"
   ON notifications FOR SELECT USING (
     is_admin() AND target = 'firm'
   );
 
--- Admins can update (dismiss) firm notifications
+DROP POLICY IF EXISTS "Admins dismiss firm notifications" ON notifications;
 CREATE POLICY "Admins dismiss firm notifications"
   ON notifications FOR UPDATE USING (
     is_admin() AND target = 'firm'
   );
 
--- Clients see notifications targeted to their client_id
+DROP POLICY IF EXISTS "Clients see own notifications" ON notifications;
 CREATE POLICY "Clients see own notifications"
   ON notifications FOR SELECT USING (
     target IN (SELECT id::text FROM clients WHERE profile_id = auth.uid())
   );
 
--- Clients can dismiss their own notifications
+DROP POLICY IF EXISTS "Clients dismiss own notifications" ON notifications;
 CREATE POLICY "Clients dismiss own notifications"
   ON notifications FOR UPDATE USING (
     target IN (SELECT id::text FROM clients WHERE profile_id = auth.uid())
   );
 
--- System can insert notifications (service role bypasses RLS anyway, but belt-and-suspenders)
+DROP POLICY IF EXISTS "System can insert notifications" ON notifications;
 CREATE POLICY "System can insert notifications"
   ON notifications FOR INSERT WITH CHECK (true);
 
@@ -190,10 +188,10 @@ CREATE POLICY "System can insert notifications"
    ══════════════════════════════════════════════════════ */
 
 CREATE TABLE IF NOT EXISTS site_content (
-  id                text PRIMARY KEY,    -- e.g. 'hero_tagline'
-  section           text NOT NULL,       -- e.g. 'hero', 'practice', 'founders'
-  key               text NOT NULL,       -- e.g. 'tagline', 'description'
-  label             text NOT NULL,       -- Human-readable label
+  id                text PRIMARY KEY,
+  section           text NOT NULL,
+  key               text NOT NULL,
+  label             text NOT NULL,
   content           text NOT NULL,
   content_type      content_type NOT NULL DEFAULT 'text',
   updated_at        timestamptz NOT NULL DEFAULT now(),
@@ -205,11 +203,11 @@ CREATE UNIQUE INDEX IF NOT EXISTS idx_content_section_key ON site_content(sectio
 
 ALTER TABLE site_content ENABLE ROW LEVEL SECURITY;
 
--- Anyone can read site content (public website)
+DROP POLICY IF EXISTS "Public read site content" ON site_content;
 CREATE POLICY "Public read site content"
   ON site_content FOR SELECT USING (true);
 
--- Only admins can modify site content
+DROP POLICY IF EXISTS "Admins manage site content" ON site_content;
 CREATE POLICY "Admins manage site content"
   ON site_content FOR ALL USING (is_admin());
 
@@ -233,7 +231,6 @@ END $$;
    7. VERIFY
    ══════════════════════════════════════════════════════ */
 
--- Quick smoke test: these should all succeed silently
 DO $$
 BEGIN
   PERFORM 1 FROM todo LIMIT 0;
