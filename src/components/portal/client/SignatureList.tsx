@@ -58,6 +58,7 @@ export default function SignatureList({ clientId }: SignatureListProps) {
 
   const pending = requests.filter(r => r.status === 'pending');
   const completed = requests.filter(r => r.status === 'signed');
+  const declined = requests.filter(r => r.status === 'declined');
 
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
@@ -141,6 +142,38 @@ export default function SignatureList({ clientId }: SignatureListProps) {
                 </div>
                 <span className="sig-item__badge sig-item__badge--signed">
                   SIGNED
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Declined signatures */}
+      {declined.length > 0 && (
+        <div>
+          <span style={{
+            fontFamily: "'JetBrains Mono', monospace",
+            fontSize: 9,
+            letterSpacing: '0.35em',
+            color: 'rgba(239,68,68,0.3)',
+            display: 'block',
+            marginBottom: 12,
+          }}>
+            DECLINED
+          </span>
+
+          <div className="sig-list">
+            {declined.map((r) => (
+              <div key={r.id} className="sig-item" style={{ cursor: 'default', opacity: 0.5 }}>
+                <div className="sig-item__info">
+                  <span className="sig-item__name">{r.documentName}</span>
+                  <span className="sig-item__meta">
+                    {r.documentCategory} · Declined {r.signed_at ? formatDate(r.signed_at) : ''}
+                  </span>
+                </div>
+                <span className="sig-item__badge sig-item__badge--declined">
+                  DECLINED
                 </span>
               </div>
             ))}

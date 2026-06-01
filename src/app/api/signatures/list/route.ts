@@ -10,7 +10,10 @@ export async function GET(req: NextRequest) {
   );
 
   const clientId = req.nextUrl.searchParams.get('client_id');
-  let query = sb.from('signature_requests').select('*, documents(name, category)').order('created_at', { ascending: false });
+  let query = sb
+    .from('signature_requests')
+    .select('*, documents(name, category), clients(name, email, property)')
+    .order('created_at', { ascending: false });
   if (clientId) query = query.eq('client_id', clientId);
 
   const { data, error } = await query;

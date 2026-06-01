@@ -32,6 +32,10 @@ export default function SignatureModal({ request, onClose, onSigned }: Signature
   const [error, setError] = useState('');
   const [agreed, setAgreed] = useState(false);
   const [signed, setSigned] = useState(false);
+  const [showDecline, setShowDecline] = useState(false);
+  const [declineReason, setDeclineReason] = useState('');
+  const [declining, setDeclining] = useState(false);
+  const [declined, setDeclined] = useState(false);
 
   const handleSign = useCallback(async () => {
     if (!padRef.current || padRef.current.isEmpty() || !agreed) return;
@@ -64,13 +68,51 @@ export default function SignatureModal({ request, onClose, onSigned }: Signature
     }
   }, [agreed, request.id, onSigned, onClose]);
 
+  const handleDecline = useCallback(async () => {
+    setDeclining(true);
+    setError('');
+
+    try {
+      const res = await fetch('/api/signatures/decline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          signature_request_id: request.id,
+          reason: declineReason.trim() || undefined,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Decline failed');
+
+      setDeclined(true);
+      setTimeout(() => {
+        onSigned();
+        onClose();
+      }, 2000);
+    } catch (e: unknown) {
+      setError(e instanceof Error ? e.message : 'Decline failed');
+    } finally {
+      setDeclining(false);
+    }
+  }, [request.id, declineReason, onSigned, onClose]);
+
   const formatDate = (d: string) =>
     new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 
   return (
     <div className="sig-overlay" onClick={onClose}>
       <div className="sig-modal" onClick={(e) => e.stopPropagation()}>
-        {signed ? (
+        {declined ? (
+          /* Decline success */
+          <div className="sig-success">
+            <div className="sig-success__icon" style={{ borderColor: 'rgba(239,68,68,0.3)', color: '#ef4444' }}>✕</div>
+            <h2 className="sig-success__title">Signature Declined</h2>
+            <p className="sig-success__sub">
+              Your response has been recorded. The requesting party will be notified.
+            </p>
+          </div>
+        ) : signed ? (
           /* Success state */
           <div className="sig-success">
             <div className="sig-success__icon">✓</div>
@@ -79,6 +121,70 @@ export default function SignatureModal({ request, onClose, onSigned }: Signature
               Your signature has been recorded and an audit trail has been created.
             </p>
           </div>
+        ) : showDecline ? (
+          /* Decline flow */
+          <>
+            <div className="sig-header">
+              <div>
+                <span className="sig-header__label">DECLINE SIGNATURE</span>
+                <h2 className="sig-header__title">{request.documentName}</h2>
+                <span className="sig-header__meta">
+                  {request.documentCategory} · Requested {formatDate(request.created_at)}
+                </span>
+              </div>
+              <button className="sig-header__close" onClick={() => setShowDecline(false)}>←</button>
+            </div>
+
+            <div style={{ padding: '24px 32px' }}>
+              <div style={{
+                fontFamily: "'JetBrains Mono', monospace",
+                fontSize: 9,
+                letterSpacing: '0.35em',
+                color: 'rgba(239,68,68,0.5)',
+                marginBottom: 12,
+              }}>
+                REASON FOR DECLINING (OPTIONAL)
+              </div>
+              <textarea
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                placeholder="Please provide a reason for declining this signature request…"
+                rows={4}
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.02)',
+                  border: '1px solid rgba(239,68,68,0.1)',
+                  color: 'rgba(255,255,255,0.7)',
+                  fontFamily: "'Inter', sans-serif",
+                  fontSize: 13,
+                  padding: '12px 14px',
+                  resize: 'vertical',
+                  outline: 'none',
+                  lineHeight: 1.5,
+                }}
+              />
+            </div>
+
+            {error && <p className="sig-error">{error}</p>}
+
+            <div className="sig-actions">
+              <button className="sig-actions__cancel" onClick={() => setShowDecline(false)}>
+                Back
+              </button>
+              <button
+                className="sig-actions__sign"
+                onClick={handleDecline}
+                disabled={declining}
+                style={{
+                  background: 'rgba(239,68,68,0.15)',
+                  borderColor: 'rgba(239,68,68,0.3)',
+                  color: '#ef4444',
+                }}
+              >
+                {declining ? 'Declining…' : 'Confirm Decline'}
+              </button>
+            </div>
+          </>
         ) : (
           <>
             {/* Header */}
@@ -158,17 +264,30 @@ export default function SignatureModal({ request, onClose, onSigned }: Signature
             {error && <p className="sig-error">{error}</p>}
 
             {/* Actions */}
-            <div className="sig-actions">
-              <button className="sig-actions__cancel" onClick={onClose}>
-                Cancel
-              </button>
+            <div className="sig-actions" style={{ justifyContent: 'space-between' }}>
               <button
-                className="sig-actions__sign"
-                onClick={handleSign}
-                disabled={!hasSignature || !agreed || signing}
+                className="sig-actions__cancel"
+                onClick={() => setShowDecline(true)}
+                style={{
+                  color: 'rgba(239,68,68,0.5)',
+                  borderColor: 'rgba(239,68,68,0.1)',
+                  fontSize: 11,
+                }}
               >
-                {signing ? 'Signing…' : 'Sign Document'}
+                Decline
               </button>
+              <div style={{ display: 'flex', gap: 12 }}>
+                <button className="sig-actions__cancel" onClick={onClose}>
+                  Cancel
+                </button>
+                <button
+                  className="sig-actions__sign"
+                  onClick={handleSign}
+                  disabled={!hasSignature || !agreed || signing}
+                >
+                  {signing ? 'Signing…' : 'Sign Document'}
+                </button>
+              </div>
             </div>
 
             {/* Legal footer */}

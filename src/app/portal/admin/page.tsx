@@ -12,7 +12,7 @@ import {
   createEngagement, updateEngagement,
   createInvoice, updateInvoice,
 } from '@/lib/data';
-import type { Client, Engagement, Invoice, Document as DBDocument, AuditLogEntry, Todo, Message } from '@/lib/database.types';
+import type { Client, Engagement, Invoice, Document as DBDocument, AuditLogEntry, Todo, Message, SignatureRequest } from '@/lib/database.types';
 import ClientModal, { type ClientFormData } from '@/components/portal/admin/ClientModal';
 import EngagementModal, { type EngagementFormData } from '@/components/portal/admin/EngagementModal';
 import InvoiceModal, { type InvoiceFormData } from '@/components/portal/admin/InvoiceModal';
@@ -22,6 +22,8 @@ import AdminOverview from '@/components/portal/admin/tabs/AdminOverview';
 import AdminClients from '@/components/portal/admin/tabs/AdminClients';
 import AdminEngagements from '@/components/portal/admin/tabs/AdminEngagements';
 import AdminDocuments from '@/components/portal/admin/tabs/AdminDocuments';
+import AdminSignatures from '@/components/portal/admin/tabs/AdminSignatures';
+import SignatureRequestModal from '@/components/portal/admin/SignatureRequestModal';
 import AdminMessages from '@/components/portal/admin/tabs/AdminMessages';
 import AdminInvoices from '@/components/portal/admin/tabs/AdminInvoices';
 import AdminActivity from '@/components/portal/admin/tabs/AdminActivity';
@@ -44,6 +46,7 @@ export default function AdminPanel() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
+  const [signatures, setSignatures] = useState<(SignatureRequest & { documents?: { name: string; category: string } | null; clients?: { name: string; email: string; property: string } | null })[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [inviteStatus, setInviteStatus] = useState<Record<string, string>>({});
 
@@ -51,6 +54,7 @@ export default function AdminPanel() {
   const [clientModal, setClientModal] = useState<{ open: boolean; client: Client | null }>({ open: false, client: null });
   const [engModal, setEngModal] = useState<{ open: boolean; engagement: Engagement | null }>({ open: false, engagement: null });
   const [invModal, setInvModal] = useState<{ open: boolean; invoice: Invoice | null }>({ open: false, invoice: null });
+  const [sigReqModal, setSigReqModal] = useState<{ open: boolean; document: DBDocument | null; client: Client | null }>({ open: false, document: null, client: null });
 
   /* ── Auth guard ── */
   useEffect(() => {
@@ -68,6 +72,12 @@ export default function AdminPanel() {
       setMessages(data.messages || []);
       setAuditLog(data.auditLog || []);
       setTodos((data.todos || []) as Todo[]);
+      /* Load signature requests */
+      try {
+        const sigRes = await fetch('/api/signatures/list');
+        const sigData = await sigRes.json();
+        setSignatures(sigData.signatures || []);
+      } catch { /* skip */ }
     } catch {
       const [c, e, i] = await Promise.all([fetchAllClients(), fetchAllEngagements(), fetchAllInvoices()]);
       setClients(c); setEngagements(e); setInvoices(i);
@@ -83,7 +93,8 @@ export default function AdminPanel() {
   const overdueInvoices = invoices.filter(i => i.status === 'overdue');
   const unreadMessages = messages.filter(m => !m.read).length;
   const pendingDocs = documents.filter(d => d.status === 'pending-review').length;
-  const alertCount = urgentTodos.length + overdueTodos.length + overdueInvoices.length;
+  const pendingSignatures = signatures.filter(s => s.status === 'pending').length;
+  const alertCount = urgentTodos.length + overdueTodos.length + overdueInvoices.length + pendingSignatures;
 
   /* ── Todo handlers ── */
   const handleAddTodo = async (title: string, priority: string, clientId: string, due: string, visible: boolean) => {
@@ -256,6 +267,18 @@ export default function AdminPanel() {
             engagements={engagements}
             documents={documents}
             onReload={loadData}
+            onRequestSignature={(doc) => {
+              const client = clients.find(c => c.id === doc.client_id);
+              if (client) setSigReqModal({ open: true, document: doc, client });
+            }}
+          />
+        );
+      case 'signatures':
+        return (
+          <AdminSignatures
+            signatures={signatures}
+            clients={clients}
+            onReload={loadData}
           />
         );
       case 'messages':
@@ -296,6 +319,7 @@ export default function AdminPanel() {
             messages: unreadMessages,
             invoices: overdueInvoices.length,
             documents: pendingDocs,
+            signatures: pendingSignatures,
           }}
         />
 
@@ -331,6 +355,13 @@ export default function AdminPanel() {
         invoice={invModal.invoice}
         clients={clients}
         engagements={engagements}
+      />
+      <SignatureRequestModal
+        open={sigReqModal.open}
+        document={sigReqModal.document}
+        client={sigReqModal.client}
+        onClose={() => setSigReqModal({ open: false, document: null, client: null })}
+        onSent={loadData}
       />
     </div>
   );
