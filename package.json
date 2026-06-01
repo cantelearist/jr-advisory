@@ -17,12 +17,14 @@
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.1",
+    "grapesjs": "^0.23.1",
+    "grapesjs-preset-webpage": "^1.0.3",
     "next": "^15",
     "postgres": "^3.4.5",
     "react": "^19",
     "react-dom": "^19",
-    "stripe": "^17.7.0",
-    "resend": "^4.0.0"
+    "resend": "^4.0.0",
+    "stripe": "^17.7.0"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",

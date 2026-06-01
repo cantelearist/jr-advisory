@@ -28,6 +28,7 @@ import AdminMessages from '@/components/portal/admin/tabs/AdminMessages';
 import AdminInvoices from '@/components/portal/admin/tabs/AdminInvoices';
 import AdminActivity from '@/components/portal/admin/tabs/AdminActivity';
 import AdminContent from '@/components/portal/admin/tabs/AdminContent';
+import AdminPages from '@/components/portal/admin/tabs/AdminPages';
 import AdminSettings from '@/components/portal/admin/tabs/AdminSettings';
 import '@/components/portal/admin/admin.css';
 
@@ -39,6 +40,16 @@ export default function AdminPanel() {
 
   /* ── State ── */
   const [tab, setTab] = useState<Tab>('overview');
+
+  /* Read ?tab= from URL on mount */
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const urlTab = params.get('tab');
+    const validTabs = ['overview','clients','engagements','documents','signatures','messages','invoices','activity','content','pages','settings'];
+    if (urlTab && validTabs.includes(urlTab)) {
+      setTab(urlTab as Tab);
+    }
+  }, []);
   const [clients, setClients] = useState<Client[]>([]);
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
@@ -294,6 +305,8 @@ export default function AdminPanel() {
         );
       case 'activity':
         return <AdminActivity auditLog={auditLog} />;
+      case 'pages':
+        return <AdminPages onEditPage={(pageId) => router.push(`/portal/admin/editor?id=${pageId}`)} />;
       case 'content':
         return <AdminContent />;
       case 'settings':

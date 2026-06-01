@@ -394,6 +394,24 @@
   color: var(--admin-text);
 }
 
+.admin-btn--sm {
+  padding: 5px 12px;
+  font-size: 10px;
+  letter-spacing: 0.08em;
+  text-decoration: none;
+}
+
+.admin-kpi-strip {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.admin-kpi-strip .admin-kpi {
+  flex: 1;
+  min-width: 120px;
+}
+
 /* ── Section Headers ── */
 .admin-section {
   margin-bottom: 32px;

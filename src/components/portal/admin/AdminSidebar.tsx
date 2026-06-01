@@ -1,6 +1,6 @@
 'use client';
 
-export type Tab = 'overview' | 'clients' | 'engagements' | 'documents' | 'signatures' | 'messages' | 'invoices' | 'activity' | 'content' | 'settings';
+export type Tab = 'overview' | 'clients' | 'engagements' | 'documents' | 'signatures' | 'messages' | 'invoices' | 'activity' | 'content' | 'pages' | 'settings';
 
 interface SidebarItem {
   id: Tab;
@@ -18,7 +18,8 @@ const ITEMS: SidebarItem[] = [
   { id: 'signatures',   label: 'Signatures',   icon: '✍' },
   { id: 'messages',     label: 'Messages',     icon: '✉' },
   { id: 'activity',     label: 'Activity',     icon: '▸' },
-  { id: 'content',      label: 'Content',      icon: '✎', section: 'SYSTEM' },
+  { id: 'pages',        label: 'Page Builder', icon: '◧', section: 'SYSTEM' },
+  { id: 'content',      label: 'Content',      icon: '✎' },
   { id: 'settings',     label: 'Settings',     icon: '⚙' },
 ];
 
