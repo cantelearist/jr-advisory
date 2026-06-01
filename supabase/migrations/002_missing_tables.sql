@@ -4,6 +4,12 @@
    ────────────────────────────────────────────────────── */
 
 /* ══════════════════════════════════════════════════════
+   0. EXTENSIONS
+   ══════════════════════════════════════════════════════ */
+
+CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
+
+/* ══════════════════════════════════════════════════════
    1. ENUMS (add if not already present)
    ══════════════════════════════════════════════════════ */
 
@@ -68,7 +74,7 @@ ALTER TABLE todo ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Admins full access to todos" ON todo;
 CREATE POLICY "Admins full access to todos"
-  ON todo FOR ALL USING (is_admin());
+  ON todo FOR ALL USING (is_admin()) WITH CHECK (is_admin());
 
 DROP POLICY IF EXISTS "Clients see visible todos" ON todo;
 CREATE POLICY "Clients see visible todos"
@@ -109,7 +115,7 @@ ALTER TABLE signature_requests ENABLE ROW LEVEL SECURITY;
 
 DROP POLICY IF EXISTS "Admins full access to signatures" ON signature_requests;
 CREATE POLICY "Admins full access to signatures"
-  ON signature_requests FOR ALL USING (is_admin());
+  ON signature_requests FOR ALL USING (is_admin()) WITH CHECK (is_admin());
 
 DROP POLICY IF EXISTS "Clients see own signatures" ON signature_requests;
 CREATE POLICY "Clients see own signatures"
@@ -164,6 +170,8 @@ DROP POLICY IF EXISTS "Admins dismiss firm notifications" ON notifications;
 CREATE POLICY "Admins dismiss firm notifications"
   ON notifications FOR UPDATE USING (
     is_admin() AND target = 'firm'
+  ) WITH CHECK (
+    is_admin() AND target = 'firm'
   );
 
 DROP POLICY IF EXISTS "Clients see own notifications" ON notifications;
@@ -175,6 +183,8 @@ CREATE POLICY "Clients see own notifications"
 DROP POLICY IF EXISTS "Clients dismiss own notifications" ON notifications;
 CREATE POLICY "Clients dismiss own notifications"
   ON notifications FOR UPDATE USING (
+    target IN (SELECT id::text FROM clients WHERE profile_id = auth.uid())
+  ) WITH CHECK (
     target IN (SELECT id::text FROM clients WHERE profile_id = auth.uid())
   );
 
@@ -209,7 +219,7 @@ CREATE POLICY "Public read site content"
 
 DROP POLICY IF EXISTS "Admins manage site content" ON site_content;
 CREATE POLICY "Admins manage site content"
-  ON site_content FOR ALL USING (is_admin());
+  ON site_content FOR ALL USING (is_admin()) WITH CHECK (is_admin());
 
 
 /* ══════════════════════════════════════════════════════
