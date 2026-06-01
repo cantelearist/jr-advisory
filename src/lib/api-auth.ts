@@ -64,7 +64,9 @@ export async function requireAuth(
 
   const isAdmin =
     profile?.role === 'admin' ||
-    user.user_metadata?.role === 'admin';
+    profile?.role === 'manager' ||
+    user.user_metadata?.role === 'admin' ||
+    user.user_metadata?.role === 'manager';
 
   return { user, profile, isAdmin, sb };
 }

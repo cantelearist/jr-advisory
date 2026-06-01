@@ -36,7 +36,7 @@ export async function middleware(request: NextRequest) {
   // ── Login page: redirect authenticated users to their home ──
   if (path === '/portal' && user) {
     const role = user.user_metadata?.role || 'client';
-    const dest = role === 'admin' ? '/portal/admin' : '/portal/dashboard';
+    const dest = (role === 'admin' || role === 'manager') ? '/portal/admin' : '/portal/dashboard';
     return NextResponse.redirect(new URL(dest, request.url));
   }
 

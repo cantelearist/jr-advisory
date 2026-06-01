@@ -30,6 +30,7 @@ import AdminActivity from '@/components/portal/admin/tabs/AdminActivity';
 import AdminContent from '@/components/portal/admin/tabs/AdminContent';
 import AdminPages from '@/components/portal/admin/tabs/AdminPages';
 import AdminSettings from '@/components/portal/admin/tabs/AdminSettings';
+import AdminTeam from '@/components/portal/admin/tabs/AdminTeam';
 import '@/components/portal/admin/admin.css';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
@@ -45,7 +46,7 @@ export default function AdminPanel() {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const urlTab = params.get('tab');
-    const validTabs = ['overview','clients','engagements','documents','signatures','messages','invoices','activity','content','pages','settings'];
+    const validTabs = ['overview','clients','engagements','documents','signatures','messages','invoices','activity','team','content','pages','settings'];
     if (urlTab && validTabs.includes(urlTab)) {
       setTab(urlTab as Tab);
     }
@@ -58,6 +59,7 @@ export default function AdminPanel() {
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [signatures, setSignatures] = useState<(SignatureRequest & { documents?: { name: string; category: string } | null; clients?: { name: string; email: string; property: string } | null })[]>([]);
+  const [teamUsers, setTeamUsers] = useState<{ id: string; full_name: string; email: string; role: string; created_at: string }[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [inviteStatus, setInviteStatus] = useState<Record<string, string>>({});
 
@@ -88,6 +90,12 @@ export default function AdminPanel() {
         const sigRes = await fetch('/api/signatures/list');
         const sigData = await sigRes.json();
         setSignatures(sigData.signatures || []);
+      } catch { /* skip */ }
+      /* Load team users */
+      try {
+        const teamRes = await fetch('/api/team');
+        const teamData = await teamRes.json();
+        setTeamUsers(teamData.users || []);
       } catch { /* skip */ }
     } catch {
       const [c, e, i] = await Promise.all([fetchAllClients(), fetchAllEngagements(), fetchAllInvoices()]);
@@ -305,6 +313,8 @@ export default function AdminPanel() {
         );
       case 'activity':
         return <AdminActivity auditLog={auditLog} />;
+      case 'team':
+        return <AdminTeam users={teamUsers} />;
       case 'pages':
         return <AdminPages onEditPage={(pageId) => router.push(`/portal/admin/editor?id=${pageId}`)} />;
       case 'content':

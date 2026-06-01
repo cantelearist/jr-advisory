@@ -1371,3 +1371,422 @@
     max-height: 400px;
   }
 }
+
+/* ═══════════════════════════════════════════════════════════════════
+   ROMER OVERVIEW — "Cinematic Precision" Dashboard
+   Manrope headings, deep-space layers, tonal KPI cards
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ── Status Bar ── */
+.romer-status-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  margin-bottom: 24px;
+}
+
+.romer-status-bar__live {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.romer-status-bar__dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #50d8e9;
+  animation: romerPulse 2s infinite;
+}
+
+.romer-status-bar__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  font-weight: 700;
+  color: #50d8e9;
+}
+
+.romer-status-bar__time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--admin-text-dim);
+}
+
+.romer-status-bar__time span {
+  color: var(--admin-text);
+}
+
+@keyframes romerPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.4; }
+}
+
+/* ── KPI Grid (3x2) ── */
+.romer-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.romer-kpi {
+  background: var(--admin-card);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  transition: border-color 0.2s ease;
+}
+
+.romer-kpi:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.romer-kpi__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--admin-text-muted);
+  opacity: 0.6;
+  margin-bottom: 10px;
+}
+
+.romer-kpi__value {
+  font-family: 'Manrope', sans-serif;
+  font-size: 28px;
+  font-weight: 520;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  color: var(--admin-text);
+}
+
+.romer-kpi__delta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.romer-kpi__delta--positive {
+  color: #50d8e9;
+}
+
+.romer-kpi__delta--warning {
+  color: #ffb689;
+}
+
+.romer-kpi__delta--neutral {
+  color: var(--admin-text-muted);
+}
+
+.romer-kpi__delta--success {
+  color: #4ade80;
+}
+
+/* Mini sparkline bars */
+.romer-kpi__bars {
+  display: flex;
+  gap: 2px;
+  align-items: flex-end;
+  height: 20px;
+}
+
+.romer-kpi__bar {
+  width: 3px;
+  border-radius: 1px;
+  transition: height 0.3s ease;
+}
+
+/* ── Signal Chart ── */
+.romer-chart {
+  background: var(--admin-card);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  margin-bottom: 24px;
+}
+
+.romer-chart__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding: 0 4px;
+}
+
+.romer-chart__title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: var(--admin-text);
+  opacity: 0.6;
+}
+
+.romer-chart__legend {
+  display: flex;
+  gap: 16px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--admin-text-muted);
+}
+
+.romer-chart__legend-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+.romer-chart__canvas {
+  border-radius: 8px;
+  background: rgba(7, 7, 8, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  position: relative;
+  height: 180px;
+}
+
+/* ── Two-Column Grid (Focus Queue + Pipeline) ── */
+.romer-duo-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.romer-panel {
+  background: var(--admin-card);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+.romer-panel__title {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--admin-text);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  padding-bottom: 10px;
+  margin-bottom: 16px;
+}
+
+/* Focus queue items */
+.romer-queue-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  font-size: 14px;
+  color: var(--admin-text);
+}
+
+.romer-queue-item + .romer-queue-item {
+  border-top: 1px solid rgba(255, 255, 255, 0.03);
+}
+
+.romer-queue-tag {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.romer-queue-tag--urgent {
+  background: rgba(255, 182, 137, 0.1);
+  color: #ffb689;
+}
+
+.romer-queue-tag--active {
+  background: rgba(80, 216, 233, 0.1);
+  color: #50d8e9;
+}
+
+.romer-queue-tag--today {
+  color: var(--admin-text-muted);
+}
+
+.romer-queue-tag--normal {
+  color: var(--admin-text-dim);
+}
+
+/* Pipeline progress bars */
+.romer-progress {
+  margin-bottom: 16px;
+}
+
+.romer-progress:last-child {
+  margin-bottom: 0;
+}
+
+.romer-progress__track {
+  height: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 999px;
+  overflow: hidden;
+  margin-bottom: 6px;
+}
+
+.romer-progress__fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.5s ease;
+}
+
+.romer-progress__meta {
+  display: flex;
+  justify-content: space-between;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--admin-text-muted);
+}
+
+.romer-progress__count {
+  font-weight: 700;
+}
+
+/* ── Activity Feed (Intelligence Panel) ── */
+.romer-activity {
+  background: var(--admin-card);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+  margin-bottom: 24px;
+}
+
+.romer-activity__item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 10px 4px;
+  border-radius: 8px;
+  transition: background 0.15s ease;
+}
+
+.romer-activity__item:hover {
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.romer-activity__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  margin-top: 6px;
+  flex-shrink: 0;
+}
+
+.romer-activity__title {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--admin-text);
+}
+
+.romer-activity__time {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--admin-text-muted);
+  margin-top: 3px;
+  opacity: 0.7;
+}
+
+/* ── Team Table ── */
+.romer-team-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.romer-role-card {
+  background: var(--admin-card);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  padding: 16px 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+.romer-role-card:hover {
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.romer-role-card--active {
+  border-color: rgba(201, 169, 110, 0.35) !important;
+  background: rgba(201, 169, 110, 0.04);
+}
+
+.romer-role-card__count {
+  font-family: 'Manrope', sans-serif;
+  font-size: 24px;
+  font-weight: 520;
+  letter-spacing: -0.04em;
+  color: var(--admin-text);
+}
+
+.romer-role-card__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  color: var(--admin-text-muted);
+  margin-top: 4px;
+}
+
+/* Status dot */
+.romer-status-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.romer-status-dot--admin { background: #bec2ff; }
+.romer-status-dot--manager { background: #50d8e9; }
+.romer-status-dot--contractor { background: #ffb689; }
+.romer-status-dot--client { background: #4ade80; }
+
+/* ── Responsive ── */
+@media (max-width: 1024px) {
+  .romer-kpi-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .romer-duo-grid {
+    grid-template-columns: 1fr;
+  }
+  .romer-team-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .romer-kpi-grid {
+    grid-template-columns: 1fr;
+  }
+  .romer-team-grid {
+    grid-template-columns: 1fr;
+  }
+}
