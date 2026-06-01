@@ -8,6 +8,12 @@
    1. ENUMS (add if not already present)
    ══════════════════════════════════════════════════════ */
 
+/* Add 'payment' to timeline_type enum if not present */
+DO $$ BEGIN
+  ALTER TYPE timeline_type ADD VALUE IF NOT EXISTS 'payment';
+EXCEPTION WHEN others THEN NULL;
+END $$;
+
 DO $$ BEGIN
   CREATE TYPE todo_priority AS ENUM ('urgent', 'high', 'normal', 'low');
 EXCEPTION WHEN duplicate_object THEN NULL;

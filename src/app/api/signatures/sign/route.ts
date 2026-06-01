@@ -72,6 +72,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Notify admin
+    const { createInAppNotification } = await import('@/lib/notifications');
+    await createInAppNotification({
+      target: 'firm',
+      type: 'signature',
+      title: `${docName || 'Document'} signed by ${sigReq.signer_name}`,
+      link: '/portal/signatures',
+    });
+
     return NextResponse.json({ success: true, signature: updated });
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 });

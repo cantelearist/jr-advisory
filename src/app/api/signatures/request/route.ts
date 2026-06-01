@@ -29,6 +29,16 @@ export async function POST(req: NextRequest) {
       metadata: { document_id, client_id, signer_name, requested_by: auth.user.id },
     });
 
+    // Notify client
+    const { createInAppNotification } = await import('@/lib/notifications');
+    await createInAppNotification({
+      target: client_id,
+      type: 'signature',
+      title: 'Signature requested on a document',
+      body: message || 'Please review and sign the document in your portal.',
+      link: '/portal/documents',
+    });
+
     return NextResponse.json({ success: true, signatureRequest: sigReq });
   } catch (e: unknown) {
     return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 });
