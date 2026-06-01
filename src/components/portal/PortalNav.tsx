@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/components/portal/AuthProvider";
+import NotificationBell from "@/components/portal/NotificationBell";
 
 const NAV_ITEMS = [
   { label: "Office", href: "/portal/dashboard", icon: "◎" },
@@ -15,7 +16,7 @@ const NAV_ITEMS = [
 
 export default function PortalNav() {
   const pathname = usePathname();
-  const { user, profile, isAdmin, signOut } = useAuth();
+  const { user, profile, clientRecord, isAdmin, signOut } = useAuth();
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
 
@@ -65,7 +66,8 @@ export default function PortalNav() {
           ))}
         </div>
 
-        <div className="portal-nav__user">
+        <div className="portal-nav__user" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <NotificationBell target={isAdmin ? 'firm' : (clientRecord?.id || 'unknown')} />
           <button
             className="portal-nav__user-btn"
             onClick={() => setShowUserMenu(!showUserMenu)}

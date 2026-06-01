@@ -11,6 +11,7 @@ export type UserRole = 'admin' | 'client';
 export type TodoPriority = 'urgent' | 'high' | 'normal' | 'low';
 export type TodoStatus = 'pending' | 'in_progress' | 'done';
 export type SignatureStatus = 'pending' | 'signed' | 'declined' | 'expired';
+export type NotificationType = 'message' | 'document' | 'invoice' | 'signature' | 'phase' | 'system';
 
 export interface Profile {
   id: string; role: UserRole; full_name: string; email: string;
@@ -84,6 +85,18 @@ export interface SignatureRequest {
   ip_address: string | null; created_at: string; updated_at: string;
 }
 
+export interface Notification {
+  id: string;
+  target: string; /* 'firm' for admin, or client_id for clients */
+  type: NotificationType;
+  title: string;
+  body: string | null;
+  link: string | null; /* portal page link e.g. '/portal/messages' */
+  read: boolean;
+  metadata: Record<string, unknown> | null;
+  created_at: string;
+}
+
 export interface Database {
   public: {
     Tables: {
@@ -98,6 +111,7 @@ export interface Database {
       todo: { Row: Todo; Insert: Partial<Todo> & { title: string }; Update: Partial<Todo> };
       nda_records: { Row: NdaRecord; Insert: Partial<NdaRecord> & { client_id: string; signed_date: string }; Update: Partial<NdaRecord> };
       signature_requests: { Row: SignatureRequest; Insert: Partial<SignatureRequest> & { document_id: string; client_id: string; signer_name: string }; Update: Partial<SignatureRequest> };
+      notifications: { Row: Notification; Insert: Partial<Notification> & { target: string; type: NotificationType; title: string }; Update: Partial<Notification> };
     };
     Functions: {
       is_admin: { Args: Record<string, never>; Returns: boolean };
