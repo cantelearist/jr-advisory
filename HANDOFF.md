@@ -1,7 +1,7 @@
 # JR Advisory — Technical Handoff
 
 > **James Roman Advisory** · Private client portal for hazmat remediation oversight
-> Last updated: May 26, 2026 · Commit `3b642d33`
+> Last updated: June 1, 2026 · Commit `4d2e1b1`
 
 ---
 
@@ -183,7 +183,8 @@ jr-advisory/
 | `audit_log` | System activity log | id, user_id, action, entity_type, entity_id, metadata |
 | `todo` | Tasks & to-dos | id, client_id, assigned_to, title, priority, status, due_date |
 | `signature_requests` | E-signature tracking | id, document_id, client_id, status, signed_at, signature_data |
-| `content` | CMS content blocks | id, key, title, body, published |
+| `notifications` | In-app notification feed | id, target, type, title, body, link, read, metadata |
+| `site_content` | CMS content blocks | id, section, key, label, content, content_type |
 
 ### Enum Types
 
@@ -199,6 +200,8 @@ UserRole:          admin | client
 TodoPriority:      urgent | high | normal | low
 TodoStatus:        pending | in_progress | done
 SignatureStatus:   pending | signed | declined | expired
+NotificationType:  message | document | invoice | signature | phase | system
+ContentType:       text | html | markdown
 ```
 
 ### Storage Buckets
@@ -372,9 +375,10 @@ useEffect(() => {
 
 ### Currently Connected
 - ✅ Supabase (all 3 keys — both Vercel projects, all envs)
+- ✅ Database password: set (used during migration, June 1 2026)
 - ⏳ Stripe — keys obtained, need to add to Vercel env vars: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`
 - ⏳ Resend — key obtained (`re_FY8Qzkak_...`), need to add `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` to Vercel
-- ⏳ DATABASE_URL — password needs reset in Supabase Dashboard → Settings → Database
+- ⏳ DATABASE_URL — not set on Vercel (only needed for `/api/fix-trigger` route)
 
 ### Stripe Webhook
 - Webhook ID: `we_1TbAcV9fhKrRctJYo3Fpjr8G`
@@ -557,11 +561,13 @@ Uses IIFE pattern for complex tab content:
 
 | Issue | Status | Fix |
 |---|---|---|
+| Database tables | ✅ All 10 live | Migrated June 1, 2026 — all tables, enums, indexes, RLS policies created |
 | Auth trigger (`handle_new_user`) | ⚠️ Needs setup | Paste SQL (see §10) in Supabase Dashboard → SQL Editor → Run |
 | Stripe env vars | ⏳ Keys ready, not deployed | Add 3 vars to Vercel env vars, then redeploy |
 | Resend env vars | ⏳ Key ready, not deployed | Add `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` to Vercel |
 | Resend domain verification | ⏳ Not done | Add DNS records in Namecheap; until then use `onboarding@resend.dev` |
-| DATABASE_URL password | ⚠️ Wrong password | Reset in Supabase Dashboard → Settings → Database |
+| favicon.ico | ⚠️ Returns 404 | Only `favicon.svg` exists in `/public`; add a `.ico` or update `layout.tsx` metadata |
+| `/login` route | ⚠️ Returns 404 | No `/login` page exists — login is at `/portal` |
 | PostgREST schema cache | Intermittent | Restart project in Dashboard if new tables aren't writable |
 | Vercel API token | ❌ Expired | Generate new one in Vercel → Settings → Tokens (if needed for API access) |
 
@@ -593,6 +599,12 @@ Uses IIFE pattern for complex tab content:
 | Fixes | Auth race condition on all portal pages | `fee39e5a`, `d8dc0e7f` |
 | Handoff | HANDOFF.md added to repo | `dcda4e62` |
 | Polish | Mobile responsive fixes + audit log seed data | `3b642d33` |
+| 5A-API | API Security Hardening (rate limiting, input validation) | `e463aad` |
+| 5B-DB | Database Setup — missing tables migration file | `6c8e060` |
+| 5C-Wire | Integration Wiring (Supabase ↔ API routes) | `e2afc05` |
+| 5D-Hard | Polish & Hardening (error handling, edge cases) | `fecab85` |
+| DB-Fix | RLS policy fix — uuid extension, WITH CHECK on all policies | `21e1cf9` |
+| DB-Migrate | All 10 tables live — `002_missing_tables.sql` applied via SQL Editor | `4d2e1b1` |
 
 ---
 
@@ -620,7 +632,66 @@ Uses IIFE pattern for complex tab content:
 
 ---
 
-## 14. Suggested Next Steps
+## 14. Latest Test Results (June 1, 2026)
+
+### Public Pages
+| Route | Status | Notes |
+|---|---|---|
+| `/` (homepage) | ✅ 200 | 95ms total load |
+| `/portal` (login) | ✅ 200 | 191ms |
+| `/portal/dashboard` | ✅ 307→login | Auth redirect working |
+| `/privacy` | ✅ 200 | |
+| `/accessibility` | ✅ 200 | |
+| `/cookies` | ✅ 200 | |
+| `/nda` | ✅ 200 | |
+| `/sitemap.xml` | ✅ 200 | |
+| `/terms` | ✅ 307 | Redirect (expected) |
+| `/disclaimer` | ✅ 307 | Redirect (expected) |
+
+### Portal Pages (all 307→login when unauthenticated — correct)
+`/portal/documents`, `/portal/invoices`, `/portal/messages`, `/portal/timeline`, `/portal/welcome`, `/portal/admin`
+
+### API Routes
+| Route | Status | Notes |
+|---|---|---|
+| `/api/health` | ✅ 401 | Key-protected (working) |
+| `/api/todos` | ✅ 401 | Session-protected |
+| `/api/admin` | ✅ 401 | Key-protected |
+| `/auth/callback` | ✅ 307 | Redirect (expected) |
+
+### Database (all 10 tables verified via Supabase REST API)
+```
+✅ profiles           ✅ clients
+✅ engagements         ✅ documents
+✅ invoices            ✅ timeline_events
+✅ todo                ✅ signature_requests
+✅ notifications       ✅ site_content
+```
+
+### Security Headers
+| Header | Value |
+|---|---|
+| `Content-Security-Policy` | ✅ Full policy (self + Stripe + Supabase + Vercel) |
+| `Strict-Transport-Security` | ✅ `max-age=31536000; includeSubDomains; preload` |
+| `X-Content-Type-Options` | ✅ `nosniff` |
+| `X-Frame-Options` | ✅ `DENY` |
+
+### Performance
+| Page | TTFB | Total |
+|---|---|---|
+| Homepage | 89ms | 95ms |
+| Login | 44ms | 45ms |
+
+### Supabase Auth
+✅ Reachable — providers available (Apple, Azure, Bitbucket, Discord, + more)
+
+### Minor Issues Found
+- `favicon.ico` → 404 (only `favicon.svg` exists)
+- `/login` → 404 (login page is at `/portal`)
+
+---
+
+## 15. Suggested Next Steps
 
 ### High Priority (pre-launch)
 1. **Complete 3-step setup** — auth trigger, env vars, redeploy (see §11)
