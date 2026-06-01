@@ -1,15 +1,15 @@
 /* ── Delete Message API ── */
 /* DELETE /api/messages/delete — admin deletes a message */
+/* Requires admin session */
 
-import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAdmin, isAuthError } from '@/lib/api-auth';
 
 export async function DELETE(req: NextRequest) {
-  const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+
+  const { sb } = auth;
 
   try {
     const body = await req.json();
@@ -48,6 +48,7 @@ export async function DELETE(req: NextRequest) {
         client_id: msg.client_id,
         subject: msg.subject,
         sender_type: msg.sender_type,
+        deleted_by: auth.user.id,
       },
     });
 

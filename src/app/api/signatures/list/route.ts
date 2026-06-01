@@ -1,20 +1,36 @@
 /* ── E-Signature List — list signature requests ── */
-import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+/* Requires auth: admin sees all, client sees only their own */
+
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAuth, isAuthError } from '@/lib/api-auth';
 
 export async function GET(req: NextRequest) {
-  const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const auth = await requireAuth(req);
+  if (isAuthError(auth)) return auth;
 
+  const { sb, isAdmin } = auth;
   const clientId = req.nextUrl.searchParams.get('client_id');
+
   let query = sb
     .from('signature_requests')
     .select('*, documents(name, category), clients(name, email, property)')
     .order('created_at', { ascending: false });
-  if (clientId) query = query.eq('client_id', clientId);
+
+  if (isAdmin && clientId) {
+    query = query.eq('client_id', clientId);
+  } else if (!isAdmin) {
+    // Client: scope to their own client record
+    const { data: clientRec } = await sb
+      .from('clients')
+      .select('id')
+      .eq('profile_id', auth.user.id)
+      .single();
+
+    if (!clientRec) {
+      return NextResponse.json({ signatures: [] });
+    }
+    query = query.eq('client_id', clientRec.id);
+  }
 
   const { data, error } = await query;
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });

@@ -1,13 +1,14 @@
 /* ── E-Signature Request — admin sends doc for client signature ── */
-import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+/* Requires admin session */
+
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAdmin, isAuthError } from '@/lib/api-auth';
 
 export async function POST(req: NextRequest) {
-  const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+
+  const { sb } = auth;
 
   try {
     const { document_id, client_id, signer_name, signer_email, message } = await req.json();
@@ -25,7 +26,7 @@ export async function POST(req: NextRequest) {
     await sb.from('documents').update({ status: 'pending-review' }).eq('id', document_id);
     await sb.from('audit_log').insert({
       action: 'signature_requested', entity_type: 'signature_request', entity_id: sigReq.id,
-      metadata: { document_id, client_id, signer_name },
+      metadata: { document_id, client_id, signer_name, requested_by: auth.user.id },
     });
 
     return NextResponse.json({ success: true, signatureRequest: sigReq });

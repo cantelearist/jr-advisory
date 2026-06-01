@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
       action: 'payment_received',
       entity_type: 'invoice',
       entity_id: invoiceId,
-      details: {
+      metadata: {
         invoice_number: session.metadata?.invoice_number,
         amount: (session.amount_total || 0) / 100,
         payment_intent: session.payment_intent,

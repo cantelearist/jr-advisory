@@ -1,26 +1,20 @@
 /* ── GET /api/admin/clients/[id] — Single client with all related data ── */
+/* Requires admin session */
 
 export const dynamic = 'force-dynamic';
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAdmin, isAuthError } from '@/lib/api-auth';
 
 export async function GET(
-  _request: NextRequest,
+  request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
+  const auth = await requireAdmin(request);
+  if (isAuthError(auth)) return auth;
+
+  const { sb } = auth;
   const { id } = await params;
-
-  if (!supabaseUrl || !serviceKey) {
-    return NextResponse.json({ error: 'Not configured' }, { status: 500 });
-  }
-
-  const sb = createClient(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
 
   const [client, engagements, invoices, messages, documents, ndas] = await Promise.all([
     sb.from('clients').select('*').eq('id', id).single(),

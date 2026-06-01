@@ -1,26 +1,19 @@
 /* ── PATCH/DELETE /api/todos/[id] — Update and delete todos ── */
+/* Requires admin session */
 
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAdmin, isAuthError } from '@/lib/api-auth';
 
 export const dynamic = 'force-dynamic';
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
-
-function sb() {
-  return createClient(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
-}
 
 export async function PATCH(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!supabaseUrl || !serviceKey)
-    return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
 
+  const { sb } = auth;
   const { id } = await params;
   const body = await req.json();
 
@@ -33,7 +26,7 @@ export async function PATCH(
     updates.completed_at = null;
   }
 
-  const { data, error } = await sb()
+  const { data, error } = await sb
     .from('todo')
     .update(updates)
     .eq('id', id)
@@ -48,11 +41,12 @@ export async function DELETE(
   req: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!supabaseUrl || !serviceKey)
-    return NextResponse.json({ error: 'Not configured' }, { status: 500 });
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
 
+  const { sb } = auth;
   const { id } = await params;
-  const { error } = await sb().from('todo').delete().eq('id', id);
+  const { error } = await sb.from('todo').delete().eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
   return NextResponse.json({ success: true });

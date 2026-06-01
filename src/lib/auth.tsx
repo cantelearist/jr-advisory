@@ -205,9 +205,9 @@ export function useRequireAuth() {
 export function useRequireAdmin() {
   const auth = useAuth();
   useEffect(() => {
-    if (!auth.loading && !auth.isAdmin && !auth.isDemo) {
+    if (!auth.loading && !auth.isAdmin) {
       window.location.href = '/portal';
     }
-  }, [auth.loading, auth.isAdmin, auth.isDemo]);
+  }, [auth.loading, auth.isAdmin]);
   return auth;
 }
