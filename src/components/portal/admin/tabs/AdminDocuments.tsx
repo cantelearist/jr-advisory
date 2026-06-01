@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import type { Client, Engagement, Document as DBDocument } from '@/lib/database.types';
 import DocumentUpload from '@/components/portal/admin/DocumentUpload';
 
@@ -22,6 +22,37 @@ export default function AdminDocuments({ clients, engagements, documents, onRelo
   const [showUpload, setShowUpload] = useState(false);
   const [catFilter, setCatFilter] = useState<typeof CAT_FILTERS[number]>('all');
   const [search, setSearch] = useState('');
+  const [requestingSigFor, setRequestingSigFor] = useState<string | null>(null);
+
+  const handleRequestSignature = useCallback(async (doc: DBDocument) => {
+    const client = clients.find(c => c.id === doc.client_id);
+    if (!client) { alert('Client not found'); return; }
+
+    const message = prompt(`Optional message for ${client.name} about "${doc.name}":`);
+    if (message === null) return; // cancelled
+
+    setRequestingSigFor(doc.id);
+    try {
+      const res = await fetch('/api/signatures/request', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          document_id: doc.id,
+          client_id: doc.client_id,
+          signer_name: client.name,
+          signer_email: client.email,
+          message: message || `Please review and sign "${doc.name}"`,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Failed');
+      onReload();
+    } catch (e: unknown) {
+      alert(e instanceof Error ? e.message : 'Failed to create signature request');
+    } finally {
+      setRequestingSigFor(null);
+    }
+  }, [clients, onReload]);
 
   const filtered = useMemo(() => {
     let result = documents;
@@ -141,6 +172,21 @@ export default function AdminDocuments({ clients, engagements, documents, onRelo
                   <td style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{new Date(doc.created_at).toLocaleDateString()}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 8 }}>
+                      {/* Request Signature */}
+                      {(doc.category === 'nda' || doc.category === 'proposals' || doc.category === 'clearance') && doc.status !== 'final' && (
+                        <button
+                          onClick={() => handleRequestSignature(doc)}
+                          disabled={requestingSigFor === doc.id}
+                          className="admin-btn admin-btn--ghost"
+                          style={{
+                            fontSize: 9, padding: '4px 12px',
+                            color: 'var(--admin-accent)',
+                            borderColor: 'rgba(201,169,110,0.15)',
+                          }}
+                        >
+                          {requestingSigFor === doc.id ? '…' : '✍ SIGN'}
+                        </button>
+                      )}
                       {hasFile && (
                         <button
                           onClick={async () => {

@@ -1,0 +1,427 @@
+/* ── Signature Components ── */
+
+/* Overlay */
+.sig-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.85);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: sigFadeIn 0.3s ease;
+}
+
+.sig-modal {
+  background: #0a0a0a;
+  border: 1px solid rgba(255,255,255,0.06);
+  max-width: 640px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: sigSlideUp 0.4s ease;
+}
+
+@keyframes sigFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes sigSlideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ── */
+.sig-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding: 32px 32px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+}
+
+.sig-header__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.4em;
+  color: rgba(201,169,110,0.5);
+}
+
+.sig-header__title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 28px;
+  font-weight: 300;
+  color: #fff;
+  margin: 8px 0 6px;
+  letter-spacing: -0.01em;
+}
+
+.sig-header__meta {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.2);
+  letter-spacing: 0.05em;
+}
+
+.sig-header__close {
+  background: none;
+  border: 1px solid rgba(255,255,255,0.06);
+  color: rgba(255,255,255,0.3);
+  width: 32px;
+  height: 32px;
+  cursor: pointer;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.sig-header__close:hover {
+  color: #fff;
+  border-color: rgba(255,255,255,0.15);
+}
+
+/* ── Message from admin ── */
+.sig-message {
+  margin: 0;
+  padding: 20px 32px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  background: rgba(201,169,110,0.02);
+}
+
+.sig-message__from {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.15em;
+  color: rgba(201,169,110,0.5);
+  text-transform: uppercase;
+}
+
+.sig-message__text {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 16px;
+  color: rgba(255,255,255,0.6);
+  margin: 8px 0 0;
+  line-height: 1.6;
+  font-style: italic;
+}
+
+/* ── Signer info ── */
+.sig-signer {
+  padding: 20px 32px;
+  border-bottom: 1px solid rgba(255,255,255,0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.sig-signer__row {
+  display: flex;
+  align-items: baseline;
+  gap: 16px;
+}
+
+.sig-signer__label {
+  font-family: 'Inter', sans-serif;
+  font-size: 10px;
+  letter-spacing: 0.2em;
+  color: rgba(255,255,255,0.2);
+  text-transform: uppercase;
+  min-width: 60px;
+}
+
+.sig-signer__value {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: rgba(255,255,255,0.7);
+}
+
+/* ── Signature Pad ── */
+.sig-pad-wrapper {
+  padding: 24px 32px;
+}
+
+.sig-pad-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.sig-pad-header__label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.35em;
+  color: rgba(255,255,255,0.2);
+}
+
+.sig-pad-header__clear {
+  background: none;
+  border: none;
+  color: rgba(201,169,110,0.5);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  cursor: pointer;
+  letter-spacing: 0.05em;
+  transition: color 0.2s;
+}
+
+.sig-pad-header__clear:hover {
+  color: #c9a96e;
+}
+
+.sig-pad {
+  position: relative;
+  border: 1px solid rgba(255,255,255,0.06);
+  background: rgba(255,255,255,0.02);
+}
+
+.sig-pad__canvas {
+  display: block;
+  width: 100%;
+  cursor: crosshair;
+  touch-action: none;
+}
+
+.sig-pad__line {
+  position: absolute;
+  bottom: 40px;
+  left: 32px;
+  right: 32px;
+  height: 1px;
+  background: rgba(255,255,255,0.06);
+  pointer-events: none;
+}
+
+.sig-pad__placeholder {
+  position: absolute;
+  bottom: 46px;
+  left: 32px;
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 14px;
+  color: rgba(255,255,255,0.1);
+  font-style: italic;
+  pointer-events: none;
+}
+
+/* ── Agreement ── */
+.sig-agree {
+  display: flex;
+  gap: 12px;
+  padding: 0 32px;
+  cursor: pointer;
+  align-items: flex-start;
+}
+
+.sig-agree__check {
+  margin-top: 2px;
+  accent-color: #c9a96e;
+  flex-shrink: 0;
+}
+
+.sig-agree__text {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.3);
+  line-height: 1.5;
+}
+
+/* ── Error ── */
+.sig-error {
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  color: #ef4444;
+  margin: 12px 32px 0;
+}
+
+/* ── Actions ── */
+.sig-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 24px 32px;
+}
+
+.sig-actions__cancel {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.08);
+  color: rgba(255,255,255,0.4);
+  padding: 12px 24px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.sig-actions__cancel:hover {
+  color: rgba(255,255,255,0.7);
+  border-color: rgba(255,255,255,0.15);
+}
+
+.sig-actions__sign {
+  background: rgba(201,169,110,0.15);
+  border: 1px solid rgba(201,169,110,0.3);
+  color: #c9a96e;
+  padding: 12px 32px;
+  font-family: 'Inter', sans-serif;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.sig-actions__sign:hover:not(:disabled) {
+  background: rgba(201,169,110,0.25);
+  border-color: rgba(201,169,110,0.5);
+}
+
+.sig-actions__sign:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+/* ── Legal footer ── */
+.sig-legal {
+  padding: 16px 32px 24px;
+  border-top: 1px solid rgba(255,255,255,0.04);
+}
+
+.sig-legal p {
+  font-family: 'Inter', sans-serif;
+  font-size: 9px;
+  color: rgba(255,255,255,0.12);
+  line-height: 1.6;
+  letter-spacing: 0.02em;
+  margin: 0;
+}
+
+/* ── Success ── */
+.sig-success {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  padding: 80px 40px;
+  text-align: center;
+}
+
+.sig-success__icon {
+  width: 64px;
+  height: 64px;
+  border: 2px solid rgba(201,169,110,0.3);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 28px;
+  color: #c9a96e;
+  animation: sigCheckIn 0.5s ease;
+}
+
+@keyframes sigCheckIn {
+  from { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.sig-success__title {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  font-size: 32px;
+  font-weight: 300;
+  color: #fff;
+  margin: 0;
+}
+
+.sig-success__sub {
+  font-family: 'Inter', sans-serif;
+  font-size: 13px;
+  color: rgba(255,255,255,0.3);
+  margin: 0;
+  max-width: 300px;
+}
+
+/* ── Signature List Items ── */
+.sig-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.sig-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: rgba(255,255,255,0.02);
+  border: 1px solid rgba(255,255,255,0.04);
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.sig-item:hover {
+  border-color: rgba(201,169,110,0.15);
+  background: rgba(201,169,110,0.02);
+}
+
+.sig-item__info {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.sig-item__name {
+  font-family: 'Inter', sans-serif;
+  font-size: 14px;
+  color: rgba(255,255,255,0.8);
+}
+
+.sig-item__meta {
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  color: rgba(255,255,255,0.2);
+}
+
+.sig-item__badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 9px;
+  letter-spacing: 0.15em;
+  padding: 4px 10px;
+  border: 1px solid;
+  flex-shrink: 0;
+}
+
+.sig-item__badge--pending {
+  color: rgba(201,169,110,0.7);
+  border-color: rgba(201,169,110,0.2);
+  background: rgba(201,169,110,0.05);
+}
+
+.sig-item__badge--signed {
+  color: rgba(74,222,128,0.6);
+  border-color: rgba(74,222,128,0.15);
+  background: rgba(74,222,128,0.03);
+}
+
+.sig-item__badge--declined {
+  color: rgba(239,68,68,0.6);
+  border-color: rgba(239,68,68,0.15);
+  background: rgba(239,68,68,0.03);
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .sig-modal { max-height: 95vh; }
+  .sig-header { padding: 24px 20px 16px; }
+  .sig-message { padding: 16px 20px; }
+  .sig-signer { padding: 16px 20px; }
+  .sig-pad-wrapper { padding: 16px 20px; }
+  .sig-agree { padding: 0 20px; }
+  .sig-actions { padding: 20px; }
+  .sig-legal { padding: 12px 20px 20px; }
+}
