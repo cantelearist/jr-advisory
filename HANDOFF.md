@@ -562,7 +562,7 @@ Uses IIFE pattern for complex tab content:
 | Issue | Status | Fix |
 |---|---|---|
 | Database tables | ✅ All 10 live | Migrated June 1, 2026 — all tables, enums, indexes, RLS policies created |
-| Auth trigger (`handle_new_user`) | ⚠️ Needs setup | Paste SQL (see §10) in Supabase Dashboard → SQL Editor → Run |
+| Auth trigger (`handle_new_user`) | ✅ Live | Created June 1, 2026 via SQL Editor |
 | Stripe env vars | ⏳ Keys ready, not deployed | Add 3 vars to Vercel env vars, then redeploy |
 | Resend env vars | ⏳ Key ready, not deployed | Add `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` to Vercel |
 | Resend domain verification | ⏳ Not done | Add DNS records in Namecheap; until then use `onboarding@resend.dev` |
@@ -571,8 +571,8 @@ Uses IIFE pattern for complex tab content:
 | PostgREST schema cache | Intermittent | Restart project in Dashboard if new tables aren't writable |
 | Vercel API token | ❌ Expired | Generate new one in Vercel → Settings → Tokens (if needed for API access) |
 
-### 3 Steps to Go Live (manual)
-1. **Supabase SQL Editor** — paste & run the `handle_new_user()` trigger SQL above
+### 2 Steps to Go Live (manual)
+1. ~~Supabase SQL Editor — auth trigger~~ ✅ Done
 2. **Vercel Environment Variables** — add 5 keys: `STRIPE_SECRET_KEY`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`, `STRIPE_WEBHOOK_SECRET`, `RESEND_API_KEY`, `NOTIFICATION_FROM_EMAIL`
 3. **Redeploy** on Vercel (Deployments → Redeploy last Production deployment)
 
