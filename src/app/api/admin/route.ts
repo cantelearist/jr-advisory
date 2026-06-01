@@ -1,19 +1,14 @@
 /* ── GET /api/admin — Server-side admin data fetch (bypasses RLS) ── */
+/* Requires admin session */
 
-import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAdmin, isAuthError } from '@/lib/api-auth';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+export async function GET(req: NextRequest) {
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
 
-export async function GET() {
-  if (!supabaseUrl || !serviceKey) {
-    return NextResponse.json({ error: 'Not configured' }, { status: 500 });
-  }
-
-  const sb = createClient(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const { sb } = auth;
 
   const [clients, engagements, invoices, messages, documents, timeline, ndas, auditLog, todos] = await Promise.all([
     sb.from('clients').select('*').order('created_at', { ascending: false }),

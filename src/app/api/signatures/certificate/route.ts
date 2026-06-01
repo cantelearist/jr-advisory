@@ -1,14 +1,14 @@
 /* ── Signature Certificate — returns audit data for a signed document ── */
-import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+/* Requires auth: admin or the signing client */
+
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAuth, isAuthError } from '@/lib/api-auth';
 
 export async function GET(req: NextRequest) {
-  const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const auth = await requireAuth(req);
+  if (isAuthError(auth)) return auth;
 
+  const { sb, isAdmin } = auth;
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
@@ -20,6 +20,19 @@ export async function GET(req: NextRequest) {
 
   if (error || !sigReq) {
     return NextResponse.json({ error: 'Signature request not found' }, { status: 404 });
+  }
+
+  // Non-admin users can only view certificates for their own client record
+  if (!isAdmin) {
+    const { data: clientRec } = await sb
+      .from('clients')
+      .select('id')
+      .eq('profile_id', auth.user.id)
+      .single();
+
+    if (!clientRec || clientRec.id !== sigReq.client_id) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
   }
 
   /* Fetch related audit log entries */

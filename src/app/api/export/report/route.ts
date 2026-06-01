@@ -1,6 +1,8 @@
 /* ── Client Report Export — branded HTML report ── */
-import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+/* Requires admin session */
+
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAdmin, isAuthError } from '@/lib/api-auth';
 
 function reportHTML(type: string, cli: Record<string, unknown>, eng: Record<string, unknown>,
   invs: Record<string, unknown>[], tl: Record<string, unknown>[], docs: Record<string, unknown>[]) {
@@ -73,8 +75,10 @@ ${tl.length > 0 ? `<h2>Timeline</h2>${tl.map(t=>`<div class="ti"><div class="td"
 }
 
 export async function GET(req: NextRequest) {
-  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } });
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+
+  const { sb } = auth;
   const clientId = req.nextUrl.searchParams.get('client_id');
   const type = req.nextUrl.searchParams.get('type') || 'summary';
   if (!clientId) return NextResponse.json({ error: 'Missing client_id' }, { status: 400 });

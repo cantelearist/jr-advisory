@@ -1,18 +1,30 @@
 /* ── POST /api/notifications/dismiss — mark notification(s) as read ── */
+/* Requires auth */
 
-import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAuth, isAuthError } from '@/lib/api-auth';
 
 export async function POST(req: NextRequest) {
-  const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const auth = await requireAuth(req);
+  if (isAuthError(auth)) return auth;
+
+  const { sb, isAdmin } = auth;
 
   try {
     const body = await req.json();
     const { notification_id, dismiss_all, target } = body;
+
+    // Non-admin users can only dismiss their own notifications
+    if (!isAdmin && target) {
+      const { data: clientRec } = await sb
+        .from('clients')
+        .select('id')
+        .eq('profile_id', auth.user.id)
+        .single();
+      if (!clientRec || target !== clientRec.id) {
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+      }
+    }
 
     if (dismiss_all && target) {
       /* Dismiss all for a target */

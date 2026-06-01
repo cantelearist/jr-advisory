@@ -1,6 +1,8 @@
 /* ── Invoice Export — branded HTML invoice for print/PDF/image ── */
-import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+/* Requires auth: admin or the invoice's client */
+
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAuth, isAuthError } from '@/lib/api-auth';
 
 function invoiceHTML(inv: Record<string, unknown>, cli: Record<string, unknown>, eng: Record<string, unknown>) {
   const amt = Number(inv.amount || 0);
@@ -46,13 +48,29 @@ ${inv.paid_date?`<p style="color:#6ec9a0;font-size:14px;margin-bottom:32px">✓ 
 }
 
 export async function GET(req: NextRequest) {
-  const sb = createClient(process.env.NEXT_PUBLIC_SUPABASE_URL!, process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } });
+  const auth = await requireAuth(req);
+  if (isAuthError(auth)) return auth;
+
+  const { sb, isAdmin } = auth;
   const id = req.nextUrl.searchParams.get('id');
   if (!id) return NextResponse.json({ error: 'Missing id' }, { status: 400 });
 
   const { data: inv } = await sb.from('invoices').select('*').eq('id', id).single();
   if (!inv) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+
+  // Non-admin: verify the invoice belongs to their client record
+  if (!isAdmin) {
+    const { data: clientRec } = await sb
+      .from('clients')
+      .select('id')
+      .eq('profile_id', auth.user.id)
+      .single();
+
+    if (!clientRec || clientRec.id !== inv.client_id) {
+      return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+    }
+  }
+
   const { data: cli } = await sb.from('clients').select('*').eq('id', inv.client_id).single();
   const { data: eng } = await sb.from('engagements').select('*').eq('id', inv.engagement_id).single();
 

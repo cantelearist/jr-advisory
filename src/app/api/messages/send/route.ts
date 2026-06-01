@@ -1,16 +1,16 @@
 /* ── Send Message API ── */
 /* POST /api/messages/send — admin sends to client (or client replies) */
+/* Requires auth: admin can send to any client, client can only reply to their own engagement */
 
-import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAuth, isAuthError } from '@/lib/api-auth';
 import { sendNotification, createInAppNotification } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
-  const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const auth = await requireAuth(req);
+  if (isAuthError(auth)) return auth;
+
+  const { sb, isAdmin } = auth;
 
   try {
     const body = await req.json();
@@ -18,6 +18,22 @@ export async function POST(req: NextRequest) {
 
     if (!client_id || !engagement_id || !sender_type || !sender_name || !subject || !msgBody) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    // Non-admin users can only send as 'client' and only for their own client record
+    if (!isAdmin) {
+      if (sender_type !== 'client') {
+        return NextResponse.json({ error: 'Clients can only send as client' }, { status: 403 });
+      }
+      const { data: clientRec } = await sb
+        .from('clients')
+        .select('id')
+        .eq('profile_id', auth.user.id)
+        .single();
+
+      if (!clientRec || clientRec.id !== client_id) {
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+      }
     }
 
     const { data: msg, error } = await sb

@@ -1,12 +1,11 @@
 /* ── Stripe Checkout Session — creates payment link for an invoice ── */
 /* POST /api/payments/checkout { invoice_id } */
+/* Requires auth: admin or the invoice's client */
 
-import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { type NextRequest, NextResponse } from 'next/server';
+import { requireAuth, isAuthError } from '@/lib/api-auth';
 import Stripe from 'stripe';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
-const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.jamesroman.la';
 
 function getStripe() {
@@ -16,6 +15,9 @@ function getStripe() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth(req);
+  if (isAuthError(auth)) return auth;
+
   let stripe: Stripe;
   try {
     stripe = getStripe();
@@ -23,9 +25,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Stripe not configured. Add STRIPE_SECRET_KEY in Vercel env vars.' }, { status: 503 });
   }
 
-  const sb = createClient(supabaseUrl, serviceKey, {
-    auth: { autoRefreshToken: false, persistSession: false },
-  });
+  const { sb, isAdmin } = auth;
 
   try {
     const { invoice_id } = await req.json();
@@ -42,6 +42,19 @@ export async function POST(req: NextRequest) {
 
     if (invErr || !invoice) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    }
+
+    // Non-admin: verify ownership
+    if (!isAdmin) {
+      const { data: clientRec } = await sb
+        .from('clients')
+        .select('id')
+        .eq('profile_id', auth.user.id)
+        .single();
+
+      if (!clientRec || clientRec.id !== invoice.client_id) {
+        return NextResponse.json({ error: 'Access denied' }, { status: 403 });
+      }
     }
 
     if (invoice.status === 'paid') {
@@ -98,7 +111,7 @@ export async function POST(req: NextRequest) {
       action: 'checkout_created',
       entity_type: 'invoice',
       entity_id: invoice.id,
-      details: { invoice_number: invoice.invoice_number, amount: invoice.amount, session_id: session.id },
+      metadata: { invoice_number: invoice.invoice_number, amount: invoice.amount, session_id: session.id },
     }).then(() => {});
 
     return NextResponse.json({ url: session.url });

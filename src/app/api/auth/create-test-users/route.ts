@@ -12,6 +12,11 @@ const USERS = [
 ];
 
 export async function POST(req: NextRequest) {
+  /* Block in production — test user creation should never run against live data */
+  if (process.env.VERCEL_ENV === 'production') {
+    return NextResponse.json({ error: 'Disabled in production' }, { status: 403 });
+  }
+
   const key = req.nextUrl.searchParams.get('key');
   if (key !== SETUP_KEY) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 403 });
