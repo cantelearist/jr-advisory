@@ -3,7 +3,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { sendNotification } from '@/lib/notifications';
+import { sendNotification, createInAppNotification } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
   const sb = createClient(
@@ -47,7 +47,7 @@ export async function POST(req: NextRequest) {
       metadata: { client_id, sender_type, subject },
     });
 
-    // Email notification — notify the other party
+    // Email + in-app notifications — notify the other party
     try {
       if (sender_type === 'firm') {
         // Admin sent → notify client
@@ -68,8 +68,17 @@ export async function POST(req: NextRequest) {
             },
           });
         }
+        // In-app notification for client
+        await createInAppNotification({
+          target: client_id,
+          type: 'message',
+          title: `New message: ${subject}`,
+          body: msgBody.slice(0, 120),
+          link: '/portal/messages',
+          metadata: { sender_name, message_id: msg.id },
+        });
       } else {
-        // Client sent → notify admins
+        // Client sent → notify admins (email)
         const { data: admins } = await sb
           .from('profiles')
           .select('email, full_name')
@@ -88,6 +97,15 @@ export async function POST(req: NextRequest) {
             });
           }
         }
+        // In-app notification for admin
+        await createInAppNotification({
+          target: 'firm',
+          type: 'message',
+          title: `New message from ${sender_name}`,
+          body: subject,
+          link: '/portal/admin?tab=messages',
+          metadata: { client_id, sender_name, message_id: msg.id },
+        });
       }
     } catch (notifErr) {
       console.error('[messages/send] Notification failed (non-blocking):', notifErr);

@@ -185,6 +185,46 @@ export async function sendNotification(payload: NotificationPayload): Promise<{
   }
 }
 
+/* ── In-App Notification ── */
+
+export async function createInAppNotification(opts: {
+  target: string; /* 'firm' or client_id */
+  type: 'message' | 'document' | 'invoice' | 'signature' | 'phase' | 'system';
+  title: string;
+  body?: string;
+  link?: string;
+  metadata?: Record<string, unknown>;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { createClient } = await import('@supabase/supabase-js');
+    const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!url || !key) return { success: false, error: 'Supabase not configured' };
+
+    const sb = createClient(url, key, { auth: { autoRefreshToken: false, persistSession: false } });
+    const { error } = await sb.from('notifications').insert({
+      target: opts.target,
+      type: opts.type,
+      title: opts.title,
+      body: opts.body || null,
+      link: opts.link || null,
+      read: false,
+      metadata: opts.metadata || null,
+    });
+
+    if (error) {
+      /* If table doesn't exist yet, fail silently */
+      if (error.code === '42P01' || error.message.includes('does not exist')) {
+        return { success: false, error: 'notifications table not created yet' };
+      }
+      return { success: false, error: error.message };
+    }
+    return { success: true };
+  } catch (e) {
+    return { success: false, error: e instanceof Error ? e.message : 'Unknown' };
+  }
+}
+
 /* ── Batch Send ── */
 
 export async function sendNotifications(payloads: NotificationPayload[]): Promise<{
