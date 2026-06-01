@@ -83,14 +83,37 @@ export async function POST(req: NextRequest) {
       },
     }).then(() => {});
 
-    // Create timeline event
-    await sb.from('timeline_events').insert({
-      engagement_id: session.metadata?.engagement_id,
-      event_type: 'payment',
-      title: `Payment Received — ${session.metadata?.invoice_number}`,
-      description: `$${((session.amount_total || 0) / 100).toLocaleString()} paid via online checkout`,
-      event_date: now,
-    }).then(() => {});
+    // Create timeline event (only if we can resolve the engagement)
+    const engagementId = session.metadata?.engagement_id;
+    if (engagementId) {
+      const { data: eng } = await sb
+        .from('engagements')
+        .select('phase')
+        .eq('id', engagementId)
+        .single();
+
+      if (eng) {
+        await sb.from('timeline_events').insert({
+          engagement_id: engagementId,
+          phase: eng.phase,
+          event_type: 'payment',
+          title: `Payment Received — ${session.metadata?.invoice_number}`,
+          description: `$${((session.amount_total || 0) / 100).toLocaleString()} paid via online checkout`,
+          event_date: now,
+        }).then(() => {});
+      }
+    }
+
+    // In-app notification for admin
+    const { createInAppNotification } = await import('@/lib/notifications');
+    await createInAppNotification({
+      target: 'firm',
+      type: 'invoice',
+      title: `Payment received — ${session.metadata?.invoice_number}`,
+      body: `$${((session.amount_total || 0) / 100).toLocaleString()} from ${session.customer_email || 'client'}`,
+      link: '/portal/invoices',
+      metadata: { invoice_id: invoiceId, amount: (session.amount_total || 0) / 100 },
+    });
 
     console.log(`✅ Invoice ${invoiceId} marked as paid`);
   }
