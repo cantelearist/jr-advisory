@@ -1,7 +1,7 @@
 # JR Advisory — Technical Handoff
 
 > **James Roman Advisory** · Private client portal for hazmat remediation oversight
-> Last updated: June 1, 2026 · Commit `4d2e1b1`
+> Last updated: June 1, 2026 · Commit `482ce52`+
 
 ---
 
@@ -566,8 +566,8 @@ Uses IIFE pattern for complex tab content:
 | Stripe env vars | ⏳ Keys ready, not deployed | Add 3 vars to Vercel env vars, then redeploy |
 | Resend env vars | ⏳ Key ready, not deployed | Add `RESEND_API_KEY` + `NOTIFICATION_FROM_EMAIL` to Vercel |
 | Resend domain verification | ⏳ Not done | Add DNS records in Namecheap; until then use `onboarding@resend.dev` |
-| favicon.ico | ⚠️ Returns 404 | Only `favicon.svg` exists in `/public`; add a `.ico` or update `layout.tsx` metadata |
-| `/login` route | ⚠️ Returns 404 | No `/login` page exists — login is at `/portal` |
+| favicon.ico | ✅ Fixed | Generated `.ico` from SVG; both `.svg` and `.ico` in `/public` |
+| `/login` route | ✅ Fixed | `/login` now redirects to `/portal` |
 | PostgREST schema cache | Intermittent | Restart project in Dashboard if new tables aren't writable |
 | Vercel API token | ❌ Expired | Generate new one in Vercel → Settings → Tokens (if needed for API access) |
 
@@ -686,8 +686,8 @@ Uses IIFE pattern for complex tab content:
 ✅ Reachable — providers available (Apple, Azure, Bitbucket, Discord, + more)
 
 ### Minor Issues Found
-- `favicon.ico` → 404 (only `favicon.svg` exists)
-- `/login` → 404 (login page is at `/portal`)
+- ~~`favicon.ico` → 404~~ ✅ Fixed — generated `favicon.ico` from SVG (32×32, gold JR on black)
+- ~~`/login` → 404~~ ✅ Fixed — added `/login` page that redirects to `/portal`
 
 ---
 
