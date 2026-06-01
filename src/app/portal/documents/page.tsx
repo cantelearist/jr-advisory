@@ -10,6 +10,7 @@ import DocumentSearch from '@/components/portal/client/DocumentSearch';
 import DocumentList, { type DocItem } from '@/components/portal/client/DocumentList';
 import DocumentViewer from '@/components/portal/client/DocumentViewer';
 import ClientUpload from '@/components/portal/client/ClientUpload';
+import SignatureList from '@/components/portal/client/SignatureList';
 import type { Document as DBDocument } from '@/lib/database.types';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
@@ -32,7 +33,7 @@ const STATUS_MAP: Record<string, string> = {
 };
 
 export default function PortalDocuments() {
-  const { supabase, clientRecord } = useAuth();
+  useAuth(); // ensure authenticated
   const [clientDocs, setClientDocs] = useState<DBDocument[]>([]);
   const [engagementId, setEngagementId] = useState('');
   const [clientId, setClientId] = useState('');
@@ -117,6 +118,9 @@ export default function PortalDocuments() {
             </button>
           )}
         </section>
+
+        {/* E-Signature Requests */}
+        {clientId && <SignatureList clientId={clientId} />}
 
         {/* Search + Category Filters */}
         <DocumentSearch

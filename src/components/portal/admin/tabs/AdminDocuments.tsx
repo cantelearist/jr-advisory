@@ -16,9 +16,10 @@ interface Props {
   engagements: Engagement[];
   documents: DBDocument[];
   onReload: () => void;
+  onRequestSignature?: (doc: DBDocument) => void;
 }
 
-export default function AdminDocuments({ clients, engagements, documents, onReload }: Props) {
+export default function AdminDocuments({ clients, engagements, documents, onReload, onRequestSignature }: Props) {
   const [showUpload, setShowUpload] = useState(false);
   const [catFilter, setCatFilter] = useState<typeof CAT_FILTERS[number]>('all');
   const [search, setSearch] = useState('');
@@ -141,6 +142,20 @@ export default function AdminDocuments({ clients, engagements, documents, onRelo
                   <td style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{new Date(doc.created_at).toLocaleDateString()}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 8 }}>
+                      {/* Request Signature */}
+                      {(doc.category === 'nda' || doc.category === 'proposals' || doc.category === 'clearance') && doc.status !== 'final' && onRequestSignature && (
+                        <button
+                          onClick={() => onRequestSignature(doc)}
+                          className="admin-btn admin-btn--ghost"
+                          style={{
+                            fontSize: 9, padding: '4px 12px',
+                            color: 'var(--admin-accent)',
+                            borderColor: 'rgba(201,169,110,0.15)',
+                          }}
+                        >
+                          ✍ SIGN
+                        </button>
+                      )}
                       {hasFile && (
                         <button
                           onClick={async () => {
