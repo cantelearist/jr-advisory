@@ -1,16 +1,29 @@
 import { expect, test } from "@playwright/test";
 
+test.use({ viewport: { width: 390, height: 844 } });
+
 test("mobile navigation opens and closes", async ({ page }) => {
-  await page.setViewportSize({ width: 390, height: 844 });
-  await page.goto("http://localhost:3001/", { waitUntil: "networkidle" });
+  await page.goto("/", { waitUntil: "networkidle" });
 
-  await expect(page.getByRole("button", { name: "Open navigation" })).toBeVisible();
-  await page.getByRole("button", { name: "Open navigation" }).click();
-  await expect(page.getByRole("dialog")).toBeVisible();
-  await expect(page.getByRole("link", { name: "Founders" })).toBeVisible();
+  const menuButton = page.getByRole("button", { name: "Open navigation" });
+  await expect(menuButton).toBeVisible();
+  await menuButton.click();
 
-  await page.getByRole("link", { name: "Founders" }).click();
-  await expect(page.getByRole("dialog")).toBeHidden();
-  await expect(page.locator("#founders")).toBeInViewport();
+  const dialog = page.getByRole("dialog");
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "The Process" })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "Malibu Story" })).toBeVisible();
+  await expect(dialog.getByRole("link", { name: "Certifications" })).toBeVisible();
+
+  await dialog.getByRole("link", { name: "The Process" }).click();
+  await expect(dialog).toBeHidden();
+  await expect(page.locator("#process")).toBeInViewport();
 });
 
+test("Private Office CTA navigates to portal", async ({ page }) => {
+  await page.goto("/", { waitUntil: "networkidle" });
+
+  await page.getByRole("button", { name: "Open navigation" }).click();
+  await page.getByRole("dialog").getByRole("link", { name: /Private Office/i }).click();
+  await expect(page).toHaveURL(/\/portal/);
+});

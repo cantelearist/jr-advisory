@@ -5,24 +5,45 @@ import { describe, expect, it } from "vitest";
 import { SiteHeader } from "./site-header";
 
 describe("SiteHeader", () => {
-  it("renders brand navigation and the consultation CTA", () => {
+  it("renders brand logo linking to home", () => {
     render(<SiteHeader />);
-
     expect(screen.getByRole("link", { name: "James Roman Advisory home" })).toHaveAttribute(
       "href",
       "/",
     );
     expect(screen.getByRole("img", { name: "James Roman Advisory" })).toBeInTheDocument();
-    expect(screen.getByRole("link", { name: "Practice" })).toHaveAttribute("href", "#practice");
-    expect(screen.getByRole("link", { name: "Portal" })).toHaveAttribute("href", "#portal");
-    expect(screen.getByRole("link", { name: "Consult" })).toHaveAttribute(
+  });
+
+  it("renders all desktop nav links with correct hrefs", () => {
+    render(<SiteHeader />);
+    expect(screen.getAllByRole("link", { name: "The Process" })[0]).toHaveAttribute(
       "href",
-      "#consultation",
+      "#process",
     );
+    expect(screen.getAllByRole("link", { name: "Malibu Story" })[0]).toHaveAttribute(
+      "href",
+      "#story",
+    );
+    expect(screen.getAllByRole("link", { name: "Certifications" })[0]).toHaveAttribute(
+      "href",
+      "#certifications",
+    );
+  });
+
+  it("renders Private Office CTA linking to /portal", () => {
+    render(<SiteHeader />);
+    expect(screen.getByRole("link", { name: /Private Office/i })).toHaveAttribute(
+      "href",
+      "/portal",
+    );
+  });
+
+  it("renders the mobile menu trigger", () => {
+    render(<SiteHeader />);
     expect(screen.getByRole("button", { name: "Open navigation" })).toBeInTheDocument();
   });
 
-  it("closes the mobile menu when a navigation item is selected", async () => {
+  it("closes the mobile menu when a nav item is selected", async () => {
     const user = userEvent.setup();
     render(<SiteHeader />);
 
@@ -30,7 +51,8 @@ describe("SiteHeader", () => {
     await user.click(menuButton);
     expect(menuButton).toHaveAttribute("aria-expanded", "true");
 
-    await user.click(screen.getAllByRole("link", { name: "Practice" })[1]);
+    const mobileLinks = screen.getAllByRole("link", { name: "The Process" });
+    await user.click(mobileLinks[mobileLinks.length - 1]);
     expect(menuButton).toHaveAttribute("aria-expanded", "false");
   });
 });
