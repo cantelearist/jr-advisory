@@ -1,5 +1,4 @@
 /* ── POST /api/migrate/execute — One-shot DDL runner (TEMPORARY) ── */
-/* Accepts database connection string, runs missing-table DDL, self-documents */
 
 import { NextResponse } from 'next/server';
 import postgres from 'postgres';
@@ -14,22 +13,38 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  let body: { connection_string?: string };
+  let body: { connection_string?: string; host?: string; port?: number; password?: string; user?: string; database?: string };
   try {
     body = await request.json();
   } catch {
     return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 });
   }
 
-  const connStr = body.connection_string;
-  if (!connStr) {
-    return NextResponse.json({ error: 'Missing connection_string in body' }, { status: 400 });
-  }
+  let sql: ReturnType<typeof postgres>;
 
-  const sql = postgres(connStr, { ssl: 'require', connect_timeout: 15, max: 1 });
+  if (body.connection_string) {
+    sql = postgres(body.connection_string, { ssl: 'require', connect_timeout: 15, max: 1 });
+  } else if (body.host && body.password) {
+    sql = postgres({
+      host: body.host,
+      port: body.port || 5432,
+      database: body.database || 'postgres',
+      username: body.user || 'postgres',
+      password: body.password,
+      ssl: 'require',
+      connect_timeout: 15,
+      max: 1,
+    });
+  } else {
+    return NextResponse.json({ error: 'Provide connection_string or {host, password}' }, { status: 400 });
+  }
 
   const log: string[] = [];
   try {
+    /* Test connection */
+    const ver = await sql`SELECT version()`;
+    log.push('✓ connected: ' + String(ver[0]?.version || '').slice(0, 40));
+
     /* 0. Extension */
     await sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
     log.push('✓ uuid-ossp extension');
@@ -46,19 +61,17 @@ export async function POST(request: Request) {
     for (const s of enumSql) { await sql.unsafe(s); }
     log.push('✓ enums');
 
-    /* 2. todo table (may already exist) */
+    /* 2. todo table */
     await sql.unsafe(`
       CREATE TABLE IF NOT EXISTS todo (
         id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         client_id uuid REFERENCES clients(id) ON DELETE CASCADE,
         engagement_id uuid REFERENCES engagements(id) ON DELETE SET NULL,
         assigned_to uuid REFERENCES profiles(id) ON DELETE SET NULL,
-        title text NOT NULL,
-        description text,
+        title text NOT NULL, description text,
         priority todo_priority NOT NULL DEFAULT 'normal',
         status todo_status NOT NULL DEFAULT 'pending',
-        due_date date,
-        completed_at timestamptz,
+        due_date date, completed_at timestamptz,
         visible_to_client boolean NOT NULL DEFAULT false,
         created_by uuid REFERENCES profiles(id) ON DELETE SET NULL,
         created_at timestamptz NOT NULL DEFAULT now(),
@@ -84,13 +97,9 @@ export async function POST(request: Request) {
         id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
         document_id uuid NOT NULL REFERENCES documents(id) ON DELETE CASCADE,
         client_id uuid NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
-        signer_name text NOT NULL,
-        signer_email text NOT NULL DEFAULT '',
-        message text,
-        status signature_status NOT NULL DEFAULT 'pending',
-        signature_data text,
-        signed_at timestamptz,
-        ip_address inet,
+        signer_name text NOT NULL, signer_email text NOT NULL DEFAULT '',
+        message text, status signature_status NOT NULL DEFAULT 'pending',
+        signature_data text, signed_at timestamptz, ip_address inet,
         created_at timestamptz NOT NULL DEFAULT now(),
         updated_at timestamptz NOT NULL DEFAULT now()
       )
@@ -113,13 +122,9 @@ export async function POST(request: Request) {
     await sql.unsafe(`
       CREATE TABLE IF NOT EXISTS notifications (
         id uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
-        target text NOT NULL,
-        type notification_type NOT NULL,
-        title text NOT NULL,
-        body text,
-        link text,
-        read boolean NOT NULL DEFAULT false,
-        metadata jsonb,
+        target text NOT NULL, type notification_type NOT NULL,
+        title text NOT NULL, body text, link text,
+        read boolean NOT NULL DEFAULT false, metadata jsonb,
         created_at timestamptz NOT NULL DEFAULT now()
       )
     `);
@@ -140,14 +145,11 @@ export async function POST(request: Request) {
     await sql.unsafe(`CREATE POLICY "System can insert notifications" ON notifications FOR INSERT WITH CHECK (true)`);
     log.push('✓ notifications table');
 
-    /* 5. site_content table (may already exist) */
+    /* 5. site_content table */
     await sql.unsafe(`
       CREATE TABLE IF NOT EXISTS site_content (
-        id text PRIMARY KEY,
-        section text NOT NULL,
-        key text NOT NULL,
-        label text NOT NULL,
-        content text NOT NULL,
+        id text PRIMARY KEY, section text NOT NULL, key text NOT NULL,
+        label text NOT NULL, content text NOT NULL,
         content_type content_type NOT NULL DEFAULT 'text',
         updated_at timestamptz NOT NULL DEFAULT now(),
         updated_by uuid REFERENCES profiles(id) ON DELETE SET NULL
@@ -162,28 +164,20 @@ export async function POST(request: Request) {
     await sql.unsafe(`CREATE POLICY "Admins manage site content" ON site_content FOR ALL USING (is_admin()) WITH CHECK (is_admin())`);
     log.push('✓ site_content table');
 
-    /* 6. Stripe columns on invoices */
+    /* 6. Stripe columns */
     await sql.unsafe(`DO $$ BEGIN ALTER TABLE invoices ADD COLUMN stripe_session_id text; EXCEPTION WHEN duplicate_column THEN NULL; END $$`);
     await sql.unsafe(`DO $$ BEGIN ALTER TABLE invoices ADD COLUMN stripe_payment_id text; EXCEPTION WHEN duplicate_column THEN NULL; END $$`);
-    log.push('✓ stripe columns on invoices');
+    log.push('✓ stripe columns');
 
     /* 7. Verify */
     const tables = ['todo', 'signature_requests', 'notifications', 'site_content'];
     const missing: string[] = [];
     for (const t of tables) {
-      try {
-        await sql.unsafe(`SELECT 1 FROM ${t} LIMIT 0`);
-      } catch {
-        missing.push(t);
-      }
+      try { await sql.unsafe(`SELECT 1 FROM ${t} LIMIT 0`); } catch { missing.push(t); }
     }
-
     await sql.end();
 
-    if (missing.length > 0) {
-      return NextResponse.json({ status: 'partial', log, missing });
-    }
-
+    if (missing.length > 0) return NextResponse.json({ status: 'partial', log, missing });
     return NextResponse.json({ status: 'ok', message: 'All tables created ✓', log });
   } catch (err: unknown) {
     await sql.end().catch(() => {});
