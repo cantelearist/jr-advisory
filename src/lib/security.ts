@@ -1,13 +1,18 @@
+const CLERK_HOST = "https://crucial-chicken-28.clerk.accounts.dev";
+const CLERK_IMG = "https://img.clerk.com";
+
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+  `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${CLERK_HOST}`,
   "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' data: blob:",
-  "font-src 'self'",
-  "connect-src 'self'",
+  `img-src 'self' data: blob: ${CLERK_IMG}`,
+  `font-src 'self' ${CLERK_HOST}`,
+  `connect-src 'self' ${CLERK_HOST}`,
+  `frame-src ${CLERK_HOST}`,
   "frame-ancestors 'none'",
   "base-uri 'self'",
   "form-action 'self'",
+  "worker-src blob:",
 ].join("; ");
 
 export const securityHeaders = [
