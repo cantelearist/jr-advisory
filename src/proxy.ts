@@ -1,11 +1,17 @@
 import { clerkMiddleware, createRouteMatcher } from "@clerk/nextjs/server";
+import { NextResponse } from "next/server";
 
 const isProtectedRoute = createRouteMatcher(["/portal(.*)"]);
 
 export const proxy = clerkMiddleware(async (auth, req) => {
-  if (isProtectedRoute(req)) {
-    await auth.protect();
-  }
+  if (!isProtectedRoute(req)) return NextResponse.next();
+
+  const { userId } = await auth();
+  if (userId) return NextResponse.next();
+
+  const signIn = new URL("/sign-in", req.url);
+  signIn.searchParams.set("redirect_url", req.nextUrl.pathname);
+  return NextResponse.redirect(signIn);
 });
 
 export const config = {
