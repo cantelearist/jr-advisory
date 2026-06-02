@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   title: "James Roman Advisory | Private Remediation & Inspection Oversight",
   description:
     "Private owner-side advisory for hazardous materials remediation and structural inspection oversight. Coastal estate specialists. Los Angeles.",
+  verification: {
+    google: "gX9mKpLqR2vWnYzAbCdEfHjMtSuV3kow",
+  },
 };
 
 export default function RootLayout({
