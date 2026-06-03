@@ -14,8 +14,10 @@ export function SmoothProvider({ children }: { children: React.ReactNode }) {
   const lenisRef = useRef<Lenis | null>(null);
 
   useEffect(() => {
+    // Shorter duration on mobile — Lenis inertia fights touch swipe otherwise
+    const isMobile = window.innerWidth < 768;
     const lenis = new Lenis({
-      duration: 1.35,
+      duration: isMobile ? 0.85 : 1.35,
       easing: (t) => 1 - Math.pow(1 - t, 4),
       smoothWheel: true,
     });
