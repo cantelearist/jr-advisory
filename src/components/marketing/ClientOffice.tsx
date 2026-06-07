@@ -3,7 +3,7 @@ import Image from "next/image";
 
 export function ClientOffice() {
   return (
-    <section id="private-office" data-testid="client-office" className="private-office-section scroll-reveal">
+    <section id="private-office" data-testid="client-office" className="private-office-section">
       {/* Ocean sunset background */}
       <div className="private-office-bg">
         <Image
@@ -11,7 +11,6 @@ export function ClientOffice() {
           alt="Malibu mountains and ocean at sunset"
           fill
           sizes="100vw"
-          className="slow-drift"
           style={{ objectFit: "cover", objectPosition: "center" }}
         />
         <div className="private-office-overlay" />
@@ -20,7 +19,7 @@ export function ClientOffice() {
       <div className="page" style={{ position: "relative", zIndex: 1 }}>
         <div className="private-office-layout">
           {/* Left: text */}
-          <div className="private-office-text">
+          <div className="private-office-text" data-reveal>
             <div className="mono" style={{ color: "var(--accent)", opacity: 0.7, marginBottom: 16, fontSize: 11, letterSpacing: ".28em" }}>
               Concierge Experience
             </div>
@@ -38,14 +37,14 @@ export function ClientOffice() {
           </div>
 
           {/* Right: portal mockup card */}
-          <div className="portal-card dossier-panel">
+          <div className="portal-card" data-reveal style={{ "--rd": "300ms" } as React.CSSProperties}>
             <div className="portal-card-header">
               <div>
                 <div className="mono" style={{ fontSize: 10, letterSpacing: ".2em", opacity: 0.5 }}>Client portal</div>
                 <div className="display" style={{ fontSize: 20, letterSpacing: ".02em", marginTop: 4 }}>Engagement file</div>
                 <div style={{ fontSize: 13, opacity: 0.5, marginTop: 4 }}>Broad Beach Rd · Active · Week 7</div>
               </div>
-              <div className="portal-badge motion-accent-pulse">Restricted</div>
+              <div className="portal-badge">Restricted</div>
             </div>
 
             <div className="portal-stats">

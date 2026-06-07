@@ -35,9 +35,9 @@ const PRACTICE_CARDS = [
 
 export function Practice() {
   return (
-    <section id="practice" data-testid="practice" className="practice-section scroll-reveal">
+    <section id="practice" data-testid="practice" className="practice-section">
       <div className="page">
-        <div>
+        <div data-reveal>
           <div className="mono" style={{ opacity: 0.5, marginBottom: 16, fontSize: 11, letterSpacing: ".28em" }}>
             The Practice
           </div>
@@ -51,20 +51,18 @@ export function Practice() {
           </p>
         </div>
 
-        <div className="practice-list">
+        <div className="practice-cards" data-reveal style={{ "--rd": "200ms" } as React.CSSProperties}>
           {PRACTICE_CARDS.map((card) => (
-            <div key={card.num} className="practice-list-item luxury-hover">
-              <div className="mono" style={{ color: "var(--accent)", opacity: 0.4, fontSize: 13, minWidth: 32 }}>
+            <div key={card.num} className="practice-card gate">
+              <div className="mono" style={{ color: "var(--accent)", opacity: 0.6, fontSize: 12 }}>
                 {card.num}
               </div>
-              <div style={{ flex: 1 }}>
-                <h3 className="display" style={{ fontSize: "clamp(22px, 2.5vw, 30px)", margin: "0 0 12px", letterSpacing: ".02em" }}>
-                  {card.title}
-                </h3>
-                <p className="small-copy" style={{ fontSize: 15, lineHeight: 1.7, opacity: 0.7, margin: 0 }}>
-                  {card.text}
-                </p>
-              </div>
+              <h3 className="display" style={{ fontSize: "clamp(22px, 2.5vw, 30px)", margin: "16px 0 12px", letterSpacing: ".02em" }}>
+                {card.title}
+              </h3>
+              <p className="small-copy" style={{ fontSize: 15, lineHeight: 1.7, opacity: 0.7, margin: 0 }}>
+                {card.text}
+              </p>
             </div>
           ))}
         </div>

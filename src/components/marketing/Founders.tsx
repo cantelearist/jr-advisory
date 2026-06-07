@@ -3,16 +3,15 @@ import Image from "next/image";
 
 export function Founders() {
   return (
-    <section id="origin" data-testid="founders" className="origin-section scroll-reveal">
+    <section id="origin" data-testid="founders" className="origin-section">
       {/* Full-width split layout: photo left, story right */}
       <div className="origin-layout">
-        <div className="origin-photo group">
+        <div className="origin-photo" data-reveal>
           <Image
             src="/images/founders/founders-malibu-beach.png"
             alt="Roman & Stephen — Co-founders, James Roman Advisory, on Malibu beach"
             fill
             sizes="(max-width: 900px) 100vw, 50vw"
-            className="luxury-image"
             style={{ objectFit: "cover", objectPosition: "center top" }}
           />
           <div className="origin-photo-caption">
@@ -26,7 +25,7 @@ export function Founders() {
           </div>
         </div>
 
-        <div className="origin-story">
+        <div className="origin-story" data-reveal>
           <div className="mono" style={{ opacity: 0.5, marginBottom: 16, fontSize: 11, letterSpacing: ".28em" }}>
             The Origin
           </div>
@@ -35,7 +34,7 @@ export function Founders() {
             the canyon <span className="accent-shimmer">claimed<br />the ridge.</span>
           </h2>
 
-          <div className="hr motion-line" style={{ margin: "32px 0" }} />
+          <div className="hr" style={{ margin: "32px 0" }} />
 
           <div className="origin-paragraphs">
             <p className="small-copy" style={{ fontSize: 17, lineHeight: 1.85, opacity: 0.75 }}>
