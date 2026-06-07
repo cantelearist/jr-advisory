@@ -1,88 +1,32 @@
 import React from "react";
-import { Logo } from "./Logo";
-import { FOOTER_COLUMNS, FIRM_YEAR } from "@/lib/constants";
+import Image from "next/image";
 
 export function SiteFooter() {
   return (
-    <footer data-testid="site-footer">
+    <footer data-testid="site-footer" className="site-footer">
       <div className="page">
-        <div
-          className="footer-grid"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.4fr 1fr 1fr 1fr",
-            gap: 40,
-            marginBottom: 60,
-          }}
-        >
-          <div className="footer-brand">
-            <Logo />
-            <p
-              className="small-copy"
-              style={{
-                marginTop: 24,
-                maxWidth: "34ch",
-                fontSize: 17,
-                lineHeight: 1.7,
-              }}
-            >
-              Private advisory for hazardous-material remediation oversight and
-              property-integrity matters in luxury properties across Malibu,
-              Santa Monica, Pacific Palisades, Beverly Hills, Bel Air, and
-              Brentwood.
-            </p>
-          </div>
-
-          {FOOTER_COLUMNS.map((col) => (
-            <div key={col.heading}>
-              <div
-                className="mono"
-                style={{ opacity: 0.6, marginBottom: 18 }}
-              >
-                {col.heading}
-              </div>
-              <div
-                style={{
-                  display: "flex",
-                  flexDirection: "column",
-                  gap: 12,
-                }}
-              >
-                {col.items.map((item) => (
-                  <a
-                    key={item.label}
-                    href={item.href}
-                    className="footer-link"
-                    style={{ fontSize: 17, opacity: 0.82 }}
-                  >
-                    {item.label}
-                  </a>
-                ))}
-              </div>
+        <div className="footer-content">
+          <div className="footer-left">
+            <Image
+              src="/images/jra-logo-transparent.png"
+              alt="James Roman Advisory"
+              width={92}
+              height={38}
+              style={{ height: 30, width: "auto", objectFit: "contain", opacity: 0.8 }}
+            />
+            <div className="footer-copy">
+              <p>© 2026 James Roman Advisory LLC</p>
+              <p style={{ fontSize: 12, opacity: 0.5 }}>
+                Malibu, California · Fully Certified · Privacy Guaranteed
+              </p>
             </div>
-          ))}
-        </div>
-
-        <div className="hr" style={{ marginBottom: 24 }} />
-
-        <div
-          className="mono footer-bottom"
-          style={{
-            display: "flex",
-            justifyContent: "space-between",
-            opacity: 0.5,
-            fontSize: 13,
-            flexWrap: "wrap",
-            gap: 12,
-          }}
-        >
-          <span>
-            © James Roman Advisory · {FIRM_YEAR} · All Rights Reserved
-          </span>
-          <span>
-            An independent advisory representative. Not a contractor.
-          </span>
-          <span>Los Angeles · California</span>
+          </div>
+          <nav className="footer-nav" aria-label="Footer navigation">
+            <a href="#practice" className="footer-link">Practice</a>
+            <a href="#origin" className="footer-link">Origin</a>
+            <a href="#cornerstones" className="footer-link">The Cornerstone</a>
+            <a href="#contact" className="footer-link">Contact</a>
+          </nav>
         </div>
       </div>
     </footer>

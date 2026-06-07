@@ -7,11 +7,9 @@ import {
   Nav,
   Hero,
   Practice,
-  Counsel,
-  Engagement,
-  Discretion,
-  Matters,
   Founders,
+  Cornerstone,
+  ClientOffice,
   Contact,
   SiteFooter,
   CookieBanner,
@@ -50,7 +48,7 @@ const jsonLd = {
     "Indoor air quality",
     "Fire and smoke remediation",
   ],
-  slogan: "Respond. Protect. Restore.",
+  slogan: "Protecting The Coast We Call Home.",
   priceRange: "$$$$",
 };
 
@@ -81,11 +79,9 @@ export default function HomePage() {
       <Hero />
       <main id="main-content">
         <Practice />
-        <Counsel />
-        <Engagement />
-        <Discretion />
-        <Matters />
         <Founders />
+        <Cornerstone />
+        <ClientOffice />
         <Contact />
       </main>
       <SiteFooter />

@@ -8,6 +8,7 @@ export { Engagement } from "./Engagement";
 export { Discretion } from "./Discretion";
 export { Matters } from "./Matters";
 export { Founders } from "./Founders";
+export { Cornerstone } from "./Cornerstone";
 export { ClientOffice } from "./ClientOffice";
 export { Contact } from "./Contact";
 export { SiteFooter } from "./SiteFooter";

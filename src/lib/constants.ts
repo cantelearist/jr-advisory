@@ -29,11 +29,9 @@ export interface NavItem {
 
 export const NAV_ITEMS: NavItem[] = [
   { label: "The Practice", href: "#practice" },
-  { label: "Counsel", href: "#counsel" },
-  { label: "Engagement", href: "#engagement" },
-  { label: "Discretion", href: "#discretion" },
-  { label: "Founders", href: "#founders" },
-  { label: "Contact", href: "#contact" },
+  { label: "Origin", href: "#origin" },
+  { label: "The Cornerstone", href: "#cornerstones" },
+  { label: "Private Office", href: "#private-office" },
 ];
 
 /* ─── Practice stats ─── */
