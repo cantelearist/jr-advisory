@@ -1,128 +1,72 @@
-"use client";
-
 import React from "react";
-import { PRACTICE_STATS } from "@/lib/constants";
-import { useCountUp } from "@/hooks/useCountUp";
 
-function NumericStat({
-  prefix,
-  target,
-  suffix,
-  accent,
-}: {
-  prefix: string;
-  target: number;
-  suffix: string;
-  accent?: boolean;
-}) {
-  const { ref, displayValue } = useCountUp(target, 1800);
-
-  return (
-    <div
-      ref={ref as React.RefObject<HTMLDivElement>}
-      className="display stat-counter"
-      style={{
-        fontSize: 42,
-        letterSpacing: ".03em",
-        lineHeight: 1,
-        ...(accent ? { color: "var(--accent)" } : undefined),
-      }}
-    >
-      {prefix}
-      {displayValue}
-      {suffix}
-    </div>
-  );
-}
-
-function StaticStat({ value, accent }: { value: string; accent?: boolean }) {
-  return (
-    <div
-      className="display"
-      style={{
-        fontSize: 42,
-        letterSpacing: ".03em",
-        lineHeight: 1,
-        ...(accent ? { color: "var(--accent)" } : undefined),
-      }}
-    >
-      {value}
-    </div>
-  );
-}
-
-function StatDisplay({ value, accent }: { value: string; accent?: boolean }) {
-  const numericMatch = value.match(/^(\$?)(\d+)/);
-  if (!numericMatch) {
-    return <StaticStat value={value} accent={accent} />;
-  }
-
-  const prefix = numericMatch[1] || "";
-  const num = parseInt(numericMatch[2], 10);
-  const suffix = value.slice(numericMatch[0].length);
-
-  return <NumericStat prefix={prefix} target={num} suffix={suffix} accent={accent} />;
-}
+const PRACTICE_CARDS = [
+  {
+    num: "01",
+    title: "Mold and Water Damage",
+    text: "Moisture mapping, containment strategy, clearance standards, and contractor performance reviewed before damage turns into a second problem.",
+  },
+  {
+    num: "02",
+    title: "Fire and Smoke Residue",
+    text: "Residue testing, odor pathways, cleaning protocols, and documentation tracked so restoration decisions are based on evidence, not pressure.",
+  },
+  {
+    num: "03",
+    title: "Asbestos and Legacy Materials",
+    text: "Legacy materials identified, sampled, abated, and closed out with the right custody trail before renovation or rebuild work moves forward.",
+  },
+  {
+    num: "04",
+    title: "Indoor Air Quality and VOCs",
+    text: "Airborne particulate, volatile organic compounds, and post-remediation clearance coordinated with independent testing and readable reporting.",
+  },
+  {
+    num: "05",
+    title: "Pre-Sale Diligence",
+    text: "Environmental and structural risk reviewed before acquisition, listing, or negotiation so hidden liability does not arrive after the transaction.",
+  },
+  {
+    num: "06",
+    title: "Contractor Procurement",
+    text: "License, insurance, bonding, scope, and field performance reviewed before any crew steps on site. Every contract questioned before it is signed.",
+  },
+];
 
 export function Practice() {
   return (
-    <section id="practice" data-testid="practice" style={{ padding: "160px 0 140px" }}>
+    <section id="practice" data-testid="practice" className="practice-section scroll-reveal">
       <div className="page">
-        <div
-          className="practice-layout"
-          style={{
-            display: "grid",
-            gridTemplateColumns: "180px 1fr 300px",
-            gap: 48,
-            alignItems: "start",
-          }}
-        >
-          <div className="num section-num" data-reveal>
-            § 01 — THE PRACTICE
+        <div>
+          <div className="mono" style={{ opacity: 0.5, marginBottom: 16, fontSize: 11, letterSpacing: ".28em" }}>
+            The Practice
           </div>
+          <h2 className="h-section" style={{ margin: "0 0 16px", fontSize: "clamp(36px, 4vw, 56px)" }}>
+            Advocacy,<br />
+            <span className="accent-shimmer">not remediation.</span>
+          </h2>
+          <p className="small-copy" style={{ maxWidth: "56ch", fontSize: 17, lineHeight: 1.75, opacity: 0.75 }}>
+            We carry no hammers and file no invoices for work. Our only product is judgment
+            applied exclusively on behalf of the owner.
+          </p>
+        </div>
 
-          <div data-reveal>
-            <h2 className="h-section" style={{ margin: 0 }}>
-              A small practice,
-              <br />
-              <span className="accent-shimmer">privately retained.</span>
-            </h2>
-            <p
-              className="small-copy"
-              style={{ marginTop: 32, fontSize: 17, maxWidth: "54ch" }}
-            >
-              An independent voice between your home and an industry that is,
-              candidly, uneven. We accept no fees from contractors — ever. We do
-              not bid on the work, sell remediation, or take a position in any
-              party performing it.
-            </p>
-            <p
-              className="small-copy"
-              style={{ marginTop: 18, fontSize: 17, maxWidth: "54ch" }}
-            >
-              We are paid by the homeowner. We represent only the homeowner. That
-              distinction is the entire firm.
-            </p>
-          </div>
-
-          <div className="practice-stats" data-reveal style={{ textAlign: "right" }}>
-            <div style={{ display: "grid", gap: 28 }}>
-              {PRACTICE_STATS.map((stat, i) => (
-                <React.Fragment key={stat.label}>
-                  {i > 0 && <div className="hr accent" />}
-                  <div>
-                    <StatDisplay value={stat.value} accent={stat.accent} />
-                    <div
-                      className="mono"
-                      style={{ opacity: 0.55, marginTop: 8 }}
-                    >
-                      {stat.label}
-                    </div>
-                  </div>
-                </React.Fragment>
-              ))}
+        <div className="practice-list">
+          {PRACTICE_CARDS.map((card) => (
+            <div key={card.num} className="practice-list-item luxury-hover">
+              <div className="mono" style={{ color: "var(--accent)", opacity: 0.4, fontSize: 13, minWidth: 32 }}>
+                {card.num}
+              </div>
+              <div style={{ flex: 1 }}>
+                <h3 className="display" style={{ fontSize: "clamp(22px, 2.5vw, 30px)", margin: "0 0 12px", letterSpacing: ".02em" }}>
+                  {card.title}
+                </h3>
+                <p className="small-copy" style={{ fontSize: 15, lineHeight: 1.7, opacity: 0.7, margin: 0 }}>
+                  {card.text}
+                </p>
+              </div>
             </div>
-          </div>
+          ))}
         </div>
       </div>
     </section>

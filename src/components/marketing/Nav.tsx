@@ -36,6 +36,7 @@ export function Nav() {
     <>
       <header
         data-testid="main-nav"
+        className="motion-fade-up"
         style={{
           position: "sticky",
           top: 0,
@@ -94,7 +95,7 @@ export function Nav() {
                 padding: "6px 0",
               }}
             >
-              Private Inquiry <span className="arr">→</span>
+              Book Inquiry <span className="arr">→</span>
             </a>
 
             {/* Mobile hamburger */}
@@ -139,7 +140,7 @@ export function Nav() {
           })}
           <div className="hr" style={{ width: 60, margin: "8px 0" }} />
           <a href="#contact" className="btn ghost" onClick={closeMenu}>
-            Private Inquiry <span className="arr">→</span>
+            Book Inquiry <span className="arr">→</span>
           </a>
         </nav>
       </div>

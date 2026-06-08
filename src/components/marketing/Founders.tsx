@@ -1,125 +1,63 @@
 import React from "react";
 import Image from "next/image";
-import { FOUNDERS } from "@/lib/constants";
 
 export function Founders() {
   return (
-    <section
-      id="founders"
-      data-testid="founders"
-      style={{ padding: "160px 0 140px" }}
-    >
-      <div className="page">
-        <div className="num section-num" data-reveal>
-          § 06 — THE FOUNDERS
-        </div>
-
-        <div
-          data-reveal
-          style={{ marginTop: 44, maxWidth: "58ch", margin: "44px auto 0", textAlign: "center" }}
-        >
-          <h2 className="h-section" style={{ margin: "0 0 32px", fontSize: "clamp(36px, 4vw, 56px)" }}>
-            Two locals,{" "}
-            <span className="accent-shimmer">one obligation</span>
+    <section id="origin" data-testid="founders" className="origin-section scroll-reveal">
+      {/* Full-width split layout: photo left, story right */}
+      <div className="origin-layout">
+        <div className="origin-photo group">
+          <Image
+            src="/images/founders/founders-malibu-beach.png"
+            alt="Roman & Stephen — Co-founders, James Roman Advisory, on Malibu beach"
+            fill
+            sizes="(max-width: 900px) 100vw, 50vw"
+            className="luxury-image"
+            style={{ objectFit: "cover", objectPosition: "center top" }}
+          />
+          <div className="origin-photo-caption">
+            <span className="mono" style={{ fontSize: 11, letterSpacing: ".2em", opacity: 0.7 }}>
+              Roman &amp; Stephen · Malibu
+            </span>
             <br />
-            to the place they call home.
-          </h2>
-          <p
-            className="small-copy"
-            style={{ fontSize: 18, lineHeight: 1.85, opacity: 0.82, margin: "0 auto", maxWidth: "54ch" }}
-          >
-            When the smoke clears and the gates open again, someone has to stand
-            on your side of it. We do. Not as a secondary concern — as the
-            primary one.
-          </p>
-        </div>
-
-        <div className="hr" style={{ margin: "56px 0" }} />
-
-        <div className="founders-grid">
-          {FOUNDERS.map((f) => (
-            <div key={f.name} className="founder-card" data-reveal>
-              <div className="founder-card-inner">
-                <div className="founder-portrait-wrap">
-                  <Image
-                    src={`/founders/${f.name.toLowerCase()}.png`}
-                    alt={`${f.name} — Co-Founder, James Roman Advisory`}
-                    className="founder-portrait"
-                    width={420}
-                    height={420}
-                    sizes="(max-width: 900px) 320px, 420px"
-                    style={f.portraitPosition ? { objectPosition: f.portraitPosition } : undefined}
-                  />
-                </div>
-                <div style={{ textAlign: "center" }}>
-                  <h3
-                    className="display"
-                    style={{
-                      fontSize: "clamp(28px, 3vw, 40px)",
-                      margin: "0 0 6px",
-                      letterSpacing: ".03em",
-                    }}
-                  >
-                    {f.name}
-                  </h3>
-                  <div
-                    className="mono"
-                    style={{
-                      color: "var(--accent)",
-                      fontSize: 14,
-                      marginBottom: 28,
-                      letterSpacing: ".12em",
-                    }}
-                  >
-                    {f.title}
-                  </div>
-                  <p
-                    className="small-copy founder-quote"
-                    style={{
-                      fontSize: 17,
-                      lineHeight: 1.85,
-                      margin: "0 auto",
-                      opacity: 0.85,
-                      textAlign: "center",
-                      fontStyle: "italic",
-                    }}
-                  >
-                    &ldquo;{f.quote}&rdquo;
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-
-        <div className="hr" style={{ margin: "56px 0" }} />
-
-        <div data-reveal className="founders-credo">
-          <div
-            className="mono"
-            style={{ color: "var(--accent)", marginBottom: 22, textAlign: "center", letterSpacing: ".12em" }}
-          >
-            OUR POSITION
+            <span className="mono" style={{ fontSize: 10, letterSpacing: ".2em", opacity: 0.5 }}>
+              Co-founders
+            </span>
           </div>
-          <p
-            className="small-copy"
-            style={{
-              fontSize: 18,
-              lineHeight: 1.9,
-              maxWidth: "60ch",
-              margin: "0 auto",
-              opacity: 0.85,
-              textAlign: "center",
-            }}
-          >
-            Between us — over twenty years in construction, architecture, and
-            remediation. We&apos;ve seen the care that goes into significant
-            homes. We&apos;ve also seen what happens when that care isn&apos;t
-            there on the back end. The firm stays small on purpose. Your
-            engagement passes through our hands — not a junior&apos;s, not a
-            project manager&apos;s. Ours. There is no exit interview from a
-            place you call home.
-          </p>
+        </div>
+
+        <div className="origin-story">
+          <div className="mono" style={{ opacity: 0.5, marginBottom: 16, fontSize: 11, letterSpacing: ".28em" }}>
+            The Origin
+          </div>
+          <h2 className="h-section" style={{ margin: "0 0 0", fontSize: "clamp(36px, 4vw, 56px)" }}>
+            Twice in thirty years,<br />
+            the canyon <span className="accent-shimmer">claimed<br />the ridge.</span>
+          </h2>
+
+          <div className="hr motion-line" style={{ margin: "32px 0" }} />
+
+          <div className="origin-paragraphs">
+            <p className="small-copy" style={{ fontSize: 17, lineHeight: 1.85, opacity: 0.75 }}>
+              Stephen was born in Malibu. He watched his family&apos;s home burn
+              in 1993 and again in 2018. Both times, the hardest part wasn&apos;t
+              the loss — it was what came after: contractors who couldn&apos;t be
+              trusted, advisors who worked for the insurance company.
+            </p>
+            <p className="small-copy" style={{ fontSize: 17, lineHeight: 1.85, opacity: 0.75, marginTop: 20 }}>
+              Roman spent years overseeing construction across Los Angeles
+              and watched, repeatedly, how quickly standards drift when no
+              one is clearly standing for the person paying the bill.
+            </p>
+            <p className="small-copy" style={{ fontSize: 17, lineHeight: 1.85, opacity: 0.75, marginTop: 20 }}>
+              James Roman Advisory exists because both of them needed it,
+              years before they built it.
+            </p>
+          </div>
+
+          <a href="#contact" className="mono inquiry-link" style={{ marginTop: 40, display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, letterSpacing: ".22em", opacity: 0.6 }}>
+            Book a private consultation <span className="arr">→</span>
+          </a>
         </div>
       </div>
     </section>

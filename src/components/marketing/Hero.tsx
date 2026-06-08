@@ -1,170 +1,65 @@
 "use client";
 
-import React, { useRef, useEffect } from "react";
-import { Plate } from "./Plate";
-import { SERVICE_AREAS, FIRM_DESCRIPTION } from "@/lib/constants";
+import React from "react";
+import Image from "next/image";
+import { SERVICE_AREAS } from "@/lib/constants";
 
 export function Hero() {
-  const ref = useRef<HTMLElement>(null);
-  const bgRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    const tm = setTimeout(() => {
-      ref.current
-        ?.querySelectorAll(".stage, [data-reveal], .mask-reveal")
-        .forEach((n) => n.classList.add("in"));
-    }, 60);
-    return () => clearTimeout(tm);
-  }, []);
-
-  // Parallax — background moves at 30% of scroll speed
-  useEffect(() => {
-    // Respect reduced motion
-    const mq = window.matchMedia("(prefers-reduced-motion: reduce)");
-    if (mq.matches) return;
-
-    let ticking = false;
-    function onScroll() {
-      if (!ticking) {
-        ticking = true;
-        requestAnimationFrame(() => {
-          if (bgRef.current) {
-            const y = window.scrollY * 0.3;
-            bgRef.current.style.transform = `translateY(${y}px)`;
-          }
-          ticking = false;
-        });
-      }
-    }
-
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
-  }, []);
-
   return (
-    <section
-      ref={ref}
-      id="hero"
-      data-testid="hero"
-      style={{
-        position: "relative",
-        minHeight: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        overflow: "hidden",
-      }}
-    >
-      {/* Background plate with parallax */}
-      <div
-        ref={bgRef}
-        className="hero-parallax-bg"
-        style={{ position: "absolute", inset: "-20% 0 0 0", zIndex: 0, height: "120%" }}
-      >
-        <Plate
-          tag="PLATE I · COASTAL ESCARPMENT"
-          label="01 / 06"
-          h="100%"
-          drift
+    <section id="hero" data-testid="hero" className="hero-section">
+      {/* Background image */}
+      <div className="hero-bg motion-soft-reveal">
+        <Image
+          src="/images/jra-hero.jpg"
+          alt="Malibu coastline luxury estate"
+          fill
+          priority
+          sizes="100vw"
+          className="slow-drift"
+          style={{ objectFit: "cover", objectPosition: "center" }}
         />
-        <div
-          style={{
-            position: "absolute",
-            inset: 0,
-            background:
-              "linear-gradient(180deg, rgba(10,11,14,0.55) 0%, rgba(10,11,14,0.15) 35%, rgba(10,11,14,0.85) 100%)",
-          }}
-        />
-        <div className="corners">
-          <span className="tl" />
-          <span className="tr" />
-          <span className="bl" />
-          <span className="br" />
-        </div>
+        <div className="hero-overlay" />
+        <div className="hero-gradient" />
+        <div className="hero-bottom-fade" />
       </div>
 
       {/* Content */}
-      <div
-        className="page"
-        style={{
-          position: "relative",
-          zIndex: 1,
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "center",
-          padding: "140px 0 60px",
-        }}
-      >
-        <div className="stage" style={{ maxWidth: 1100 }}>
-          <div
-            className="eyebrow"
-            style={{
-              marginBottom: 44,
-              display: "flex",
-              gap: 18,
-              alignItems: "center",
-            }}
-          >
-            <span className="chip-dot">Private Engagement · MMXXVI</span>
-          </div>
+      <div className="hero-content page">
+        <div className="hero-eyebrow motion-fade-up">
+          <span className="mono" style={{ fontSize: 11, letterSpacing: ".28em", opacity: 0.5 }}>
+            Owner-side advisory · No contractors · No conflicts
+          </span>
+        </div>
+        <div className="mono motion-fade-up motion-delay-1" style={{ fontSize: 10, letterSpacing: ".32em", opacity: 0.4, marginBottom: 24 }}>
+          Private advisory · Los Angeles coastal estates
+        </div>
 
-          <h1 className="h-display" style={{ margin: 0 }}>
-            Respond.
-            <br />
-            <span className="accent-shimmer">Protect.</span>
-            <br />
-            Restore.
-          </h1>
+        <h1 className="hero-headline motion-fade-up motion-delay-1">
+          Protecting<br />
+          The Coast<br />
+          We Call <span className="accent-shimmer">Home.</span>
+        </h1>
 
-          <p
-            className="small-copy"
-            style={{ marginTop: 40, maxWidth: "48ch" }}
-          >
-            {FIRM_DESCRIPTION}
+        <div className="hero-rule motion-line" />
+
+        <div className="hero-bottom-row motion-fade-up motion-delay-2">
+          <p className="small-copy" style={{ maxWidth: "52ch", fontSize: 17, lineHeight: 1.75, opacity: 0.8, margin: 0 }}>
+            Ultra-discreet hazardous materials remediation advisory and structural inspection
+            oversight for coastal estate owners where cost, liability, and pressure arrive together.
           </p>
-
-          <div
-            style={{
-              marginTop: 48,
-              display: "flex",
-              gap: 32,
-              flexWrap: "wrap",
-              alignItems: "center",
-            }}
-          >
-            <a href="#practice" className="btn ghost">
-              The Practice <span className="arr">→</span>
-            </a>
-            <a
-              href="#contact"
-              className="mono inquiry-link"
-              style={{
-                opacity: 0.7,
-                display: "inline-flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              Private Inquiry <span className="arr">→</span>
-            </a>
-          </div>
+          <a href="#practice" className="mono inquiry-link" style={{ fontSize: 12, letterSpacing: ".22em", opacity: 0.6, whiteSpace: "nowrap" }}>
+            View practice <span className="arr">→</span>
+          </a>
         </div>
       </div>
 
-      {/* Location strip — animated marquee */}
-      <div
-        style={{ position: "relative", zIndex: 1, padding: "20px 0 28px" }}
-        data-reveal
-      >
+      {/* Location strip */}
+      <div className="motion-fade-up motion-delay-3" style={{ position: "relative", zIndex: 1, padding: "20px 0 28px" }}>
         <div className="hr gold-line" style={{ marginBottom: 20 }} />
         <div className="cities-marquee-wrap">
           <div className="cities-marquee">
-            {/* Duplicate the list for seamless loop */}
             {[...SERVICE_AREAS, ...SERVICE_AREAS].map((area, i) => (
-              <span
-                key={`${area}-${i}`}
-                className="mono cities-marquee-item"
-              >
+              <span key={`${area}-${i}`} className="mono cities-marquee-item">
                 <span className="cities-sep">/</span>
                 {area.toUpperCase()}
               </span>
