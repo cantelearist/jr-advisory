@@ -944,21 +944,22 @@ body::after {
   padding: 120px 0 100px;
   border-top: 1px solid rgba(255,255,255,0.06);
 }
-.practice-cards {
+/* Practice: 2-column flat list with dividers */
+.practice-list {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 20px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0;
   margin-top: 56px;
 }
-.practice-card {
-  padding: 32px 28px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: var(--panel);
-  transition: border-color 0.4s ease, transform 0.4s ease;
+.practice-list-item {
+  display: flex;
+  gap: 20px;
+  padding: 36px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  transition: background 0.3s ease;
 }
-.practice-card:hover {
-  border-color: rgba(201,181,138,0.25);
-  transform: translateY(-2px);
+.practice-list-item:hover {
+  background: rgba(255,255,255,0.02);
 }
 
 /* ─── Origin / Founders section (split layout) ─── */
@@ -997,20 +998,22 @@ body::after {
   padding: 120px 0 100px;
   border-top: 1px solid rgba(255,255,255,0.06);
 }
-.cornerstone-grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 24px;
+/* Cornerstone: stacked vertical centered layout */
+.cornerstone-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
 }
-.cornerstone-card {
-  padding: 36px 32px;
-  border: 1px solid rgba(255,255,255,0.08);
-  background: var(--panel);
-  transition: border-color 0.4s ease, transform 0.4s ease;
+.cornerstone-stack-item {
+  text-align: center;
+  padding: 56px 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.06);
+  width: 100%;
+  max-width: 600px;
 }
-.cornerstone-card:hover {
-  border-color: rgba(201,181,138,0.25);
-  transform: translateY(-2px);
+.cornerstone-stack-item:last-child {
+  border-bottom: none;
 }
 
 /* ─── Private Office section (bg image + portal card) ─── */
@@ -1257,9 +1260,9 @@ body::after {
     border-bottom: 1px solid rgba(255,255,255,.08);
   }
 
-  /* Practice cards: 2 columns on tablet */
-  .practice-cards {
-    grid-template-columns: repeat(2, 1fr);
+  /* Practice list: 1 column on tablet */
+  .practice-list {
+    grid-template-columns: 1fr;
   }
 
   /* Origin: stack on tablet */
@@ -1273,9 +1276,9 @@ body::after {
     padding: 48px 24px;
   }
 
-  /* Cornerstone: keep 3 cols but tighter */
-  .cornerstone-grid {
-    gap: 16px;
+  /* Cornerstone: stack stays stacked */
+  .cornerstone-stack-item {
+    padding: 40px 16px;
   }
 
   /* Private Office: stack */
@@ -1389,8 +1392,8 @@ body::after {
     padding: 80px 0 60px;
   }
 
-  /* Practice cards: single column on mobile */
-  .practice-cards {
+  /* Practice list: single column on mobile */
+  .practice-list {
     grid-template-columns: 1fr !important;
   }
   .practice-section {
@@ -1408,9 +1411,9 @@ body::after {
     padding: 40px 24px !important;
   }
 
-  /* Cornerstone: single column */
-  .cornerstone-grid {
-    grid-template-columns: 1fr !important;
+  /* Cornerstone: tighter padding on mobile */
+  .cornerstone-stack-item {
+    padding: 36px 12px !important;
   }
   .cornerstone-section {
     padding: 80px 0 60px;

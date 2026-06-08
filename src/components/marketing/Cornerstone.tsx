@@ -27,20 +27,20 @@ export function Cornerstone() {
             The Cornerstone
           </div>
           <h2 className="h-section" style={{ margin: "0 auto", fontSize: "clamp(36px, 4vw, 56px)", maxWidth: "20ch" }}>
-            The terms we don&apos;t <span className="accent-shimmer">negotiate.</span>
+            The terms we <span className="accent-shimmer">don&apos;t</span> negotiate.
           </h2>
         </div>
 
-        <div className="cornerstone-grid">
+        <div className="cornerstone-stack">
           {CORNERSTONES.map((item) => (
-            <div key={item.num} className="cornerstone-card dossier-panel luxury-hover">
-              <div className="mono" style={{ color: "var(--accent)", opacity: 0.6, fontSize: 12, marginBottom: 20 }}>
+            <div key={item.num} className="cornerstone-stack-item">
+              <div className="mono" style={{ color: "var(--accent)", opacity: 0.4, fontSize: 13, marginBottom: 16 }}>
                 {item.num}
               </div>
               <h3 className="display" style={{ fontSize: "clamp(28px, 3vw, 40px)", margin: "0 0 16px", letterSpacing: ".02em" }}>
                 {item.title}
               </h3>
-              <p className="small-copy" style={{ fontSize: 15, lineHeight: 1.75, opacity: 0.7, margin: 0 }}>
+              <p className="small-copy" style={{ fontSize: 15, lineHeight: 1.75, opacity: 0.7, margin: 0, maxWidth: "48ch" }}>
                 {item.text}
               </p>
             </div>

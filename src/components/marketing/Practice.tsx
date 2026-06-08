@@ -51,18 +51,20 @@ export function Practice() {
           </p>
         </div>
 
-        <div className="practice-cards">
+        <div className="practice-list">
           {PRACTICE_CARDS.map((card) => (
-            <div key={card.num} className="practice-card dossier-panel luxury-hover">
-              <div className="mono" style={{ color: "var(--accent)", opacity: 0.6, fontSize: 12 }}>
+            <div key={card.num} className="practice-list-item luxury-hover">
+              <div className="mono" style={{ color: "var(--accent)", opacity: 0.4, fontSize: 13, minWidth: 32 }}>
                 {card.num}
               </div>
-              <h3 className="display" style={{ fontSize: "clamp(22px, 2.5vw, 30px)", margin: "16px 0 12px", letterSpacing: ".02em" }}>
-                {card.title}
-              </h3>
-              <p className="small-copy" style={{ fontSize: 15, lineHeight: 1.7, opacity: 0.7, margin: 0 }}>
-                {card.text}
-              </p>
+              <div style={{ flex: 1 }}>
+                <h3 className="display" style={{ fontSize: "clamp(22px, 2.5vw, 30px)", margin: "0 0 12px", letterSpacing: ".02em" }}>
+                  {card.title}
+                </h3>
+                <p className="small-copy" style={{ fontSize: 15, lineHeight: 1.7, opacity: 0.7, margin: 0 }}>
+                  {card.text}
+                </p>
+              </div>
             </div>
           ))}
         </div>
