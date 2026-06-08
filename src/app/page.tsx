@@ -15,6 +15,8 @@ import {
   CookieBanner,
   ScrollProgress,
   BackToTop,
+  ExperienceGlow,
+  SmoothScroll,
 } from "@/components/marketing";
 
 const jsonLd = {
@@ -74,6 +76,8 @@ export default function HomePage() {
       <a href="#practice" className="skip-to-content">
         Skip to content
       </a>
+      <ExperienceGlow />
+      <SmoothScroll />
       <ScrollProgress />
       <Nav />
       <Hero />

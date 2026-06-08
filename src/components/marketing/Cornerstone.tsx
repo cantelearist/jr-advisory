@@ -20,9 +20,9 @@ const CORNERSTONES = [
 
 export function Cornerstone() {
   return (
-    <section id="cornerstones" data-testid="cornerstones" className="cornerstone-section">
+    <section id="cornerstones" data-testid="cornerstones" className="cornerstone-section scroll-reveal">
       <div className="page">
-        <div data-reveal style={{ textAlign: "center", marginBottom: 56 }}>
+        <div style={{ textAlign: "center", marginBottom: 56 }}>
           <div className="mono" style={{ opacity: 0.5, marginBottom: 16, fontSize: 11, letterSpacing: ".28em" }}>
             The Cornerstone
           </div>
@@ -31,9 +31,9 @@ export function Cornerstone() {
           </h2>
         </div>
 
-        <div className="cornerstone-grid" data-reveal style={{ "--rd": "200ms" } as React.CSSProperties}>
+        <div className="cornerstone-grid">
           {CORNERSTONES.map((item) => (
-            <div key={item.num} className="cornerstone-card gate">
+            <div key={item.num} className="cornerstone-card dossier-panel luxury-hover">
               <div className="mono" style={{ color: "var(--accent)", opacity: 0.6, fontSize: 12, marginBottom: 20 }}>
                 {item.num}
               </div>

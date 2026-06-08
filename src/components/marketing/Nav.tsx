@@ -36,6 +36,7 @@ export function Nav() {
     <>
       <header
         data-testid="main-nav"
+        className="motion-fade-up"
         style={{
           position: "sticky",
           top: 0,

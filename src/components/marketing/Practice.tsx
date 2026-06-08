@@ -35,9 +35,9 @@ const PRACTICE_CARDS = [
 
 export function Practice() {
   return (
-    <section id="practice" data-testid="practice" className="practice-section">
+    <section id="practice" data-testid="practice" className="practice-section scroll-reveal">
       <div className="page">
-        <div data-reveal>
+        <div>
           <div className="mono" style={{ opacity: 0.5, marginBottom: 16, fontSize: 11, letterSpacing: ".28em" }}>
             The Practice
           </div>
@@ -51,9 +51,9 @@ export function Practice() {
           </p>
         </div>
 
-        <div className="practice-cards" data-reveal style={{ "--rd": "200ms" } as React.CSSProperties}>
+        <div className="practice-cards">
           {PRACTICE_CARDS.map((card) => (
-            <div key={card.num} className="practice-card gate">
+            <div key={card.num} className="practice-card dossier-panel luxury-hover">
               <div className="mono" style={{ color: "var(--accent)", opacity: 0.6, fontSize: 12 }}>
                 {card.num}
               </div>
