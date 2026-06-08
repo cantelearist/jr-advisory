@@ -16,7 +16,6 @@ import {
   ScrollProgress,
   BackToTop,
   ExperienceGlow,
-  SmoothScroll,
 } from "@/components/marketing";
 
 const jsonLd = {
@@ -77,7 +76,6 @@ export default function HomePage() {
         Skip to content
       </a>
       <ExperienceGlow />
-      <SmoothScroll />
       <ScrollProgress />
       <Nav />
       <Hero />

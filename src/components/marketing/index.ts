@@ -16,4 +16,3 @@ export { CookieBanner } from "./CookieBanner";
 export { ScrollProgress } from "./ScrollProgress";
 export { BackToTop } from "./BackToTop";
 export { ExperienceGlow } from "./ExperienceGlow";
-export { SmoothScroll } from "./SmoothScroll";
