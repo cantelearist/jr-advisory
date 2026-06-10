@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
 import { getSupabase, isSupabaseConfigured } from '@/lib/supabase';
+import sanitizeHtml from 'sanitize-html';
 
 interface PageData {
   id: string;
@@ -11,6 +12,82 @@ interface PageData {
   status: string;
   meta_title: string | null;
   meta_description: string | null;
+}
+
+/**
+ * Sanitize page HTML from the CMS page builder.
+ * Allows rich content (images, links, iframes for embeds) but strips
+ * script tags, event handlers, and other XSS vectors.
+ */
+function sanitizePageHtml(html: string): string {
+  return sanitizeHtml(html, {
+    allowedTags: [
+      // Structure
+      'div', 'span', 'p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6',
+      'a', 'img', 'br', 'hr', 'ul', 'ol', 'li',
+      // Formatting
+      'strong', 'em', 'b', 'i', 'u', 's', 'sub', 'sup',
+      // Tables
+      'table', 'thead', 'tbody', 'tfoot', 'tr', 'th', 'td',
+      // Semantic
+      'blockquote', 'pre', 'code',
+      'section', 'article', 'header', 'footer', 'nav', 'main', 'aside',
+      'figure', 'figcaption', 'picture', 'source', 'video',
+      // Embeds (YouTube/Vimeo)
+      'iframe',
+      // Forms (page builder may include contact forms)
+      'button', 'form', 'input', 'label', 'select', 'option', 'textarea',
+      // Style blocks from GrapesJS
+      'style',
+    ],
+    allowedAttributes: {
+      '*': ['class', 'id', 'style', 'data-*', 'aria-*', 'role'],
+      'a': ['href', 'target', 'rel', 'title'],
+      'img': ['src', 'alt', 'title', 'width', 'height', 'loading', 'srcset', 'sizes'],
+      'iframe': ['src', 'width', 'height', 'allowfullscreen', 'frameborder', 'allow', 'title'],
+      'source': ['src', 'srcset', 'type', 'media', 'sizes'],
+      'video': ['src', 'width', 'height', 'controls', 'autoplay', 'muted', 'loop', 'poster'],
+      'td': ['colspan', 'rowspan'],
+      'th': ['colspan', 'rowspan'],
+      'input': ['type', 'name', 'value', 'placeholder', 'required'],
+      'textarea': ['name', 'placeholder', 'rows', 'cols', 'required'],
+      'select': ['name', 'required'],
+      'option': ['value'],
+      'label': ['for'],
+      'button': ['type'],
+      'form': ['action', 'method'],
+    },
+    // Allow iframe src only from trusted embed domains
+    allowedIframeHostnames: ['www.youtube.com', 'youtube.com', 'player.vimeo.com', 'vimeo.com'],
+    // Allow data: URIs for images (base64)
+    allowedSchemes: ['http', 'https', 'mailto', 'tel', 'data'],
+    allowedSchemesByTag: {
+      img: ['http', 'https', 'data'],
+      a: ['http', 'https', 'mailto', 'tel'],
+    },
+    // Strip all event handler attributes (onclick, onerror, etc.)
+    // sanitize-html does this by default — only explicitly allowed attributes pass through
+  });
+}
+
+/**
+ * Sanitize CSS from the CMS page builder.
+ * Strips dangerous constructs like url() to external domains,
+ * expression(), behavior(), @import to external URLs, etc.
+ */
+function sanitizePageCss(css: string): string {
+  return css
+    // Remove JS expressions in CSS (IE-specific but defensive)
+    .replace(/expression\s*\(/gi, '/* blocked */(')
+    // Remove behavior() (IE-specific)
+    .replace(/behavior\s*:/gi, '/* blocked */:')
+    // Remove -moz-binding
+    .replace(/-moz-binding\s*:/gi, '/* blocked */:')
+    // Remove @import with external URLs (keep local ones)
+    .replace(/@import\s+url\s*\(\s*(['"]?)(?!https:\/\/fonts\.googleapis\.com)(https?:)?\/\//gi, '/* blocked-import */')
+    // Block url() pointing to javascript: or data:text/html
+    .replace(/url\s*\(\s*(['"]?)\s*javascript:/gi, 'url($1/* blocked */')
+    .replace(/url\s*\(\s*(['"]?)\s*data:text\/html/gi, 'url($1/* blocked */');
 }
 
 async function getPage(slug: string): Promise<PageData | null> {
@@ -47,6 +124,10 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
   if (!page) {
     notFound();
   }
+
+  // Sanitize HTML and CSS from the page builder before rendering
+  const safeHtml = sanitizePageHtml(page.html);
+  const safeCss = page.css ? sanitizePageCss(page.css) : '';
 
   // Base styles for the rendered page (same as the editor canvas)
   const baseStyles = `
@@ -176,8 +257,8 @@ export default async function DynamicPage({ params }: { params: Promise<{ slug: 
   return (
     <div style={{ minHeight: '100vh', background: '#0a0b0e' }}>
       <style dangerouslySetInnerHTML={{ __html: baseStyles }} />
-      {page.css && <style dangerouslySetInnerHTML={{ __html: page.css }} />}
-      <div dangerouslySetInnerHTML={{ __html: page.html }} />
+      {safeCss && <style dangerouslySetInnerHTML={{ __html: safeCss }} />}
+      <div dangerouslySetInnerHTML={{ __html: safeHtml }} />
     </div>
   );
 }

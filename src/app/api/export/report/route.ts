@@ -3,6 +3,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAuthError } from '@/lib/api-auth';
+import { escapeHtml, sanitizeFilename } from '@/lib/sanitize';
 
 function reportHTML(type: string, cli: Record<string, unknown>, eng: Record<string, unknown>,
   invs: Record<string, unknown>[], tl: Record<string, unknown>[], docs: Record<string, unknown>[]) {
@@ -13,6 +14,9 @@ function reportHTML(type: string, cli: Record<string, unknown>, eng: Record<stri
   const fmtD = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
   const fmtS = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
   const title = type === 'financial' ? 'Financial Report' : type === 'engagement' ? 'Engagement Report' : 'Client Summary';
+
+  // Escape all user/DB-sourced values before interpolation
+  const e = escapeHtml;
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
@@ -37,18 +41,18 @@ td{padding:12px 8px;border-bottom:1px solid rgba(255,255,255,0.05);font-size:14p
 .ft p{font-size:12px;color:rgba(255,255,255,0.3);line-height:1.8}
 </style></head><body>
 <div class="hdr"><div><div class="logo">JAMES ROMAN</div><div class="logo-sub">ADVISORY</div></div>
-<div style="text-align:right"><div style="font-size:28px;letter-spacing:3px;color:rgba(255,255,255,0.3);text-transform:uppercase">${title}</div>
+<div style="text-align:right"><div style="font-size:28px;letter-spacing:3px;color:rgba(255,255,255,0.3);text-transform:uppercase">${e(title)}</div>
 <div style="font-size:12px;letter-spacing:2px;color:rgba(255,255,255,0.3);margin-top:4px">${fmtD(new Date().toISOString())}</div></div></div>
 
 <h2>Client Information</h2>
 <div class="sg">
-<div class="sc"><div class="sl">Client</div><div class="sv">${cli.name||'N/A'}</div></div>
-<div class="sc"><div class="sl">Property</div><div class="sv" style="font-size:16px">${cli.property||'N/A'}</div></div>
-<div class="sc"><div class="sl">Status</div><div class="sv gold">${String(cli.status||'').toUpperCase()}</div></div></div>
+<div class="sc"><div class="sl">Client</div><div class="sv">${e(cli.name) || 'N/A'}</div></div>
+<div class="sc"><div class="sl">Property</div><div class="sv" style="font-size:16px">${e(cli.property) || 'N/A'}</div></div>
+<div class="sc"><div class="sl">Status</div><div class="sv gold">${e(String(cli.status||'').toUpperCase())}</div></div></div>
 
 ${eng ? `<h2>Engagement</h2><div class="sg">
-<div class="sc"><div class="sl">Type</div><div class="sv" style="font-size:16px">${eng.type||''}</div></div>
-<div class="sc"><div class="sl">Phase</div><div class="sv">${phases[String(eng.phase||'1')]||''}</div></div>
+<div class="sc"><div class="sl">Type</div><div class="sv" style="font-size:16px">${e(eng.type)}</div></div>
+<div class="sc"><div class="sl">Phase</div><div class="sv">${e(phases[String(eng.phase||'1')]||'')}</div></div>
 <div class="sc"><div class="sl">Start</div><div class="sv" style="font-size:16px">${fmtD(String(eng.start_date||''))}</div></div></div>` : ''}
 
 <h2>Financial Summary</h2>
@@ -59,15 +63,15 @@ ${eng ? `<h2>Engagement</h2><div class="sg">
 
 <h2>Invoices</h2>
 <table><thead><tr><th>Invoice</th><th>Description</th><th>Amount</th><th>Status</th><th>Due</th></tr></thead>
-<tbody>${invs.map(i=>`<tr><td>${i.invoice_number||''}</td><td>${i.description||''}</td><td>$${Number(i.amount||0).toLocaleString()}</td>
-<td style="color:${i.status==='paid'?'#6ec9a0':i.status==='overdue'?'#c96e6e':'#c9a96e'}">${String(i.status||'').toUpperCase()}</td>
+<tbody>${invs.map(i=>`<tr><td>${e(i.invoice_number)}</td><td>${e(i.description)}</td><td>$${Number(i.amount||0).toLocaleString()}</td>
+<td style="color:${i.status==='paid'?'#6ec9a0':i.status==='overdue'?'#c96e6e':'#c9a96e'}">${e(String(i.status||'').toUpperCase())}</td>
 <td>${fmtS(String(i.due_date||''))}</td></tr>`).join('')}</tbody></table>
 
-${tl.length > 0 ? `<h2>Timeline</h2>${tl.map(t=>`<div class="ti"><div class="td">${fmtS(String(t.event_date||''))}</div><div>${t.title||''}</div></div>`).join('')}` : ''}
+${tl.length > 0 ? `<h2>Timeline</h2>${tl.map(t=>`<div class="ti"><div class="td">${fmtS(String(t.event_date||''))}</div><div>${e(t.title)}</div></div>`).join('')}` : ''}
 
 <h2>Documents (${docs.length})</h2>
 <table><thead><tr><th>Name</th><th>Category</th><th>Status</th><th>Date</th></tr></thead>
-<tbody>${docs.map(d=>`<tr><td>${d.name||''}</td><td>${d.category||''}</td><td>${d.status||''}</td><td>${fmtS(String(d.created_at||''))}</td></tr>`).join('')}</tbody></table>
+<tbody>${docs.map(d=>`<tr><td>${e(d.name)}</td><td>${e(d.category)}</td><td>${e(d.status)}</td><td>${fmtS(String(d.created_at||''))}</td></tr>`).join('')}</tbody></table>
 
 <div class="ft"><p class="gold">James Roman Advisory</p>
 <p>This report is confidential. Generated ${new Date().toLocaleString('en-US', { timeZone: 'America/Los_Angeles' })} PT</p></div>
@@ -98,8 +102,9 @@ export async function GET(req: NextRequest) {
 
   await sb.from('audit_log').insert({ action: 'report_exported', entity_type: 'report', entity_id: clientId, metadata: { type, client_name: cli?.name } });
 
+  const safeFilename = `${sanitizeFilename(cli?.name)}_${sanitizeFilename(type)}`;
   const html = reportHTML(type, cli || {}, eng || {}, (invs || []) as Record<string, unknown>[], tl, (docs || []) as Record<string, unknown>[]);
   return new NextResponse(html, {
-    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Content-Disposition': `inline; filename="${(cli?.name||'report').replace(/\s+/g,'_')}_${type}.html"` },
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Content-Disposition': `inline; filename="${safeFilename}.html"` },
   });
 }

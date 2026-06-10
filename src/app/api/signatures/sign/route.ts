@@ -2,6 +2,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
+import { validateSignatureData } from '@/lib/sanitize';
 
 export async function POST(req: NextRequest) {
   const response = NextResponse.next();
@@ -28,9 +29,14 @@ export async function POST(req: NextRequest) {
   );
 
   try {
-    const { signature_request_id, signature_data, ip_address } = await req.json();
+    const { signature_request_id, signature_data } = await req.json();
     if (!signature_request_id || !signature_data) {
       return NextResponse.json({ error: 'Missing fields' }, { status: 400 });
+    }
+
+    // Validate signature data is a proper data:image URL (from canvas.toDataURL())
+    if (!validateSignatureData(signature_data)) {
+      return NextResponse.json({ error: 'Invalid signature data format' }, { status: 400 });
     }
 
     const { data: sigReq } = await sb
@@ -40,7 +46,8 @@ export async function POST(req: NextRequest) {
 
     if (!sigReq) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-    const clientIp = ip_address || req.headers.get('x-forwarded-for') || 'unknown';
+    // Use server-detected IP only — never trust client-supplied IP
+    const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
     const { data: updated, error } = await sb
       .from('signature_requests')
       .update({

@@ -3,12 +3,16 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
+import { escapeHtml, sanitizeFilename } from '@/lib/sanitize';
 
 function invoiceHTML(inv: Record<string, unknown>, cli: Record<string, unknown>, eng: Record<string, unknown>) {
   const amt = Number(inv.amount || 0);
   const status = String(inv.status || 'draft').toUpperCase();
   const sc = status === 'PAID' ? '#6ec9a0' : status === 'OVERDUE' ? '#c96e6e' : '#c9a96e';
   const fmtDate = (d: string) => new Date(d).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+
+  // Escape all user/DB-sourced values before interpolation
+  const e = escapeHtml;
 
   return `<!DOCTYPE html><html><head><meta charset="utf-8">
 <style>
@@ -33,13 +37,13 @@ td{padding:16px 0;border-bottom:1px solid rgba(255,255,255,0.05);font-size:16px}
 .gold{color:#c9a96e}
 </style></head><body>
 <div class="hdr"><div><div class="logo">JAMES ROMAN</div><div class="logo-sub">ADVISORY</div></div>
-<div><div class="inv-title">INVOICE</div><div class="inv-num">${inv.invoice_number||''}</div></div></div>
-<div class="meta"><div><h3>Billed To</h3><p>${cli.name||''}<br>${cli.property||''}<br>${cli.area||''}</p></div>
-<div><h3>Invoice Details</h3><p>Date: ${fmtDate(String(inv.created_at||''))}<br>Due: ${fmtDate(String(inv.due_date||''))}<br>Status: <span class="badge">${status}</span></p></div></div>
+<div><div class="inv-title">INVOICE</div><div class="inv-num">${e(inv.invoice_number)}</div></div></div>
+<div class="meta"><div><h3>Billed To</h3><p>${e(cli.name)}<br>${e(cli.property)}<br>${e(cli.area)}</p></div>
+<div><h3>Invoice Details</h3><p>Date: ${fmtDate(String(inv.created_at||''))}<br>Due: ${fmtDate(String(inv.due_date||''))}<br>Status: <span class="badge">${e(status)}</span></p></div></div>
 <table><thead><tr><th>Description</th><th>Engagement</th><th style="text-align:right">Amount</th></tr></thead>
-<tbody><tr><td>${inv.description||''}</td><td>${eng.type||''}</td><td style="text-align:right">$${amt.toLocaleString()}</td></tr>
+<tbody><tr><td>${e(inv.description)}</td><td>${e(eng.type)}</td><td style="text-align:right">$${amt.toLocaleString()}</td></tr>
 <tr class="total"><td colspan="2">Total Due</td><td style="text-align:right;color:#c9a96e">$${amt.toLocaleString()}</td></tr></tbody></table>
-${inv.notes?`<div style="margin-bottom:32px;padding:16px;background:rgba(255,255,255,0.02);border-left:2px solid rgba(201,169,110,0.3)"><p style="font-size:14px;font-style:italic;color:rgba(255,255,255,0.5)">${inv.notes}</p></div>`:''}
+${inv.notes?`<div style="margin-bottom:32px;padding:16px;background:rgba(255,255,255,0.02);border-left:2px solid rgba(201,169,110,0.3)"><p style="font-size:14px;font-style:italic;color:rgba(255,255,255,0.5)">${e(inv.notes)}</p></div>`:''}
 ${inv.paid_date?`<p style="color:#6ec9a0;font-size:14px;margin-bottom:32px">✓ Payment received ${fmtDate(String(inv.paid_date))}</p>`:''}
 <div class="ft"><p class="gold">James Roman Advisory</p>
 <p>Independent Hazmat Remediation Oversight<br>Los Angeles Westside · Malibu · Beverly Hills · Brentwood<br>(310) 430-2500 · roman@jamesroman.la</p>
@@ -76,7 +80,8 @@ export async function GET(req: NextRequest) {
 
   await sb.from('audit_log').insert({ action: 'invoice_exported', entity_type: 'invoice', entity_id: id, metadata: { invoice_number: inv.invoice_number } });
 
+  const safeFilename = sanitizeFilename(inv.invoice_number);
   return new NextResponse(invoiceHTML(inv, cli || {}, eng || {}), {
-    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Content-Disposition': `inline; filename="${inv.invoice_number}.html"` },
+    headers: { 'Content-Type': 'text/html; charset=utf-8', 'Content-Disposition': `inline; filename="${safeFilename}.html"` },
   });
 }

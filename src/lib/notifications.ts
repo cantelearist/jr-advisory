@@ -1,6 +1,7 @@
 /* ── Email notification system via Resend ── */
 
 import { Resend } from 'resend';
+import { escapeHtml } from './sanitize';
 
 function getResend(): Resend | null {
   const key = process.env.RESEND_API_KEY;
@@ -64,61 +65,61 @@ export interface NotificationPayload {
 
 const templates: Record<string, (data: Record<string, string>) => { subject: string; html: string }> = {
   new_message: (data) => ({
-    subject: `New message: ${data.subject || 'Update from James Roman Advisory'}`,
+    subject: `New message: ${escapeHtml(data.subject) || 'Update from James Roman Advisory'}`,
     html: baseTemplate(`
       <h2>New Message</h2>
-      <p>Hello ${data.recipientName},</p>
-      <p>You have a new secure message from ${data.senderName || 'your advisory team'}.</p>
+      <p>Hello ${escapeHtml(data.recipientName)},</p>
+      <p>You have a new secure message from ${escapeHtml(data.senderName) || 'your advisory team'}.</p>
       <div class="highlight">
         <div class="label">Subject</div>
-        <p>${data.subject}</p>
+        <p>${escapeHtml(data.subject)}</p>
       </div>
-      ${data.preview ? `<p style="color: #888; font-style: italic;">"${data.preview}…"</p>` : ''}
+      ${data.preview ? `<p style="color: #888; font-style: italic;">"${escapeHtml(data.preview)}…"</p>` : ''}
       <a href="${SITE_URL}/portal/messages" class="btn">View Message</a>
     `),
   }),
 
   invoice_sent: (data) => ({
-    subject: `Invoice ${data.invoiceNumber} — ${data.amount}`,
+    subject: `Invoice ${escapeHtml(data.invoiceNumber)} — ${escapeHtml(data.amount)}`,
     html: baseTemplate(`
       <h2>Invoice Ready</h2>
-      <p>Hello ${data.recipientName},</p>
+      <p>Hello ${escapeHtml(data.recipientName)},</p>
       <p>A new invoice has been prepared for your review.</p>
       <div class="highlight">
-        <div class="label">Invoice ${data.invoiceNumber}</div>
-        <p style="font-size: 24px; color: #ffffff; margin-bottom: 8px;">${data.amount}</p>
-        <p style="color: #888;">${data.description}</p>
-        ${data.dueDate ? `<p style="color: #c9a96e; margin-top: 8px;">Due: ${data.dueDate}</p>` : ''}
+        <div class="label">Invoice ${escapeHtml(data.invoiceNumber)}</div>
+        <p style="font-size: 24px; color: #ffffff; margin-bottom: 8px;">${escapeHtml(data.amount)}</p>
+        <p style="color: #888;">${escapeHtml(data.description)}</p>
+        ${data.dueDate ? `<p style="color: #c9a96e; margin-top: 8px;">Due: ${escapeHtml(data.dueDate)}</p>` : ''}
       </div>
       <a href="${SITE_URL}/portal/invoices" class="btn">View Invoice</a>
     `),
   }),
 
   document_uploaded: (data) => ({
-    subject: `New document: ${data.documentName}`,
+    subject: `New document: ${escapeHtml(data.documentName)}`,
     html: baseTemplate(`
       <h2>Document Available</h2>
-      <p>Hello ${data.recipientName},</p>
+      <p>Hello ${escapeHtml(data.recipientName)},</p>
       <p>A new document has been uploaded to your secure vault.</p>
       <div class="highlight">
-        <div class="label">${data.category || 'Document'}</div>
-        <p>${data.documentName}</p>
+        <div class="label">${escapeHtml(data.category) || 'Document'}</div>
+        <p>${escapeHtml(data.documentName)}</p>
       </div>
       <a href="${SITE_URL}/portal/documents" class="btn">View Documents</a>
     `),
   }),
 
   phase_change: (data) => ({
-    subject: `Engagement update — Phase ${data.newPhase}`,
+    subject: `Engagement update — Phase ${escapeHtml(data.newPhase)}`,
     html: baseTemplate(`
       <h2>Engagement Update</h2>
-      <p>Hello ${data.recipientName},</p>
+      <p>Hello ${escapeHtml(data.recipientName)},</p>
       <p>Your engagement has progressed to a new phase.</p>
       <div class="highlight">
         <div class="label">Phase Update</div>
-        <p style="color: #888;">From: Phase ${data.oldPhase}</p>
-        <p style="color: #ffffff; font-size: 18px;">Now: Phase ${data.newPhase}</p>
-        ${data.phaseLabel ? `<p style="color: #c9a96e; margin-top: 8px;">${data.phaseLabel}</p>` : ''}
+        <p style="color: #888;">From: Phase ${escapeHtml(data.oldPhase)}</p>
+        <p style="color: #ffffff; font-size: 18px;">Now: Phase ${escapeHtml(data.newPhase)}</p>
+        ${data.phaseLabel ? `<p style="color: #c9a96e; margin-top: 8px;">${escapeHtml(data.phaseLabel)}</p>` : ''}
       </div>
       <a href="${SITE_URL}/portal/timeline" class="btn">View Timeline</a>
     `),
@@ -128,11 +129,11 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
     subject: 'Welcome to Your Client Portal — James Roman Advisory',
     html: baseTemplate(`
       <h2>Welcome</h2>
-      <p>Hello ${data.recipientName},</p>
+      <p>Hello ${escapeHtml(data.recipientName)},</p>
       <p>Your secure client portal is now active. From here you can access documents, view your engagement timeline, and communicate directly with your advisory team.</p>
       <div class="highlight">
         <div class="label">Your Portal</div>
-        <p>Login: ${data.email}</p>
+        <p>Login: ${escapeHtml(data.email)}</p>
         <p style="color: #888; margin-top: 4px;">Use the magic link sent to your email to sign in.</p>
       </div>
       <a href="${SITE_URL}/portal" class="btn">Access Portal</a>

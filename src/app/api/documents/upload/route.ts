@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { validateUploadFile } from '@/lib/sanitize';
 
 export async function POST(req: NextRequest) {
   // 1) Verify caller is an authenticated admin
@@ -38,6 +39,12 @@ export async function POST(req: NextRequest) {
 
   if (!file || !clientId || !engagementId || !category || !docName) {
     return NextResponse.json({ error: 'Missing required fields: file, client_id, engagement_id, category, name' }, { status: 400 });
+  }
+
+  // Server-side file validation: type, extension, size
+  const uploadError = validateUploadFile(file.name, file.type, file.size);
+  if (uploadError) {
+    return NextResponse.json({ error: uploadError }, { status: 400 });
   }
 
   // 3) Admin client for storage + DB
