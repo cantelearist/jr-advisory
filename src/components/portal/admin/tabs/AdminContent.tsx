@@ -10,7 +10,7 @@ export default function AdminContent() {
           <div className="admin-header__eyebrow">SYSTEM</div>
           <h1 className="admin-header__title">Site Content</h1>
           <p className="admin-header__subtitle">
-            Edit marketing page copy directly. Changes save to localStorage (demo mode) or Supabase.
+            Edit marketing page copy directly. Changes save to Supabase.
           </p>
         </div>
       </div>

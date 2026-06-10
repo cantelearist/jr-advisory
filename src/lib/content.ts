@@ -1,5 +1,5 @@
 /* ── Content Management System ── */
-/* Editable site content: Supabase when configured, localStorage fallback */
+/* Editable site content: requires Supabase. Falls back to defaults for reads (not localStorage). */
 
 import { getSupabase, isSupabaseConfigured } from './supabase';
 
@@ -13,8 +13,6 @@ export interface ContentBlock {
   updated_at: string;
   updated_by: string | null;
 }
-
-const CONTENT_KEY = 'jr_advisory_site_content';
 
 /* ── Default content blocks (mirrors constants.ts) ── */
 export const DEFAULT_CONTENT: ContentBlock[] = [
@@ -39,32 +37,12 @@ export const DEFAULT_CONTENT: ContentBlock[] = [
   { id: 'discretion_intro', section: 'discretion', key: 'intro', label: 'Discretion Introduction', content: 'Your home. Your family. Your privacy. These are not negotiable — they are the foundation of every engagement.', content_type: 'html', updated_at: '', updated_by: null },
 ];
 
-/* ── localStorage operations ── */
-
-function getLocalContent(): ContentBlock[] {
-  if (typeof window === 'undefined') return DEFAULT_CONTENT;
-  const stored = localStorage.getItem(CONTENT_KEY);
-  if (stored) {
-    try {
-      return JSON.parse(stored);
-    } catch {
-      return DEFAULT_CONTENT;
-    }
-  }
-  return DEFAULT_CONTENT;
-}
-
-function saveLocalContent(blocks: ContentBlock[]): void {
-  if (typeof window !== 'undefined') {
-    localStorage.setItem(CONTENT_KEY, JSON.stringify(blocks));
-  }
-}
-
 /* ── Public API ── */
 
 export async function fetchAllContent(): Promise<ContentBlock[]> {
   if (!isSupabaseConfigured()) {
-    return getLocalContent();
+    // For marketing pages that need to render during build/SSG, return defaults
+    return DEFAULT_CONTENT;
   }
   const { data } = await getSupabase()
     .from('site_content')
@@ -76,9 +54,7 @@ export async function fetchAllContent(): Promise<ContentBlock[]> {
 
 export async function fetchContent(section: string, key: string): Promise<string> {
   if (!isSupabaseConfigured()) {
-    const blocks = getLocalContent();
-    const block = blocks.find(b => b.section === section && b.key === key);
-    return block?.content || DEFAULT_CONTENT.find(b => b.section === section && b.key === key)?.content || '';
+    return DEFAULT_CONTENT.find(b => b.section === section && b.key === key)?.content || '';
   }
   const { data } = await getSupabase()
     .from('site_content')
@@ -95,22 +71,10 @@ export async function updateContent(
   content: string,
   updatedBy?: string,
 ): Promise<void> {
-  const now = new Date().toISOString();
   if (!isSupabaseConfigured()) {
-    const blocks = getLocalContent();
-    const idx = blocks.findIndex(b => b.id === id);
-    if (idx >= 0) {
-      blocks[idx] = { ...blocks[idx], content, updated_at: now, updated_by: updatedBy || null };
-    } else {
-      // New custom block
-      const def = DEFAULT_CONTENT.find(b => b.id === id);
-      if (def) {
-        blocks.push({ ...def, content, updated_at: now, updated_by: updatedBy || null });
-      }
-    }
-    saveLocalContent(blocks);
-    return;
+    throw new Error('Supabase is not configured. Cannot update content.');
   }
+  const now = new Date().toISOString();
   await getSupabase()
     .from('site_content')
     .upsert({ id, content, updated_at: now, updated_by: updatedBy } as Record<string, unknown>);
@@ -118,12 +82,8 @@ export async function updateContent(
 
 export async function resetContent(): Promise<void> {
   if (!isSupabaseConfigured()) {
-    if (typeof window !== 'undefined') {
-      localStorage.removeItem(CONTENT_KEY);
-    }
-    return;
+    throw new Error('Supabase is not configured. Cannot reset content.');
   }
-  // For Supabase: delete all custom content, defaults will be used
   await getSupabase().from('site_content').delete().neq('id', '');
 }
 

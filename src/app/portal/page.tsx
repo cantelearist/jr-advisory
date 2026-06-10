@@ -215,13 +215,22 @@ function PortalLogin() {
                 </span>
                 <span className="portal-login__button-arrow">→</span>
               </button>
-              <button
-                type="button"
-                className="portal-login__toggle"
-                onClick={() => { setShowMagicLink(true); setError(''); }}
-              >
-                Use magic link instead
-              </button>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '-8px' }}>
+                <button
+                  type="button"
+                  className="portal-login__toggle"
+                  onClick={() => { setShowMagicLink(true); setError(''); }}
+                >
+                  Use magic link instead
+                </button>
+                <button
+                  type="button"
+                  className="portal-login__toggle"
+                  onClick={() => router.push('/portal/forgot-password')}
+                >
+                  Forgot password?
+                </button>
+              </div>
             </form>
           )}
           <p className="portal-login__notice">

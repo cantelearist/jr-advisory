@@ -2,9 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, useCallback, type ReactNode } from 'react';
 import { getSupabase, isSupabaseConfigured } from './supabase';
-import { getDatabase, SEED_CLIENTS } from './testData';
 import type { Profile, Client } from './database.types';
-import type { Client as TestClient } from './testData';
 import type { User, Session } from '@supabase/supabase-js';
 
 /* ── Types ── */
@@ -15,30 +13,12 @@ interface AuthState {
   session: Session | null;
   isAdmin: boolean;
   loading: boolean;
-  isDemo: boolean; // true when using localStorage fallback
+  error: string | null;
 }
 
 interface AuthContextType extends AuthState {
   signIn: (email: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
-  demoLogin: (clientId: string) => void;
-}
-
-/* ── Fallback: convert test data Client to DB Client shape ── */
-function toDbClient(tc: TestClient): Client {
-  return {
-    id: tc.id,
-    profile_id: null,
-    name: tc.name,
-    email: tc.email,
-    phone: tc.phone,
-    property: tc.property,
-    area: tc.area,
-    status: tc.status,
-    notes: null,
-    created_at: tc.createdAt,
-    updated_at: tc.createdAt,
-  };
 }
 
 /* ── Context ── */
@@ -52,28 +32,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     session: null,
     isAdmin: false,
     loading: true,
-    isDemo: !isSupabaseConfigured(),
+    error: null,
   });
 
   /* ── Supabase auth listener ── */
   useEffect(() => {
     if (!isSupabaseConfigured()) {
-      // Demo mode: check localStorage for active client
-      const clientId = localStorage.getItem('jr_active_client');
-      if (clientId) {
-        const db = getDatabase();
-        const tc = db.clients.find(c => c.id === clientId);
-        if (tc) {
-          setState(s => ({
-            ...s,
-            client: toDbClient(tc),
-            loading: false,
-            isDemo: true,
-          }));
-          return;
-        }
-      }
-      setState(s => ({ ...s, loading: false, isDemo: true }));
+      /* ── FAIL LOUDLY: never silently downgrade to demo mode ── */
+      setState(s => ({
+        ...s,
+        loading: false,
+        error:
+          'Supabase is not configured. Set NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_ANON_KEY environment variables.',
+      }));
       return;
     }
 
@@ -93,7 +64,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         } else {
           setState({
             user: null, profile: null, client: null,
-            session: null, isAdmin: false, loading: false, isDemo: false,
+            session: null, isAdmin: false, loading: false, error: null,
           });
         }
       }
@@ -126,23 +97,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       profile,
       client,
       session,
-      isAdmin: profile?.role === 'admin',
+      isAdmin: profile?.role === 'admin' || profile?.role === 'manager',
       loading: false,
-      isDemo: false,
+      error: null,
     });
   }
 
   /* ── Sign in with magic link ── */
   const signIn = useCallback(async (email: string) => {
     if (!isSupabaseConfigured()) {
-      // Demo fallback
-      const tc = SEED_CLIENTS.find(c => c.email.toLowerCase() === email.toLowerCase());
-      if (tc) {
-        localStorage.setItem('jr_active_client', tc.id);
-        setState(s => ({ ...s, client: toDbClient(tc), isDemo: true }));
-        return { error: null };
-      }
-      return { error: 'No matching test account' };
+      return { error: 'Supabase is not configured. Cannot sign in.' };
     }
 
     const { error } = await getSupabase().auth.signInWithOtp({
@@ -156,29 +120,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   /* ── Sign out ── */
   const signOut = useCallback(async () => {
-    if (state.isDemo) {
-      localStorage.removeItem('jr_active_client');
-      setState(s => ({
-        ...s, user: null, profile: null, client: null,
-        session: null, isAdmin: false, isDemo: true,
-      }));
-      return;
-    }
     await getSupabase().auth.signOut();
-  }, [state.isDemo]);
-
-  /* ── Demo login (test accounts) ── */
-  const demoLogin = useCallback((clientId: string) => {
-    localStorage.setItem('jr_active_client', clientId);
-    const db = getDatabase();
-    const tc = db.clients.find(c => c.id === clientId);
-    if (tc) {
-      setState(s => ({ ...s, client: toDbClient(tc), isDemo: true }));
-    }
   }, []);
 
+  /* ── If Supabase isn't configured, render a clear error ── */
+  if (state.error) {
+    return (
+      <AuthContext.Provider value={{ ...state, signIn, signOut }}>
+        {children}
+      </AuthContext.Provider>
+    );
+  }
+
   return (
-    <AuthContext.Provider value={{ ...state, signIn, signOut, demoLogin }}>
+    <AuthContext.Provider value={{ ...state, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );
