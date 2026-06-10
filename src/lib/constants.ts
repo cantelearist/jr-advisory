@@ -462,3 +462,10 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     ],
   },
 ];
+
+/* ── WIP page stubs ── */
+export const OWNER_SIDE_POINTS: string[] = [];
+export const INSIGHTS: unknown[] = [];
+export const ADVISORY_SERVICES: unknown[] = [];
+export const FIRM_DISCLAIMER = "";
+export const PROCESS_STEPS: unknown[] = [];
