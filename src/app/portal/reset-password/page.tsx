@@ -67,12 +67,17 @@ function ResetPassword() {
     setLoading(true);
 
     try {
-      const { error: updateError } = await supabase.auth.updateUser({
-        password,
+      // Use rate-limited server-side endpoint
+      const res = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
       });
 
-      if (updateError) {
-        setError(updateError.message);
+      const result = await res.json();
+
+      if (!res.ok) {
+        setError(result.error || 'Failed to update password.');
         setLoading(false);
         return;
       }

@@ -1,6 +1,7 @@
 'use client';
 
 import type { Client } from '@/lib/database.types';
+import MfaSetup from '@/components/portal/admin/MfaSetup';
 
 interface Props {
   clients: Client[];
@@ -17,6 +18,9 @@ export default function AdminSettings({ clients, onReset }: Props) {
         </div>
       </div>
 
+      {/* MFA */}
+      <MfaSetup />
+
       {/* Database */}
       <div className="admin-settings-card">
         <h3>Test Database</h3>
@@ -31,7 +35,8 @@ export default function AdminSettings({ clients, onReset }: Props) {
         <h3>Authentication</h3>
         <dl className="admin-settings-grid">
           <dt>Mode:</dt><dd style={{ color: 'var(--admin-green)' }}>Supabase (Live)</dd>
-          <dt>Auth:</dt><dd style={{ color: 'var(--admin-green)' }}>Email / Magic Link ✓</dd>
+          <dt>Auth:</dt><dd style={{ color: 'var(--admin-green)' }}>Email / Magic Link / Password ✓</dd>
+          <dt>MFA:</dt><dd style={{ color: 'var(--admin-green)' }}>TOTP (Admin/Manager) ✓</dd>
           <dt>Clients:</dt><dd>{clients.length} accounts</dd>
         </dl>
       </div>

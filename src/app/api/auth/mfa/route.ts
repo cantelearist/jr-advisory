@@ -1,0 +1,178 @@
+/* ── MFA API — Enroll, Verify, Unenroll TOTP ──
+ *
+ * POST /api/auth/mfa { action: 'enroll' | 'verify' | 'unenroll' | 'challenge', ... }
+ *
+ * Admin/manager only for enrollment.
+ * No fail-open: once MFA is enrolled, it must be verified.
+ */
+
+import { NextResponse, type NextRequest } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { logAudit, AUDIT_ACTIONS } from '@/lib/audit';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+
+export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+
+  // Rate limit MFA attempts
+  const rl = checkRateLimit(ip, 'mfa', { windowMs: 15 * 60 * 1000, maxAttempts: 10 });
+  if (!rl.allowed) {
+    logAudit({
+      action: AUDIT_ACTIONS.RATE_LIMITED,
+      entity_type: 'auth',
+      metadata: { route: '/api/auth/mfa', ip },
+      ip_address: ip,
+    });
+    return NextResponse.json({ error: rl.message }, { status: 429 });
+  }
+
+  // Build cookie-aware Supabase client
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll() {
+          /* route handler — no-op */
+        },
+      },
+    },
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+  }
+
+  const body = await req.json();
+  const { action } = body;
+
+  switch (action) {
+    /* ── ENROLL: start TOTP enrollment ── */
+    case 'enroll': {
+      // Only admin/manager can enroll MFA
+      const role =
+        user.user_metadata?.role || 'client';
+      if (role !== 'admin' && role !== 'manager') {
+        return NextResponse.json(
+          { error: 'MFA enrollment is restricted to admin and manager accounts.' },
+          { status: 403 },
+        );
+      }
+
+      const { data, error } = await supabase.auth.mfa.enroll({
+        factorType: 'totp',
+        friendlyName: 'Authenticator App',
+      });
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      logAudit({
+        user_id: user.id,
+        action: AUDIT_ACTIONS.MFA_ENROLLED,
+        entity_type: 'auth',
+        metadata: { factor_id: data.id },
+        ip_address: ip,
+      });
+
+      return NextResponse.json({
+        factorId: data.id,
+        qrCode: data.totp.qr_code,
+        secret: data.totp.secret,
+        uri: data.totp.uri,
+      });
+    }
+
+    /* ── CHALLENGE: create a challenge for verification ── */
+    case 'challenge': {
+      const { factorId } = body;
+      if (!factorId) {
+        return NextResponse.json({ error: 'factorId required' }, { status: 400 });
+      }
+
+      const { data, error } = await supabase.auth.mfa.challenge({ factorId });
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      return NextResponse.json({ challengeId: data.id });
+    }
+
+    /* ── VERIFY: verify a TOTP code ── */
+    case 'verify': {
+      const { factorId, challengeId, code } = body;
+      if (!factorId || !challengeId || !code) {
+        return NextResponse.json(
+          { error: 'factorId, challengeId, and code are required' },
+          { status: 400 },
+        );
+      }
+
+      const { data, error } = await supabase.auth.mfa.verify({
+        factorId,
+        challengeId,
+        code,
+      });
+
+      if (error) {
+        logAudit({
+          user_id: user.id,
+          action: AUDIT_ACTIONS.MFA_FAILED,
+          entity_type: 'auth',
+          metadata: { factor_id: factorId, error: error.message },
+          ip_address: ip,
+        });
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      logAudit({
+        user_id: user.id,
+        action: AUDIT_ACTIONS.MFA_VERIFIED,
+        entity_type: 'auth',
+        metadata: { factor_id: factorId },
+        ip_address: ip,
+      });
+
+      return NextResponse.json({ success: true, session: data });
+    }
+
+    /* ── UNENROLL: remove a factor ── */
+    case 'unenroll': {
+      const { factorId: fid } = body;
+      if (!fid) {
+        return NextResponse.json({ error: 'factorId required' }, { status: 400 });
+      }
+
+      const { error } = await supabase.auth.mfa.unenroll({ factorId: fid });
+
+      if (error) {
+        return NextResponse.json({ error: error.message }, { status: 400 });
+      }
+
+      logAudit({
+        user_id: user.id,
+        action: AUDIT_ACTIONS.MFA_UNENROLLED,
+        entity_type: 'auth',
+        metadata: { factor_id: fid },
+        ip_address: ip,
+      });
+
+      return NextResponse.json({ success: true });
+    }
+
+    default:
+      return NextResponse.json(
+        { error: `Unknown action: ${action}` },
+        { status: 400 },
+      );
+  }
+}

@@ -1,74 +1,132 @@
-/* ── Simple in-memory rate limiter for API routes ── */
-/* Not shared across Vercel instances — best-effort protection. */
-/* For production: consider Upstash Redis rate limiting. */
+/* ── Rate Limiter — in-memory sliding window ──
+ *
+ * Provides per-IP rate limiting for auth-sensitive routes.
+ * Uses an in-memory Map, which resets on cold starts (Vercel serverless).
+ * This is acceptable for MVP — catches brute-force within an instance lifetime.
+ * For production hardening, swap to Redis/Upstash.
+ *
+ * Usage:
+ *   const result = checkRateLimit(ip, 'login', { windowMs: 900_000, maxAttempts: 5 });
+ *   if (!result.allowed) return NextResponse.json({ error: result.message }, { status: 429 });
+ */
 
 interface RateLimitEntry {
-  count: number;
-  resetAt: number;
+  timestamps: number[];
 }
 
-const store = new Map<string, RateLimitEntry>();
-
-/* Clean up expired entries periodically */
-let lastCleanup = Date.now();
-function cleanup() {
-  const now = Date.now();
-  if (now - lastCleanup < 60_000) return; // cleanup at most once/minute
-  lastCleanup = now;
-  for (const [key, entry] of store) {
-    if (entry.resetAt < now) store.delete(key);
-  }
+interface RateLimitConfig {
+  /** Window duration in milliseconds (default: 15 minutes) */
+  windowMs?: number;
+  /** Max attempts within the window (default: 5) */
+  maxAttempts?: number;
 }
 
-export interface RateLimitConfig {
-  /** Max requests per window */
-  max: number;
-  /** Window size in seconds */
-  windowSeconds: number;
-}
-
-export interface RateLimitResult {
+interface RateLimitResult {
   allowed: boolean;
   remaining: number;
-  resetAt: number;
+  resetMs: number;
+  message?: string;
+}
+
+// Separate stores per route category to avoid cross-contamination
+const stores = new Map<string, Map<string, RateLimitEntry>>();
+
+function getStore(category: string): Map<string, RateLimitEntry> {
+  let store = stores.get(category);
+  if (!store) {
+    store = new Map();
+    stores.set(category, store);
+  }
+  return store;
 }
 
 /**
- * Check rate limit for a given identifier (IP, user ID, etc).
- * Returns { allowed, remaining, resetAt }.
+ * Check if a request is within rate limits.
+ *
+ * @param identifier - Usually the client IP address
+ * @param category   - Route category: 'login', 'forgot-password', 'reset-password', 'invite', 'messages-read'
+ * @param config     - Optional overrides for window/max
  */
-export function rateLimit(
+export function checkRateLimit(
   identifier: string,
-  config: RateLimitConfig = { max: 60, windowSeconds: 60 }
+  category: string,
+  config?: RateLimitConfig,
 ): RateLimitResult {
-  cleanup();
+  const windowMs = config?.windowMs ?? 15 * 60 * 1000; // 15 minutes
+  const maxAttempts = config?.maxAttempts ?? 5;
   const now = Date.now();
-  const key = identifier;
-  const entry = store.get(key);
+  const windowStart = now - windowMs;
 
-  if (!entry || entry.resetAt < now) {
-    // New window
-    const resetAt = now + config.windowSeconds * 1000;
-    store.set(key, { count: 1, resetAt });
-    return { allowed: true, remaining: config.max - 1, resetAt };
+  const store = getStore(category);
+  const entry = store.get(identifier);
+
+  if (!entry) {
+    store.set(identifier, { timestamps: [now] });
+    return { allowed: true, remaining: maxAttempts - 1, resetMs: windowMs };
   }
 
-  entry.count++;
-  if (entry.count > config.max) {
-    return { allowed: false, remaining: 0, resetAt: entry.resetAt };
+  // Prune old entries
+  entry.timestamps = entry.timestamps.filter((t) => t > windowStart);
+
+  if (entry.timestamps.length >= maxAttempts) {
+    const oldestInWindow = entry.timestamps[0];
+    const resetMs = oldestInWindow + windowMs - now;
+    return {
+      allowed: false,
+      remaining: 0,
+      resetMs,
+      message: `Too many attempts. Try again in ${Math.ceil(resetMs / 60_000)} minutes.`,
+    };
   }
 
-  return { allowed: true, remaining: config.max - entry.count, resetAt: entry.resetAt };
+  entry.timestamps.push(now);
+  return {
+    allowed: true,
+    remaining: maxAttempts - entry.timestamps.length,
+    resetMs: windowMs,
+  };
 }
 
 /**
- * Extract client IP from request headers (Vercel / Cloudflare / fallback).
+ * Extract client IP from a Next.js request.
+ * Checks x-forwarded-for (Vercel), then x-real-ip, then falls back to 'unknown'.
  */
-export function getClientIP(req: Request): string {
-  const headers = req.headers;
-  return (
-    headers.get('x-real-ip') ||
-    headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
-    'unknown'
-  );
+export function getClientIp(req: Request): string {
+  const forwarded = req.headers.get('x-forwarded-for');
+  if (forwarded) return forwarded.split(',')[0].trim();
+  const realIp = req.headers.get('x-real-ip');
+  if (realIp) return realIp;
+  return 'unknown';
+}
+
+/* ── Default configs per route category ── */
+export const RATE_LIMITS = {
+  /** Login: 5 attempts per 15 min */
+  login: { windowMs: 15 * 60 * 1000, maxAttempts: 5 },
+  /** Forgot password: 3 attempts per 15 min (prevent email enumeration) */
+  'forgot-password': { windowMs: 15 * 60 * 1000, maxAttempts: 3 },
+  /** Reset password: 5 attempts per 15 min */
+  'reset-password': { windowMs: 15 * 60 * 1000, maxAttempts: 5 },
+  /** Invite: 10 invites per 15 min (admin-only, higher limit) */
+  invite: { windowMs: 15 * 60 * 1000, maxAttempts: 10 },
+  /** Messages read: 30 per minute (normal usage is high) */
+  'messages-read': { windowMs: 60 * 1000, maxAttempts: 30 },
+} as const;
+
+/**
+ * Periodic cleanup of expired entries. Call on a timer or per-request.
+ * Not strictly required — entries are pruned on access — but prevents
+ * memory growth if many unique IPs hit the server.
+ */
+export function cleanupExpiredEntries(): void {
+  const now = Date.now();
+  for (const [, store] of stores) {
+    for (const [key, entry] of store) {
+      // Remove entries older than 30 minutes (2x the max window)
+      entry.timestamps = entry.timestamps.filter((t) => t > now - 30 * 60 * 1000);
+      if (entry.timestamps.length === 0) {
+        store.delete(key);
+      }
+    }
+  }
 }

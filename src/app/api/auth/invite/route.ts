@@ -5,8 +5,24 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit';
+import { logAudit, AUDIT_ACTIONS } from '@/lib/audit';
 
 export async function POST(req: NextRequest) {
+  const ip = getClientIp(req);
+
+  // Rate limit
+  const rl = checkRateLimit(ip, 'invite', RATE_LIMITS.invite);
+  if (!rl.allowed) {
+    logAudit({
+      action: AUDIT_ACTIONS.RATE_LIMITED,
+      entity_type: 'auth',
+      metadata: { route: '/api/auth/invite', ip },
+      ip_address: ip,
+    });
+    return NextResponse.json({ error: rl.message }, { status: 429 });
+  }
+
   // Verify the caller is an authenticated admin
   const cookieStore = await cookies();
   const supabase = createServerClient(
@@ -107,6 +123,14 @@ export async function POST(req: NextRequest) {
       .from('clients')
       .update({ profile_id: newUser.user!.id })
       .eq('id', clientId);
+
+    logAudit({
+      user_id: user.id,
+      action: AUDIT_ACTIONS.INVITE_CREATED,
+      entity_type: 'auth',
+      metadata: { client_id: clientId, client_email: client.email },
+      ip_address: ip,
+    });
 
     return NextResponse.json({
       success: true,

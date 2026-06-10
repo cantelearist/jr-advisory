@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { getAuthClient } from '@/lib/supabase-browser';
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('');
@@ -20,16 +19,16 @@ export default function ForgotPasswordPage() {
     setLoading(true);
 
     try {
-      const supabase = getAuthClient();
-      const { error: resetError } = await supabase.auth.resetPasswordForEmail(
-        email.trim(),
-        {
-          redirectTo: `${window.location.origin}/portal/reset-password`,
-        },
-      );
+      const res = await fetch('/api/auth/forgot-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
+      });
 
-      if (resetError) {
-        setError(resetError.message);
+      const result = await res.json();
+
+      if (!res.ok) {
+        setError(result.error || 'Something went wrong.');
         setLoading(false);
         return;
       }

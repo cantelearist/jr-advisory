@@ -42,27 +42,37 @@ function PortalLogin() {
     setLoading(true);
 
     try {
-      const { data, error: authError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+      // Use rate-limited server-side login endpoint
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim(), password }),
       });
 
-      if (authError) {
-        setError(authError.message === 'Invalid login credentials'
-          ? 'Invalid email or password.'
-          : authError.message);
+      const result = await res.json();
+
+      if (!res.ok) {
+        setError(result.error || 'Login failed.');
         setLoading(false);
         return;
       }
 
-      if (data?.user) {
-        setPhase('entering');
-        const role = data.user.user_metadata?.role || 'client';
-        const redirect = searchParams.get('redirect');
-        const onboarded = data.user.user_metadata?.onboarded !== false;
-        const dest = redirect || (role === 'admin' ? '/portal/admin' : (!onboarded ? '/portal/welcome' : '/portal/dashboard'));
-        setTimeout(() => router.push(dest), 1600);
+      // Server sets the session cookie — refresh client-side auth state
+      await supabase.auth.getSession();
+
+      setPhase('entering');
+      const { role, onboarded } = result.user;
+      const redirect = searchParams.get('redirect');
+      const isPrivileged = role === 'admin' || role === 'manager';
+
+      if (result.mfaRequired) {
+        const finalDest = redirect || '/portal/admin';
+        setTimeout(() => router.push(`/portal/mfa?redirect=${encodeURIComponent(finalDest)}`), 1600);
+        return;
       }
+
+      const dest = redirect || (isPrivileged ? '/portal/admin' : (!onboarded ? '/portal/welcome' : '/portal/dashboard'));
+      setTimeout(() => router.push(dest), 1600);
     } catch {
       setError('Something went wrong. Please try again.');
       setLoading(false);

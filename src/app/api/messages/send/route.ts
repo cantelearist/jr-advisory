@@ -4,14 +4,14 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
-import { rateLimit, getClientIP } from '@/lib/rate-limit';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { sendNotification, createInAppNotification } from '@/lib/notifications';
 
 export async function POST(req: NextRequest) {
   /* Rate limit: 20 messages per minute per IP */
-  const rl = rateLimit(`msg:${getClientIP(req)}`, { max: 20, windowSeconds: 60 });
+  const rl = checkRateLimit(getClientIp(req), 'messages-send', { windowMs: 60_000, maxAttempts: 20 });
   if (!rl.allowed) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    return NextResponse.json({ error: rl.message || 'Too many requests' }, { status: 429 });
   }
 
   const auth = await requireAuth(req);

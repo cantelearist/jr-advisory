@@ -1,6 +1,22 @@
-/* ── Next.js Middleware — Auth gate for /portal/* ── */
+/* ── Next.js Middleware — Auth + MFA gate for /portal/* ──
+ *
+ * 1. Refreshes session cookies on every request.
+ * 2. Redirects unauthenticated users to /portal login.
+ * 3. Redirects authenticated users away from /portal login.
+ * 4. Enforces MFA for admin/manager — no fail-open.
+ *    If TOTP is enrolled, AAL must be aal2 or user goes to /portal/mfa.
+ */
+
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+
+/* Pages that don't require MFA verification */
+const MFA_EXEMPT_PATHS = [
+  '/portal',                    // login page itself
+  '/portal/mfa',                // MFA verification page
+  '/portal/forgot-password',
+  '/portal/reset-password',
+];
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -13,17 +29,23 @@ export async function middleware(request: NextRequest) {
         getAll() {
           return request.cookies.getAll();
         },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+        setAll(
+          cookiesToSet: {
+            name: string;
+            value: string;
+            options?: Record<string, unknown>;
+          }[],
+        ) {
           cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value)
+            request.cookies.set(name, value),
           );
           response = NextResponse.next({ request });
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, options),
           );
         },
       },
-    }
+    },
   );
 
   // Refresh session (important — keeps the cookie alive)
@@ -36,15 +58,71 @@ export async function middleware(request: NextRequest) {
   // ── Login page: redirect authenticated users to their home ──
   if (path === '/portal' && user) {
     const role = user.user_metadata?.role || 'client';
-    const dest = (role === 'admin' || role === 'manager') ? '/portal/admin' : '/portal/dashboard';
+    const isPrivileged = role === 'admin' || role === 'manager';
+
+    // If privileged and has MFA enrolled, check AAL
+    if (isPrivileged) {
+      const { data: aal } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+      if (
+        aal?.currentLevel === 'aal1' &&
+        aal?.nextLevel === 'aal2'
+      ) {
+        // MFA enrolled but not yet verified this session — send to MFA page
+        const dest = role === 'admin' ? '/portal/admin' : '/portal/dashboard';
+        return NextResponse.redirect(
+          new URL(`/portal/mfa?redirect=${encodeURIComponent(dest)}`, request.url),
+        );
+      }
+    }
+
+    const dest = isPrivileged ? '/portal/admin' : '/portal/dashboard';
     return NextResponse.redirect(new URL(dest, request.url));
   }
 
   // ── Protected pages: require authentication ──
   if (path.startsWith('/portal/') && !user) {
+    // Allow forgot-password and reset-password without auth
+    if (
+      path === '/portal/forgot-password' ||
+      path === '/portal/reset-password'
+    ) {
+      return response;
+    }
+
     const loginUrl = new URL('/portal', request.url);
     loginUrl.searchParams.set('redirect', path);
     return NextResponse.redirect(loginUrl);
+  }
+
+  // ── MFA enforcement for admin/manager — NO FAIL-OPEN ──
+  if (
+    user &&
+    path.startsWith('/portal/') &&
+    !MFA_EXEMPT_PATHS.includes(path)
+  ) {
+    const role = user.user_metadata?.role || 'client';
+    const isPrivileged = role === 'admin' || role === 'manager';
+
+    if (isPrivileged) {
+      const { data: aal } =
+        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+
+      // If MFA is enrolled (nextLevel === 'aal2') but not verified (currentLevel !== 'aal2')
+      // → redirect to MFA verification. This is the no-fail-open gate.
+      if (
+        aal?.nextLevel === 'aal2' &&
+        aal?.currentLevel !== 'aal2'
+      ) {
+        return NextResponse.redirect(
+          new URL(
+            `/portal/mfa?redirect=${encodeURIComponent(path)}`,
+            request.url,
+          ),
+        );
+      }
+    }
   }
 
   return response;

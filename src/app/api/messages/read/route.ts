@@ -4,8 +4,24 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
+import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit';
+import { logAudit, AUDIT_ACTIONS } from '@/lib/audit';
 
 export async function PATCH(req: NextRequest) {
+  const ip = getClientIp(req);
+
+  // Rate limit
+  const rl = checkRateLimit(ip, 'messages-read', RATE_LIMITS['messages-read']);
+  if (!rl.allowed) {
+    logAudit({
+      action: AUDIT_ACTIONS.RATE_LIMITED,
+      entity_type: 'message',
+      metadata: { route: '/api/messages/read', ip },
+      ip_address: ip,
+    });
+    return NextResponse.json({ error: rl.message }, { status: 429 });
+  }
+
   const auth = await requireAuth(req);
   if (isAuthError(auth)) return auth;
 

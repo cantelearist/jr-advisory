@@ -4,7 +4,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
-import { rateLimit, getClientIP } from '@/lib/rate-limit';
+import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import Stripe from 'stripe';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.jamesroman.la';
@@ -17,9 +17,9 @@ function getStripe() {
 
 export async function POST(req: NextRequest) {
   /* Rate limit: 10 checkout attempts per minute per IP */
-  const rl = rateLimit(`checkout:${getClientIP(req)}`, { max: 10, windowSeconds: 60 });
+  const rl = checkRateLimit(getClientIp(req), 'checkout', { windowMs: 60_000, maxAttempts: 10 });
   if (!rl.allowed) {
-    return NextResponse.json({ error: 'Too many requests' }, { status: 429 });
+    return NextResponse.json({ error: rl.message || 'Too many requests' }, { status: 429 });
   }
 
   const auth = await requireAuth(req);
