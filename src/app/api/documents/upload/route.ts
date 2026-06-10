@@ -6,6 +6,7 @@ import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { validateUploadFile } from '@/lib/sanitize';
+import { internalError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   // 1) Verify caller is an authenticated admin
@@ -100,13 +101,13 @@ export async function POST(req: NextRequest) {
       metadata: { file_name: file.name, storage_path: storagePath, size: file.size },
     });
 
+    // Strip internal storage paths before returning — never expose file_path or storage_path to clients
+    const { file_path: _fp, ...safeDoc } = doc;
     return NextResponse.json({
       success: true,
-      document: doc,
-      storage_path: storagePath,
+      document: safeDoc,
     });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return internalError(e, 'documents.upload');
   }
 }

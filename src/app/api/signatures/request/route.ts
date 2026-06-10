@@ -3,6 +3,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAuthError } from '@/lib/api-auth';
+import { internalError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const auth = await requireAdmin(req);
@@ -21,7 +22,7 @@ export async function POST(req: NextRequest) {
       .insert({ document_id, client_id, signer_name, signer_email: signer_email || '', message: message || '', status: 'pending' })
       .select().single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return internalError(error, 'signatures.request');
 
     await sb.from('documents').update({ status: 'pending-review' }).eq('id', document_id);
     await sb.from('audit_log').insert({
@@ -41,6 +42,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, signatureRequest: sigReq });
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 });
+    return internalError(e, 'signatures.request');
   }
 }

@@ -3,6 +3,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
+import { internalError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
@@ -33,6 +34,6 @@ export async function GET(req: NextRequest) {
   }
 
   const { data, error } = await query;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return internalError(error, 'signatures.list');
   return NextResponse.json({ signatures: data || [] });
 }

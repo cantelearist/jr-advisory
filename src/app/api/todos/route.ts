@@ -3,6 +3,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAuthError } from '@/lib/api-auth';
+import { internalError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,7 +20,7 @@ export async function GET(req: NextRequest) {
   if (status) q = q.eq('status', status);
 
   const { data, error } = await q;
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return internalError(error, 'todos');
   return NextResponse.json(data || []);
 }
 
@@ -45,6 +46,6 @@ export async function POST(req: NextRequest) {
     visible_to_client: visible_to_client ?? false,
   }).select().single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return internalError(error, 'todos');
   return NextResponse.json(data, { status: 201 });
 }

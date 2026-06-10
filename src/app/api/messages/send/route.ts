@@ -6,6 +6,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { sendNotification, createInAppNotification } from '@/lib/notifications';
+import { internalError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   /* Rate limit: 20 messages per minute per IP */
@@ -59,7 +60,7 @@ export async function POST(req: NextRequest) {
       .single();
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return internalError(error, 'messages.send');
     }
 
     // Audit log
@@ -136,6 +137,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, message: msg });
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Unknown error' }, { status: 500 });
+    return internalError(e, 'messages.send');
   }
 }

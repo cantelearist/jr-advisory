@@ -5,6 +5,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
+import { internalError } from '@/lib/api-error';
 
 export async function DELETE(req: NextRequest) {
   const documentId = req.nextUrl.searchParams.get('id');
@@ -82,7 +83,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return internalError(e, 'documents.delete');
   }
 }

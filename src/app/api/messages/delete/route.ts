@@ -4,6 +4,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAuthError } from '@/lib/api-auth';
+import { internalError } from '@/lib/api-error';
 
 export async function DELETE(req: NextRequest) {
   const auth = await requireAdmin(req);
@@ -36,7 +37,7 @@ export async function DELETE(req: NextRequest) {
       .eq('id', message_id);
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return internalError(error, 'messages.delete');
     }
 
     /* Audit log */
@@ -54,9 +55,6 @@ export async function DELETE(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (e: unknown) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return internalError(e, 'messages.delete');
   }
 }

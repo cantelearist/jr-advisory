@@ -6,6 +6,7 @@ import { type NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import Stripe from 'stripe';
+import { internalError } from '@/lib/api-error';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.jamesroman.la';
 
@@ -124,9 +125,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ url: session.url });
   } catch (e: unknown) {
     console.error('Checkout error:', e);
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Checkout failed' },
-      { status: 500 }
-    );
+    return internalError(e, 'payments.checkout');
   }
 }

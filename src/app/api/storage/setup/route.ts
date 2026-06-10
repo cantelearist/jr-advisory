@@ -3,6 +3,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { internalError } from '@/lib/api-error';
 
 const SETUP_KEY = 'jr-storage-2026';
 
@@ -64,7 +65,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, results });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ success: false, results, error: msg }, { status: 500 });
+    return internalError(e, 'storage.setup');
   }
 }
