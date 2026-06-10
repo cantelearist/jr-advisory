@@ -11,6 +11,14 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAuthClient } from '@/lib/supabase-browser';
 
+/** Sanitize redirect to prevent open-redirect attacks */
+function sanitizeRedirect(url: string | null, fallback: string): string {
+  if (!url) return fallback;
+  const cleaned = url.trim();
+  if (!cleaned.startsWith('/') || cleaned.startsWith('//')) return fallback;
+  return cleaned;
+}
+
 export default function MfaPage() {
   return (
     <Suspense fallback={<div style={{ minHeight: '100vh', background: '#000' }} />}>
@@ -37,7 +45,7 @@ function MfaVerify() {
         setFactorId(totp.id);
       } else {
         // No MFA enrolled — redirect to dashboard
-        const redirect = searchParams.get('redirect') || '/portal/dashboard';
+        const redirect = sanitizeRedirect(searchParams.get('redirect'), '/portal/dashboard');
         router.replace(redirect);
       }
     });
@@ -80,7 +88,7 @@ function MfaVerify() {
       }
 
       // MFA verified — redirect
-      const redirect = searchParams.get('redirect') || '/portal/admin';
+      const redirect = sanitizeRedirect(searchParams.get('redirect'), '/portal/admin');
       router.replace(redirect);
     } catch {
       setError('Verification failed. Please try again.');

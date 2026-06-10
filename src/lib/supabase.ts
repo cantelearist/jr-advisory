@@ -8,14 +8,21 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
 export const isSupabaseConfigured = (): boolean =>
   Boolean(supabaseUrl && supabaseAnonKey);
 
-/** Browser client — lazy-initialized, uses anon key, respects RLS */
+/**
+ * Plain Supabase client — anon key, no session persistence.
+ * P3: Disabled persistSession and autoRefreshToken to prevent stale
+ * tokens in localStorage. Portal auth goes through supabase-browser.ts
+ * (SSR/cookie-based) instead.
+ */
 let _supabase: SupabaseClient | null = null;
 export function getSupabase(): SupabaseClient {
   if (!_supabase) {
     if (!isSupabaseConfigured()) {
       throw new Error('Supabase not configured — check env vars');
     }
-    _supabase = createClient(supabaseUrl, supabaseAnonKey);
+    _supabase = createClient(supabaseUrl, supabaseAnonKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
   }
   return _supabase;
 }

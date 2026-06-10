@@ -1,12 +1,14 @@
 /* ── Auth Callback — handles magic link + invite redirects ── */
+/* P3: Added redirect URL sanitization to prevent open-redirect attacks. */
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
+import { sanitizeRedirect } from '@/lib/api-auth';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = searchParams.get('next') ?? '/portal/dashboard';
+  const next = sanitizeRedirect(searchParams.get('next'), '/portal/dashboard');
 
   if (code) {
     const cookieStore = await cookies();

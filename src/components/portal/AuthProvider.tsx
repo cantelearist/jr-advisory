@@ -91,10 +91,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [supabase, loadProfile]);
 
   const signOut = async () => {
-    await supabase.auth.signOut();
+    // Server-side logout: revokes refresh token, clears cookies
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      // Fallback: client-side signOut if server call fails
+      await supabase.auth.signOut();
+    }
     setUser(null);
     setProfile(null);
     setClientRecord(null);
+    // Full page reload to clear all client-side state
     window.location.href = '/portal';
   };
 

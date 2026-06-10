@@ -4,6 +4,7 @@
  *
  * Admin/manager only for enrollment.
  * No fail-open: once MFA is enrolled, it must be verified.
+ * P3: Fixed cookie pass-through so MFA verify properly updates session to aal2.
  */
 
 import { NextResponse, type NextRequest } from 'next/server';
@@ -26,7 +27,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: rl.message }, { status: 429 });
   }
 
-  // Build cookie-aware Supabase client
+  // Collect cookies set by Supabase SSR during the request lifecycle
+  const pendingCookies: { name: string; value: string; options?: Record<string, unknown> }[] = [];
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -35,12 +38,21 @@ export async function POST(req: NextRequest) {
         getAll() {
           return req.cookies.getAll();
         },
-        setAll() {
-          /* route handler — no-op */
+        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
+          pendingCookies.push(...cookiesToSet);
         },
       },
     },
   );
+
+  /** Create a JSON response with all pending cookies attached */
+  function respond(body: object, status = 200): NextResponse {
+    const res = NextResponse.json(body, { status });
+    for (const { name, value, options } of pendingCookies) {
+      res.cookies.set(name, value, options);
+    }
+    return res;
+  }
 
   const {
     data: { user },
@@ -56,9 +68,7 @@ export async function POST(req: NextRequest) {
   switch (action) {
     /* ── ENROLL: start TOTP enrollment ── */
     case 'enroll': {
-      // Only admin/manager can enroll MFA
-      const role =
-        user.user_metadata?.role || 'client';
+      const role = user.user_metadata?.role || 'client';
       if (role !== 'admin' && role !== 'manager') {
         return NextResponse.json(
           { error: 'MFA enrollment is restricted to admin and manager accounts.' },
@@ -72,7 +82,7 @@ export async function POST(req: NextRequest) {
       });
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        return respond({ error: error.message }, 400);
       }
 
       logAudit({
@@ -83,7 +93,7 @@ export async function POST(req: NextRequest) {
         ip_address: ip,
       });
 
-      return NextResponse.json({
+      return respond({
         factorId: data.id,
         qrCode: data.totp.qr_code,
         secret: data.totp.secret,
@@ -101,10 +111,10 @@ export async function POST(req: NextRequest) {
       const { data, error } = await supabase.auth.mfa.challenge({ factorId });
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        return respond({ error: error.message }, 400);
       }
 
-      return NextResponse.json({ challengeId: data.id });
+      return respond({ challengeId: data.id });
     }
 
     /* ── VERIFY: verify a TOTP code ── */
@@ -131,7 +141,7 @@ export async function POST(req: NextRequest) {
           metadata: { factor_id: factorId, error: error.message },
           ip_address: ip,
         });
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        return respond({ error: error.message }, 400);
       }
 
       logAudit({
@@ -142,7 +152,8 @@ export async function POST(req: NextRequest) {
         ip_address: ip,
       });
 
-      return NextResponse.json({ success: true, session: data });
+      // respond() includes the updated session cookies (aal2)
+      return respond({ success: true, session: data });
     }
 
     /* ── UNENROLL: remove a factor ── */
@@ -155,7 +166,7 @@ export async function POST(req: NextRequest) {
       const { error } = await supabase.auth.mfa.unenroll({ factorId: fid });
 
       if (error) {
-        return NextResponse.json({ error: error.message }, { status: 400 });
+        return respond({ error: error.message }, 400);
       }
 
       logAudit({
@@ -166,7 +177,7 @@ export async function POST(req: NextRequest) {
         ip_address: ip,
       });
 
-      return NextResponse.json({ success: true });
+      return respond({ success: true });
     }
 
     default:

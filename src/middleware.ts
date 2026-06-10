@@ -5,6 +5,7 @@
  * 3. Redirects authenticated users away from /portal login.
  * 4. Enforces MFA for admin/manager — no fail-open.
  *    If TOTP is enrolled, AAL must be aal2 or user goes to /portal/mfa.
+ * 5. Validates redirect URLs to prevent open-redirect attacks. (P3)
  */
 
 import { createServerClient } from '@supabase/ssr';
@@ -17,6 +18,17 @@ const MFA_EXEMPT_PATHS = [
   '/portal/forgot-password',
   '/portal/reset-password',
 ];
+
+/**
+ * Sanitize a redirect URL — must be a relative path starting with /
+ * and not a protocol-relative URL (//).
+ */
+function sanitizeRedirect(url: string | null, fallback: string): string {
+  if (!url) return fallback;
+  const cleaned = url.trim();
+  if (!cleaned.startsWith('/') || cleaned.startsWith('//')) return fallback;
+  return cleaned;
+}
 
 export async function middleware(request: NextRequest) {
   let response = NextResponse.next({ request });
@@ -92,6 +104,7 @@ export async function middleware(request: NextRequest) {
     }
 
     const loginUrl = new URL('/portal', request.url);
+    // Only pass sanitized path as redirect (path is always from nextUrl.pathname, which is safe)
     loginUrl.searchParams.set('redirect', path);
     return NextResponse.redirect(loginUrl);
   }

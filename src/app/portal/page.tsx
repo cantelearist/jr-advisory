@@ -5,6 +5,14 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
 import { getAuthClient } from '@/lib/supabase-browser';
 
+/** Sanitize redirect to prevent open-redirect attacks */
+function sanitizeRedirect(url: string | null, fallback: string): string {
+  if (!url) return fallback;
+  const cleaned = url.trim();
+  if (!cleaned.startsWith('/') || cleaned.startsWith('//')) return fallback;
+  return cleaned;
+}
+
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
 export default function PortalLoginPage() {
@@ -62,7 +70,7 @@ function PortalLogin() {
 
       setPhase('entering');
       const { role, onboarded } = result.user;
-      const redirect = searchParams.get('redirect');
+      const redirect = sanitizeRedirect(searchParams.get('redirect'), '');
       const isPrivileged = role === 'admin' || role === 'manager';
 
       if (result.mfaRequired) {
@@ -88,15 +96,17 @@ function PortalLogin() {
     setLoading(true);
 
     try {
-      const { error: otpError } = await supabase.auth.signInWithOtp({
-        email: email.trim(),
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback`,
-        },
+      // Use rate-limited server-side endpoint (P3: prevents bypass of rate limiting)
+      const res = await fetch('/api/auth/magic-link', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email.trim() }),
       });
 
-      if (otpError) {
-        setError(otpError.message);
+      const result = await res.json();
+
+      if (!res.ok) {
+        setError(result.error || 'Failed to send login link.');
         setLoading(false);
         return;
       }
