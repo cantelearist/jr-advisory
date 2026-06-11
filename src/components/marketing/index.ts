@@ -18,4 +18,3 @@ export { BackToTop } from "./BackToTop";
 export { ExperienceGlow } from "./ExperienceGlow";
 export { PageShell } from "./PageShell";
 export { PageIntro } from "./PageIntro";
-export { OwnerSideClarity } from "./OwnerSideClarity";

@@ -469,3 +469,5 @@ export const INSIGHTS: unknown[] = [];
 export const ADVISORY_SERVICES: unknown[] = [];
 export const FIRM_DISCLAIMER = "";
 export const PROCESS_STEPS: unknown[] = [];
+export const FIRM_PROOF_LINE = "";
+export const CLIENT_PAIN_POINTS: string[] = [];
