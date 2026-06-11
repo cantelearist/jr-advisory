@@ -19,7 +19,7 @@
     "@supabase/supabase-js": "^2.49.1",
     "grapesjs": "^0.23.1",
     "grapesjs-preset-webpage": "^1.0.3",
-    "next": "^15",
+    "next": "15.5.19",
     "postgres": "^3.4.5",
     "react": "^19",
     "react-dom": "^19",
@@ -37,9 +37,12 @@
     "@types/sanitize-html": "^2.16.1",
     "@vitejs/plugin-react": "^6.0.2",
     "eslint": "^9",
-    "eslint-config-next": "^15",
+    "eslint-config-next": "15.5.19",
     "jsdom": "^29.1.1",
     "typescript": "^5.9.3",
     "vitest": "^4.1.6"
+  },
+  "overrides": {
+    "postcss": "^8.5.15"
   }
 }

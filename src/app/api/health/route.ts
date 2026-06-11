@@ -3,6 +3,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isInternalSecretAuthorized } from '@/lib/internal-secret';
 
 export const dynamic = 'force-dynamic';
 
@@ -84,7 +85,7 @@ function checkEnvVars(): Record<string, boolean> {
 export async function GET(req: NextRequest) {
   /* Auth: require internal key or admin session */
   const key = req.nextUrl.searchParams.get('key');
-  if (key !== 'jr-health-2026') {
+  if (!isInternalSecretAuthorized(key, process.env.HEALTHCHECK_SECRET)) {
     /* Try admin session */
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const sKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -103,7 +104,7 @@ export async function GET(req: NextRequest) {
           return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
         }
       } else {
-        return NextResponse.json({ error: 'Unauthorized — use ?key=jr-health-2026 or admin session' }, { status: 401 });
+        return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
       }
     } else {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -138,5 +139,5 @@ export async function GET(req: NextRequest) {
     },
     env_vars: checkEnvVars(),
     version: process.env.VERCEL_GIT_COMMIT_SHA?.slice(0, 7) || 'local',
-  });
+  }, { headers: { 'Cache-Control': 'no-store, max-age=0' } });
 }

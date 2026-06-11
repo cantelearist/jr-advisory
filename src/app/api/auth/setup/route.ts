@@ -1,17 +1,14 @@
 /* ── Auth Setup — Create admin + client accounts ── */
-/* POST /api/auth/setup?key=jr-auth-2026 */
+/* POST /api/auth/setup */
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
-const SETUP_KEY = 'jr-auth-2026';
+import { isInternalSecretAuthorized } from '@/lib/internal-secret';
 
 const ADMIN_ACCOUNTS = [
-  { email: 'roman@jamesroman.la', full_name: 'Roman', password: 'JR-admin-2026!' },
-  { email: 'stephen@jamesroman.la', full_name: 'Stephen', password: 'JR-admin-2026!' },
+  { email: 'roman@jamesroman.la', full_name: 'Roman' },
+  { email: 'stephen@jamesroman.la', full_name: 'Stephen' },
 ];
-
-const CLIENT_PASSWORD = 'jr-client-2026';
 
 export async function POST(req: NextRequest) {
   /* Block in production */
@@ -20,8 +17,14 @@ export async function POST(req: NextRequest) {
   }
 
   const key = req.nextUrl.searchParams.get('key');
-  if (key !== SETUP_KEY) {
+  if (!isInternalSecretAuthorized(key, process.env.AUTH_SETUP_SECRET)) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 403 });
+  }
+
+  const adminPassword = process.env.AUTH_SETUP_ADMIN_PASSWORD;
+  const clientPassword = process.env.AUTH_SETUP_CLIENT_PASSWORD;
+  if (!adminPassword || !clientPassword) {
+    return NextResponse.json({ error: 'Auth setup passwords not configured' }, { status: 503 });
   }
 
   const admin = createClient(
@@ -46,7 +49,7 @@ export async function POST(req: NextRequest) {
 
       if (existing) {
         await admin.auth.admin.updateUserById(existing.id, {
-          password: acct.password,
+          password: adminPassword,
           user_metadata: { full_name: acct.full_name, role: 'admin' },
         });
         await admin
@@ -59,7 +62,7 @@ export async function POST(req: NextRequest) {
       } else {
         const { data, error } = await admin.auth.admin.createUser({
           email: acct.email,
-          password: acct.password,
+          password: adminPassword,
           email_confirm: true,
           user_metadata: { full_name: acct.full_name, role: 'admin' },
         });
@@ -101,7 +104,7 @@ export async function POST(req: NextRequest) {
         if (existing) {
           userId = existing.id;
           await admin.auth.admin.updateUserById(userId, {
-            password: CLIENT_PASSWORD,
+            password: clientPassword,
             user_metadata: { full_name: client.name, role: 'client' },
           });
           await admin
@@ -114,7 +117,7 @@ export async function POST(req: NextRequest) {
         } else {
           const { data, error } = await admin.auth.admin.createUser({
             email: client.email,
-            password: CLIENT_PASSWORD,
+            password: clientPassword,
             email_confirm: true,
             user_metadata: { full_name: client.name, role: 'client' },
           });

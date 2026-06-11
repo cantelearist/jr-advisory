@@ -1,7 +1,8 @@
-/* ── POST /api/migrate?key=jr-migrate-2026 — Check & report missing tables ── */
+/* ── POST /api/migrate — Check & report missing tables ── */
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isInternalSecretAuthorized } from '@/lib/internal-secret';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,7 @@ export async function POST(request: Request) {
 
   const { searchParams } = new URL(request.url);
   const key = searchParams.get('key');
-  if (key !== 'jr-migrate-2026') {
+  if (!isInternalSecretAuthorized(key, process.env.MIGRATION_SECRET)) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
@@ -64,5 +65,5 @@ export async function POST(request: Request) {
 }
 
 export async function GET() {
-  return NextResponse.json({ message: 'POST /api/migrate?key=jr-migrate-2026' });
+  return NextResponse.json({ message: 'POST /api/migrate with configured internal secret' });
 }

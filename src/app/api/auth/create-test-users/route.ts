@@ -3,8 +3,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
-const SETUP_KEY = 'jr-test-users-2026';
+import { isInternalSecretAuthorized } from '@/lib/internal-secret';
 
 const USERS = [
   { email: 'admin@jamesroman.la', password: '111111', role: 'admin', full_name: 'Admin' },
@@ -18,7 +17,7 @@ export async function POST(req: NextRequest) {
   }
 
   const key = req.nextUrl.searchParams.get('key');
-  if (key !== SETUP_KEY) {
+  if (!isInternalSecretAuthorized(key, process.env.TEST_USERS_SETUP_SECRET)) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 403 });
   }
 

@@ -1,6 +1,7 @@
 /* ── Signature table migration helper ── */
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isInternalSecretAuthorized } from '@/lib/internal-secret';
 
 export async function POST(req: NextRequest) {
   /* Block in production */
@@ -9,7 +10,9 @@ export async function POST(req: NextRequest) {
   }
 
   const key = req.nextUrl.searchParams.get('key');
-  if (key !== 'jr-migrate-2026') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  if (!isInternalSecretAuthorized(key, process.env.MIGRATION_SECRET)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
 
   const sb = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,

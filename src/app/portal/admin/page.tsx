@@ -231,13 +231,7 @@ export default function AdminPanel() {
 
   const handleReset = async () => {
     if (confirm('Reset all test data to seed state? This cannot be undone.')) {
-      try {
-        await fetch('/api/seed?key=jr-seed-2026', { method: 'POST' });
-        await fetch('/api/auth/setup?key=jr-auth-2026', { method: 'POST' });
-        loadData();
-      } catch {
-        alert('Reset failed — check console.');
-      }
+      alert('Seed resets now require server-side operation secrets. Run the reset from trusted server tooling.');
     }
   };
 

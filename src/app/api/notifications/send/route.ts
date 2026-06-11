@@ -5,6 +5,7 @@ export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { sendNotification, sendNotifications, type NotificationPayload } from '@/lib/notifications';
+import { isInternalSecretAuthorized } from '@/lib/internal-secret';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -13,11 +14,11 @@ export async function POST(req: NextRequest) {
   try {
     /* Auth: require service-level access or valid admin session */
     const authHeader = req.headers.get('authorization');
-    const internalKey = process.env.NOTIFICATION_SECRET || 'jr-notify-2026';
+    const bearerToken = authHeader?.replace('Bearer ', '');
 
-    if (authHeader !== `Bearer ${internalKey}`) {
+    if (!isInternalSecretAuthorized(bearerToken, process.env.NOTIFICATION_SECRET)) {
       /* Fallback: check if user is admin via Supabase token */
-      const token = authHeader?.replace('Bearer ', '');
+      const token = bearerToken;
       if (token && supabaseUrl && serviceKey) {
         const sb = createClient(supabaseUrl, serviceKey);
         const { data: { user } } = await sb.auth.getUser(token);
