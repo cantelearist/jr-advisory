@@ -7,6 +7,7 @@ import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit';
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit';
+import { internalError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -139,7 +140,6 @@ export async function POST(req: NextRequest) {
       message: `Account created for ${client.name}. Share credentials securely.`,
     });
   } catch (e: unknown) {
-    const msg = e instanceof Error ? e.message : String(e);
-    return NextResponse.json({ error: msg }, { status: 500 });
+    return internalError(e, 'auth.invite');
   }
 }

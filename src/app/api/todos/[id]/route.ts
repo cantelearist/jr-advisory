@@ -3,6 +3,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAuthError } from '@/lib/api-auth';
+import { internalError } from '@/lib/api-error';
 
 export const dynamic = 'force-dynamic';
 
@@ -33,7 +34,7 @@ export async function PATCH(
     .select()
     .single();
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return internalError(error, 'todos.[id]');
   return NextResponse.json(data);
 }
 
@@ -48,6 +49,6 @@ export async function DELETE(
   const { id } = await params;
   const { error } = await sb.from('todo').delete().eq('id', id);
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  if (error) return internalError(error, 'todos.[id]');
   return NextResponse.json({ success: true });
 }

@@ -3,6 +3,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
+import { internalError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth(req);
@@ -35,7 +36,7 @@ export async function POST(req: NextRequest) {
         .eq('read', false);
 
       if (error && !error.message.includes('does not exist')) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return internalError(error, 'notifications.dismiss');
       }
     } else if (notification_id) {
       /* Dismiss single */
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
         .eq('id', notification_id);
 
       if (error && !error.message.includes('does not exist')) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
+        return internalError(error, 'notifications.dismiss');
       }
     } else {
       return NextResponse.json({ error: 'Provide notification_id or dismiss_all + target' }, { status: 400 });
@@ -53,9 +54,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true });
   } catch (e: unknown) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return internalError(e, 'notifications.dismiss');
   }
 }

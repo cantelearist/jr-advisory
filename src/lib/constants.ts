@@ -462,3 +462,13 @@ export const FOOTER_COLUMNS: FooterColumn[] = [
     ],
   },
 ];
+
+/* ── WIP marketing page stubs (types match page access patterns) ── */
+export interface WipItem { title: string; summary?: string; description?: string; }
+export const OWNER_SIDE_POINTS: string[] = [];
+export const INSIGHTS: WipItem[] = [];
+export const ADVISORY_SERVICES: WipItem[] = [];
+export const FIRM_DISCLAIMER = "";
+export const PROCESS_STEPS: WipItem[] = [];
+export const FIRM_PROOF_LINE = "";
+export const CLIENT_PAIN_POINTS: string[] = [];

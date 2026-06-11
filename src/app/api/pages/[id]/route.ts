@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAuthError } from '@/lib/api-auth';
+import { internalError } from '@/lib/api-error';
 
 /* GET /api/pages/[id] — load a single page with full content */
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -59,7 +60,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (error.code === '23505') {
       return NextResponse.json({ error: 'A page with this slug already exists' }, { status: 409 });
     }
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalError(error, 'pages.[id]');
   }
 
   return NextResponse.json({ page: data });
@@ -77,7 +78,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     .eq('id', id);
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalError(error, 'pages.[id]');
   }
 
   return NextResponse.json({ success: true });

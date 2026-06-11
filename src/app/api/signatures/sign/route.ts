@@ -3,6 +3,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 import { validateSignatureData } from '@/lib/sanitize';
+import { internalError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
   const response = NextResponse.next();
@@ -57,7 +58,7 @@ export async function POST(req: NextRequest) {
       })
       .eq('id', signature_request_id).select().single();
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    if (error) return internalError(error, 'signatures.sign');
 
     await sb.from('documents').update({ status: 'final' }).eq('id', sigReq.document_id);
     await sb.from('audit_log').insert({
@@ -90,6 +91,6 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json({ success: true, signature: updated });
   } catch (e: unknown) {
-    return NextResponse.json({ error: e instanceof Error ? e.message : 'Error' }, { status: 500 });
+    return internalError(e, 'signatures.sign');
   }
 }

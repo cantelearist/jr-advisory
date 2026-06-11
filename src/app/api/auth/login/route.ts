@@ -76,7 +76,7 @@ export async function POST(req: NextRequest) {
         error:
           error.message === 'Invalid login credentials'
             ? 'Invalid email or password.'
-            : error.message,
+            : 'Login failed. Please try again.',
       },
       { status: 401 },
     );

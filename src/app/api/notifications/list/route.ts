@@ -3,6 +3,7 @@
 
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
+import { internalError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const auth = await requireAuth(req);
@@ -49,14 +50,11 @@ export async function GET(req: NextRequest) {
       if (error.code === '42P01' || error.message.includes('does not exist')) {
         return NextResponse.json({ notifications: [], fallback: true });
       }
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return internalError(error, 'notifications.list');
     }
 
     return NextResponse.json({ notifications: data || [] });
   } catch (e: unknown) {
-    return NextResponse.json(
-      { error: e instanceof Error ? e.message : 'Unknown error' },
-      { status: 500 }
-    );
+    return internalError(e, 'notifications.list');
   }
 }

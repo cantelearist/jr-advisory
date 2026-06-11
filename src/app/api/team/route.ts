@@ -1,6 +1,7 @@
 /* GET /api/team — list all profiles (admin only) */
 import { NextRequest, NextResponse } from 'next/server';
 import { requireAdmin, isAuthError } from '@/lib/api-auth';
+import { internalError } from '@/lib/api-error';
 
 export async function GET(req: NextRequest) {
   const auth = await requireAdmin(req);
@@ -12,7 +13,7 @@ export async function GET(req: NextRequest) {
     .order('created_at', { ascending: false });
 
   if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+    return internalError(error, 'team');
   }
 
   return NextResponse.json({ users: data || [] });
