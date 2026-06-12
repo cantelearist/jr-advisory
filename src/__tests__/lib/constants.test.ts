@@ -34,15 +34,13 @@ describe("constants", () => {
     expect(SERVICE_AREAS).toContain("Santa Monica");
   });
 
-  it("has 6 navigation items", () => {
-    expect(NAV_ITEMS).toHaveLength(6);
+  it("has 4 navigation items", () => {
+    expect(NAV_ITEMS).toHaveLength(4);
     expect(NAV_ITEMS.map((n) => n.label)).toEqual([
       "The Practice",
-      "Counsel",
-      "Engagement",
-      "Discretion",
-      "Founders",
-      "Contact",
+      "Origin",
+      "The Cornerstone",
+      "Private Office",
     ]);
   });
 

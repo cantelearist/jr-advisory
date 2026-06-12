@@ -10,17 +10,19 @@ describe("SiteFooter", () => {
 
   it("renders the copyright", () => {
     render(<SiteFooter />);
-    expect(screen.getByText(/© James Roman Advisory/)).toBeInTheDocument();
+    expect(screen.getByText(/© 2026 James Roman Advisory/)).toBeInTheDocument();
   });
 
-  it("renders footer column headings", () => {
+  it("renders footer nav links", () => {
     render(<SiteFooter />);
     expect(screen.getByText("Practice")).toBeInTheDocument();
-    expect(screen.getByText("Legal")).toBeInTheDocument();
+    expect(screen.getByText("Origin")).toBeInTheDocument();
+    expect(screen.getByText("The Cornerstone")).toBeInTheDocument();
+    expect(screen.getByText("Contact")).toBeInTheDocument();
   });
 
-  it("renders the independence statement", () => {
+  it("renders the location tagline", () => {
     render(<SiteFooter />);
-    expect(screen.getByText(/Not a contractor/)).toBeInTheDocument();
+    expect(screen.getByText(/Malibu, California/)).toBeInTheDocument();
   });
 });

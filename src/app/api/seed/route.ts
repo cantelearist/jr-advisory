@@ -3,6 +3,7 @@
 
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { isInternalSecretAuthorized } from '@/lib/internal-secret';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
@@ -38,7 +39,7 @@ export async function POST(request: Request) {
     /* Auth check — require secret or service key match */
     const { searchParams } = new URL(request.url);
     const key = searchParams.get('key');
-    if (key !== 'jr-seed-2026' && key !== serviceKey.slice(0, 12)) {
+    if (!isInternalSecretAuthorized(key, process.env.SEED_SECRET)) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
@@ -407,7 +408,7 @@ export async function POST(request: Request) {
 /* GET — convenience for browser testing */
 export async function GET() {
   return NextResponse.json({
-    message: 'POST /api/seed?key=jr-seed-2026 to seed the database',
+    message: 'POST /api/seed with configured internal secret to seed the database',
     warning: 'This will DELETE all existing data and replace with test data.',
   });
 }

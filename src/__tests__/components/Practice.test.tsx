@@ -8,54 +8,51 @@ describe("Practice", () => {
     expect(screen.getByTestId("practice")).toBeInTheDocument();
   });
 
-  it("renders the section number", () => {
+  it("renders the section label", () => {
     render(<Practice />);
-    expect(screen.getByText("§ 01 — THE PRACTICE")).toBeInTheDocument();
+    expect(screen.getByText("The Practice")).toBeInTheDocument();
   });
 
-  it("renders 'A small practice' heading", () => {
+  it("renders 'Advocacy,' heading", () => {
     render(<Practice />);
-    expect(screen.getByText("A small practice,")).toBeInTheDocument();
+    expect(screen.getByText("Advocacy,")).toBeInTheDocument();
   });
 
-  it("renders 'privately retained.' with accent shimmer", () => {
+  it("renders 'not remediation.' with accent shimmer", () => {
     render(<Practice />);
-    const accent = screen.getByText("privately retained.");
+    const accent = screen.getByText("not remediation.");
+    expect(accent).toBeInTheDocument();
     expect(accent.classList.contains("accent-shimmer")).toBe(true);
   });
 
   it("renders the independence statement", () => {
     render(<Practice />);
     expect(
-      screen.getByText(/We accept no fees from contractors/)
+      screen.getByText(/Our only product is judgment/)
     ).toBeInTheDocument();
   });
 
-  it("renders stat labels", () => {
+  it("renders all 6 practice cards", () => {
     render(<Practice />);
-    expect(screen.getByText("Years in industry")).toBeInTheDocument();
-    expect(screen.getByText("Clients per quarter")).toBeInTheDocument();
-    expect(screen.getByText("From contractors")).toBeInTheDocument();
+    expect(screen.getByText("Mold and Water Damage")).toBeInTheDocument();
+    expect(screen.getByText("Fire and Smoke Residue")).toBeInTheDocument();
+    expect(screen.getByText("Asbestos and Legacy Materials")).toBeInTheDocument();
+    expect(screen.getByText("Indoor Air Quality and VOCs")).toBeInTheDocument();
+    expect(screen.getByText("Pre-Sale Diligence")).toBeInTheDocument();
+    expect(screen.getByText("Contractor Procurement")).toBeInTheDocument();
   });
 
-  it("renders stat counters with stat-counter class", () => {
+  it("renders card numbers 01 through 06", () => {
     render(<Practice />);
-    const counters = document.querySelectorAll(".stat-counter");
-    // "19" and "$0" are numeric → rendered as NumericStat
-    expect(counters.length).toBeGreaterThanOrEqual(2);
+    ["01", "02", "03", "04", "05", "06"].forEach((num) => {
+      expect(screen.getByText(num)).toBeInTheDocument();
+    });
   });
 
-  it("renders the 4–6 stat with en-dash suffix", () => {
-    render(<Practice />);
-    // "4–6" starts with digit so StatDisplay parses it as NumericStat
-    // with target=4, suffix="–6". Before intersection, displayValue=0
-    expect(screen.getByText("Clients per quarter")).toBeInTheDocument();
-  });
-
-  it("emphasises homeowner-only representation", () => {
+  it("renders no contractor invoice statement", () => {
     render(<Practice />);
     expect(
-      screen.getByText(/We represent only the homeowner/)
+      screen.getByText(/We carry no hammers/)
     ).toBeInTheDocument();
   });
 });

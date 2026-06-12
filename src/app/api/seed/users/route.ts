@@ -2,9 +2,7 @@
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-
-const SEED_KEY = 'jr-seed-2026';
-const DEFAULT_PASSWORD = 'JR-test-2026!';
+import { isInternalSecretAuthorized } from '@/lib/internal-secret';
 
 type Role = 'admin' | 'manager' | 'contractor' | 'client';
 
@@ -149,8 +147,13 @@ export async function POST(req: NextRequest) {
   }
 
   const key = req.nextUrl.searchParams.get('key');
-  if (key !== SEED_KEY) {
+  if (!isInternalSecretAuthorized(key, process.env.SEED_USERS_SECRET)) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 401 });
+  }
+
+  const defaultPassword = process.env.SEED_USERS_DEFAULT_PASSWORD;
+  if (!defaultPassword) {
+    return NextResponse.json({ error: 'Seed user password not configured' }, { status: 503 });
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -185,7 +188,7 @@ export async function POST(req: NextRequest) {
           if (existing) {
             // Update existing user
             await sb.auth.admin.updateUserById(existing.id, {
-              password: DEFAULT_PASSWORD,
+              password: defaultPassword,
               user_metadata: { full_name: user.full_name, role: user.role },
             });
             await sb.from('profiles').upsert(
@@ -203,7 +206,7 @@ export async function POST(req: NextRequest) {
             // Create new user
             const { data, error } = await sb.auth.admin.createUser({
               email: user.email,
-              password: DEFAULT_PASSWORD,
+              password: defaultPassword,
               email_confirm: true,
               user_metadata: { full_name: user.full_name, role: user.role },
             });
@@ -239,14 +242,12 @@ export async function POST(req: NextRequest) {
       client: users.filter(u => u.role === 'client').length,
     },
     ...results,
-    password: DEFAULT_PASSWORD,
   });
 }
 
 export async function GET() {
   return NextResponse.json({
-    message: 'POST /api/seed/users?key=jr-seed-2026 to seed 100 test users',
+    message: 'POST /api/seed/users with configured internal secret to seed 100 test users',
     roles: ['admin (3)', 'manager (8)', 'contractor (25)', 'client (64)'],
-    password: 'All users get: JR-test-2026!',
   });
 }

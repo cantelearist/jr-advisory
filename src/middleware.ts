@@ -10,6 +10,7 @@
 
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
+import { privateSurfaceHeaders, withPrivateHeaders } from '@/lib/security-headers';
 
 /* Pages that don't require MFA verification */
 const MFA_EXEMPT_PATHS = [
@@ -31,114 +32,135 @@ function sanitizeRedirect(url: string | null, fallback: string): string {
 }
 
 export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const path = request.nextUrl.pathname;
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(
-          cookiesToSet: {
-            name: string;
-            value: string;
-            options?: Record<string, unknown>;
-          }[],
-        ) {
-          cookiesToSet.forEach(({ name, value }) =>
-            request.cookies.set(name, value),
-          );
-          response = NextResponse.next({ request });
-          cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options),
-          );
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('middleware.supabase_not_configured');
+    return new NextResponse('Private office is temporarily unavailable.', {
+      status: 503,
+      headers: Object.fromEntries(privateSurfaceHeaders.map(({ key, value }) => [key, value])),
+    });
+  }
+
+  const nextResponse = () => withPrivateHeaders(NextResponse.next({ request }));
+  const redirect = (url: URL) => withPrivateHeaders(NextResponse.redirect(url));
+
+  let response = nextResponse();
+
+  try {
+    const supabase = createServerClient(
+      supabaseUrl,
+      supabaseAnonKey,
+      {
+        cookies: {
+          getAll() {
+            return request.cookies.getAll();
+          },
+          setAll(
+            cookiesToSet: {
+              name: string;
+              value: string;
+              options?: Record<string, unknown>;
+            }[],
+          ) {
+            cookiesToSet.forEach(({ name, value }) =>
+              request.cookies.set(name, value),
+            );
+            response = nextResponse();
+            cookiesToSet.forEach(({ name, value, options }) =>
+              response.cookies.set(name, value, options),
+            );
+          },
         },
       },
-    },
-  );
+    );
 
-  // Refresh session (important — keeps the cookie alive)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+    // Refresh session (important — keeps the cookie alive)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  const path = request.nextUrl.pathname;
+    // ── Login page: redirect authenticated users to their home ──
+    if (path === '/portal' && user) {
+      const role = user.user_metadata?.role || 'client';
+      const isPrivileged = role === 'admin' || role === 'manager';
 
-  // ── Login page: redirect authenticated users to their home ──
-  if (path === '/portal' && user) {
-    const role = user.user_metadata?.role || 'client';
-    const isPrivileged = role === 'admin' || role === 'manager';
+      // If privileged and has MFA enrolled, check AAL
+      if (isPrivileged) {
+        const { data: aal } =
+          await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
 
-    // If privileged and has MFA enrolled, check AAL
-    if (isPrivileged) {
-      const { data: aal } =
-        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-
-      if (
-        aal?.currentLevel === 'aal1' &&
-        aal?.nextLevel === 'aal2'
-      ) {
-        // MFA enrolled but not yet verified this session — send to MFA page
-        const dest = role === 'admin' ? '/portal/admin' : '/portal/dashboard';
-        return NextResponse.redirect(
-          new URL(`/portal/mfa?redirect=${encodeURIComponent(dest)}`, request.url),
-        );
+        if (
+          aal?.currentLevel === 'aal1' &&
+          aal?.nextLevel === 'aal2'
+        ) {
+          // MFA enrolled but not yet verified this session — send to MFA page
+          const dest = role === 'admin' ? '/portal/admin' : '/portal/dashboard';
+          return redirect(
+            new URL(`/portal/mfa?redirect=${encodeURIComponent(dest)}`, request.url),
+          );
+        }
       }
+
+      const dest = isPrivileged ? '/portal/admin' : '/portal/dashboard';
+      return redirect(new URL(dest, request.url));
     }
 
-    const dest = isPrivileged ? '/portal/admin' : '/portal/dashboard';
-    return NextResponse.redirect(new URL(dest, request.url));
-  }
+    // ── Protected pages: require authentication ──
+    if (path.startsWith('/portal/') && !user) {
+      // Allow forgot-password and reset-password without auth
+      if (
+        path === '/portal/forgot-password' ||
+        path === '/portal/reset-password'
+      ) {
+        return response;
+      }
 
-  // ── Protected pages: require authentication ──
-  if (path.startsWith('/portal/') && !user) {
-    // Allow forgot-password and reset-password without auth
+      const loginUrl = new URL('/portal', request.url);
+      // Only pass sanitized path as redirect (path is always from nextUrl.pathname, which is safe)
+      loginUrl.searchParams.set('redirect', path);
+      return redirect(loginUrl);
+    }
+
+    // ── MFA enforcement for admin/manager — NO FAIL-OPEN ──
     if (
-      path === '/portal/forgot-password' ||
-      path === '/portal/reset-password'
+      user &&
+      path.startsWith('/portal/') &&
+      !MFA_EXEMPT_PATHS.includes(path)
     ) {
-      return response;
-    }
+      const role = user.user_metadata?.role || 'client';
+      const isPrivileged = role === 'admin' || role === 'manager';
 
-    const loginUrl = new URL('/portal', request.url);
-    // Only pass sanitized path as redirect (path is always from nextUrl.pathname, which is safe)
-    loginUrl.searchParams.set('redirect', path);
-    return NextResponse.redirect(loginUrl);
-  }
+      if (isPrivileged) {
+        const { data: aal } =
+          await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
 
-  // ── MFA enforcement for admin/manager — NO FAIL-OPEN ──
-  if (
-    user &&
-    path.startsWith('/portal/') &&
-    !MFA_EXEMPT_PATHS.includes(path)
-  ) {
-    const role = user.user_metadata?.role || 'client';
-    const isPrivileged = role === 'admin' || role === 'manager';
-
-    if (isPrivileged) {
-      const { data: aal } =
-        await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-
-      // If MFA is enrolled (nextLevel === 'aal2') but not verified (currentLevel !== 'aal2')
-      // → redirect to MFA verification. This is the no-fail-open gate.
-      if (
-        aal?.nextLevel === 'aal2' &&
-        aal?.currentLevel !== 'aal2'
-      ) {
-        return NextResponse.redirect(
-          new URL(
-            `/portal/mfa?redirect=${encodeURIComponent(path)}`,
-            request.url,
-          ),
-        );
+        // If MFA is enrolled (nextLevel === 'aal2') but not verified (currentLevel !== 'aal2')
+        // → redirect to MFA verification. This is the no-fail-open gate.
+        if (
+          aal?.nextLevel === 'aal2' &&
+          aal?.currentLevel !== 'aal2'
+        ) {
+          return redirect(
+            new URL(
+              `/portal/mfa?redirect=${encodeURIComponent(path)}`,
+              request.url,
+            ),
+          );
+        }
       }
     }
-  }
 
-  return response;
+    return response;
+  } catch (error) {
+    console.error('middleware.auth_failed', error);
+    return new NextResponse('Private office is temporarily unavailable.', {
+      status: 503,
+      headers: Object.fromEntries(privateSurfaceHeaders.map(({ key, value }) => [key, value])),
+    });
+  }
 }
 
 export const config = {

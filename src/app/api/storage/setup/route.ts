@@ -1,11 +1,10 @@
 /* ── Storage Setup — Create document bucket ── */
-/* POST /api/storage/setup?key=jr-storage-2026 */
+/* POST /api/storage/setup */
 
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { internalError } from '@/lib/api-error';
-
-const SETUP_KEY = 'jr-storage-2026';
+import { isInternalSecretAuthorized } from '@/lib/internal-secret';
 
 export async function POST(req: NextRequest) {
   /* Block in production */
@@ -14,7 +13,7 @@ export async function POST(req: NextRequest) {
   }
 
   const key = req.nextUrl.searchParams.get('key');
-  if (key !== SETUP_KEY) {
+  if (!isInternalSecretAuthorized(key, process.env.STORAGE_SETUP_SECRET)) {
     return NextResponse.json({ error: 'Invalid key' }, { status: 403 });
   }
 

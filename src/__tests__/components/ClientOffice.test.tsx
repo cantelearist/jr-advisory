@@ -8,41 +8,46 @@ describe("ClientOffice", () => {
     expect(screen.getByTestId("client-office")).toBeInTheDocument();
   });
 
-  it("renders the section number", () => {
+  it("renders the section label", () => {
+    render(<ClientOffice />);
+    expect(screen.getByText("Concierge Experience")).toBeInTheDocument();
+  });
+
+  it("renders the Private Office heading", () => {
+    render(<ClientOffice />);
+    const heading = screen.getByRole("heading", { level: 2 });
+    expect(heading.textContent).toMatch(/Private/);
+  });
+
+  it("renders 'Private' with accent shimmer in heading", () => {
+    render(<ClientOffice />);
+    const accent = screen.getByText("Private");
+    expect(accent).toBeInTheDocument();
+    expect(accent.classList.contains("accent-shimmer")).toBe(true);
+  });
+
+  it("renders the dedicated workspace description", () => {
     render(<ClientOffice />);
     expect(
-      screen.getByText("§ 07 — PRIVATE CLIENT OFFICE")
+      screen.getByText(/dedicated digital workspace/)
     ).toBeInTheDocument();
   });
 
-  it("renders 'By invitation only' heading", () => {
+  it("renders the access portal link", () => {
     render(<ClientOffice />);
-    expect(screen.getByText("By invitation")).toBeInTheDocument();
-    expect(screen.getByText("only.")).toBeInTheDocument();
+    const link = screen.getByText(/Access private office/);
+    expect(link).toBeInTheDocument();
+    expect(link.closest("a")?.getAttribute("href")).toBe("/portal");
   });
 
-  it("renders the client portal description", () => {
+  it("renders the Restricted portal badge", () => {
     render(<ClientOffice />);
-    expect(
-      screen.getByText(/dedicated, two-factor-secured project space/)
-    ).toBeInTheDocument();
+    expect(screen.getByText("Restricted")).toBeInTheDocument();
   });
 
-  it("renders the 'Enter Client Office' button", () => {
+  it("renders portal stat labels", () => {
     render(<ClientOffice />);
-    expect(screen.getByText("Enter Client Office")).toBeInTheDocument();
-  });
-
-  it("renders the 2FA required notice", () => {
-    render(<ClientOffice />);
-    expect(
-      screen.getByText("BY INVITATION ONLY · 2FA REQUIRED")
-    ).toBeInTheDocument();
-  });
-
-  it("has the gate decorative border", () => {
-    render(<ClientOffice />);
-    const gate = document.querySelector(".gate");
-    expect(gate).not.toBeNull();
+    expect(screen.getByText("Documents")).toBeInTheDocument();
+    expect(screen.getByText("Site visits")).toBeInTheDocument();
   });
 });
