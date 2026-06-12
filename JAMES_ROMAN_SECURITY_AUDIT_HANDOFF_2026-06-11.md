@@ -305,7 +305,7 @@ The local smoke server was stopped after testing.
 Automated preview smoke gate added:
 
 ```sh
-HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs https://jr-advisory-d414gyqut-roman-2757s-projects.vercel.app
+HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs <latest-jr-advisory-preview-url>
 ```
 
 The script reports eight checks individually:
@@ -329,12 +329,12 @@ The CORS rule is deliberately narrow:
 
 Any wildcard CORS result should be treated as P1 after deployment.
 
-Latest observed preview deployment status after pushing branch tip `2adbfdd`:
+Latest observed preview deployment status before this final handoff refresh:
 
 - `jr-advisory`: Ready preview at `https://jr-advisory-d414gyqut-roman-2757s-projects.vercel.app`
 - `jr-advisory-test`: Ready preview at `https://jr-advisory-test-7k92lzk6o-roman-2757s-projects.vercel.app`, but direct smoke is blocked by Vercel protection/SSO `401`
 
-Latest observed smoke result for `jr-advisory`, run without `HEALTHCHECK_SECRET` in the local runner:
+Latest observed smoke result shape for an app-accessible `jr-advisory` preview, run without `HEALTHCHECK_SECRET` in the local runner:
 
 ```txt
 PASS 1. Homepage returns 200 -- status=200
@@ -347,7 +347,7 @@ PASS 7. CORS has no wildcard and explicit origins are allowlisted -- allowed ori
 PASS 8. Sitemap legal routes are not advertised as redirects -- sitemap status=200; /terms: not advertised; /disclaimer: not advertised
 ```
 
-Interpretation: preview build/deploy is now healthy and CORS is no longer wildcard on the smoke-tested `jr-advisory` preview. Do not merge yet. Check 5 still needs a rerun with the preview `HEALTHCHECK_SECRET` after env vars are configured. Production remains untouched.
+Interpretation: preview build/deploy is now healthy and CORS is no longer wildcard on the smoke-tested `jr-advisory` preview. Do not merge yet. Check 5 still needs a rerun with the preview `HEALTHCHECK_SECRET` after env vars are configured. Use the latest Ready `jr-advisory` preview URL from Vercel/GitHub status, because documentation-only pushes create fresh preview URLs. Production remains untouched.
 
 ## Verification Not Clean
 
@@ -428,7 +428,7 @@ Recommended sequence:
 4. Verify staging/preview with the automated eight-check smoke gate:
 
    ```sh
-   HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs https://jr-advisory-d414gyqut-roman-2757s-projects.vercel.app
+   HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs <latest-jr-advisory-preview-url>
    ```
 
    The smoke gate must report each check individually. Wildcard CORS on representative surfaces is a hard failure. Explicit CORS is acceptable only for trusted origins.
@@ -489,7 +489,7 @@ npm audit --json
 ./node_modules/.bin/tsc --noEmit
 ./node_modules/.bin/eslint . --ignore-pattern '.next/**'
 ./node_modules/.bin/next build
-HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs https://jr-advisory-d414gyqut-roman-2757s-projects.vercel.app
+HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs <latest-jr-advisory-preview-url>
 ```
 
 Use direct binaries because the absolute path contains a colon.
