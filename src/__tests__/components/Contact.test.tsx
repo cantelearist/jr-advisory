@@ -10,7 +10,8 @@ describe("Contact", () => {
 
   it("renders the heading", () => {
     render(<Contact />);
-    expect(screen.getByRole("heading", { name: /Request a.*confidential.*consultation/s })).toBeInTheDocument();
+    const heading = screen.getByRole("heading");
+    expect(heading.textContent).toMatch(/Request a.*confidential.*consultation/);
   });
 
   it("renders 'confidential' with accent shimmer", () => {
