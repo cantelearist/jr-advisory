@@ -42,6 +42,14 @@ Patched repo:
 
 `/Users/romancantelearist/Documents/Codex:ChatGPT Projects/james-roman-advisory`
 
+Current branch and tested app-code state:
+
+- Branch: `security/audit-recovery-2026-06-11`
+- Includes handoff/smoke-gate commit: `78e9e21a910d89f27962ac0a4715714cd06be905`
+- Latest app-code commit smoke-tested here: `2adbfdd6ef24bc7d37a456ad76488e2e9837a2aa`
+- A later documentation-only handoff refresh may advance the branch SHA; confirm current remote tip with `git ls-remote origin refs/heads/security/audit-recovery-2026-06-11`.
+- Compare link: `https://github.com/cantelearist/jr-advisory/compare/main...security/audit-recovery-2026-06-11`
+
 Primary files changed:
 
 - `.env.example`
@@ -52,6 +60,8 @@ Primary files changed:
 - `src/lib/security-headers.ts`
 - `src/lib/internal-secret.ts`
 - `scripts/preview-smoke-gate.mjs`
+- `src/components/marketing/PageIntro.tsx`
+- `src/components/marketing/PageShell.tsx`
 - `src/__tests__/lib/security-headers.test.ts`
 - `src/__tests__/lib/internal-secret.test.ts`
 - `src/app/api/auth/create-test-users/route.ts`
@@ -66,7 +76,7 @@ Primary files changed:
 - `src/app/api/storage/setup/route.ts`
 - `src/app/portal/admin/page.tsx`
 
-There are also pre-existing untracked files in this repo, including `docs/`, several marketing pages, and marketing components. Do not assume those are part of this patch without reviewing `git status`.
+There are also pre-existing untracked files in this repo, including `docs/`, several marketing pages, and at least one marketing component. Do not assume those are part of this patch without reviewing `git status`.
 
 ## Security Fixes Applied
 
@@ -295,7 +305,7 @@ The local smoke server was stopped after testing.
 Automated preview smoke gate added:
 
 ```sh
-HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs https://james-roman-advisory-e8n0a45mn-roman-2757s-projects.vercel.app
+HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs https://jr-advisory-d414gyqut-roman-2757s-projects.vercel.app
 ```
 
 The script reports eight checks individually:
@@ -319,20 +329,25 @@ The CORS rule is deliberately narrow:
 
 Any wildcard CORS result should be treated as P1 after deployment.
 
-Latest observed preview smoke result after the smoke-gate update, run without `HEALTHCHECK_SECRET` in the local runner:
+Latest observed preview deployment status after pushing branch tip `2adbfdd`:
+
+- `jr-advisory`: Ready preview at `https://jr-advisory-d414gyqut-roman-2757s-projects.vercel.app`
+- `jr-advisory-test`: Ready preview at `https://jr-advisory-test-7k92lzk6o-roman-2757s-projects.vercel.app`, but direct smoke is blocked by Vercel protection/SSO `401`
+
+Latest observed smoke result for `jr-advisory`, run without `HEALTHCHECK_SECRET` in the local runner:
 
 ```txt
 PASS 1. Homepage returns 200 -- status=200
-PASS 2. Portal dashboard auth gate redirects or fails closed -- status=503 controlled-503-until-env-vars
-PASS 3. Portal has private cache/index headers -- cache-control=no-store, max-age=0 x-robots-tag=noindex, nofollow, noarchive
+PASS 2. Portal dashboard auth gate redirects or fails closed -- status=307 location=/portal?redirect=%2Fportal%2Fdashboard
+PASS 3. Portal has private cache/index headers -- cache-control=private, no-cache, no-store, max-age=0, must-revalidate x-robots-tag=noindex, nofollow, noarchive
 PASS 4. Production CSP is hardened -- CSP present, no unsafe-eval, includes upgrade-insecure-requests
 FAIL 5. Health secret reaches configured Supabase -- set HEALTHCHECK_SECRET before running this gate
 PASS 6. Old and anonymous health access are rejected -- old-key=status=401 anonymous=status=401 cache-control=no-store, max-age=0
-FAIL 7. CORS has no wildcard and explicit origins are allowlisted -- /: *
+PASS 7. CORS has no wildcard and explicit origins are allowlisted -- allowed origins: https://jr-advisory-d414gyqut-roman-2757s-projects.vercel.app, https://www.jamesroman.la, https://jamesroman.la
 PASS 8. Sitemap legal routes are not advertised as redirects -- sitemap status=200; /terms: not advertised; /disclaimer: not advertised
 ```
 
-Interpretation: preview is not ready to merge/deploy yet. Check 5 is expected to fail until the smoke gate is run with the preview `HEALTHCHECK_SECRET`. Check 7 is a real blocker on the tested preview: `/` still returns `Access-Control-Allow-Origin: *`. Redeploy after env vars and the `vercel.json` CORS mitigation are in the active preview, then rerun the current gate before approving merge or production.
+Interpretation: preview build/deploy is now healthy and CORS is no longer wildcard on the smoke-tested `jr-advisory` preview. Do not merge yet. Check 5 still needs a rerun with the preview `HEALTHCHECK_SECRET` after env vars are configured. Production remains untouched.
 
 ## Verification Not Clean
 
@@ -413,7 +428,7 @@ Recommended sequence:
 4. Verify staging/preview with the automated eight-check smoke gate:
 
    ```sh
-   HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs https://james-roman-advisory-e8n0a45mn-roman-2757s-projects.vercel.app
+   HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs https://jr-advisory-d414gyqut-roman-2757s-projects.vercel.app
    ```
 
    The smoke gate must report each check individually. Wildcard CORS on representative surfaces is a hard failure. Explicit CORS is acceptable only for trusted origins.
@@ -474,7 +489,7 @@ npm audit --json
 ./node_modules/.bin/tsc --noEmit
 ./node_modules/.bin/eslint . --ignore-pattern '.next/**'
 ./node_modules/.bin/next build
-HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs https://james-roman-advisory-e8n0a45mn-roman-2757s-projects.vercel.app
+HEALTHCHECK_SECRET=<preview-health-secret> node scripts/preview-smoke-gate.mjs https://jr-advisory-d414gyqut-roman-2757s-projects.vercel.app
 ```
 
 Use direct binaries because the absolute path contains a colon.
