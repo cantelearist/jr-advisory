@@ -1,7 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { render, screen } from "@testing-library/react";
 import { Hero } from "@/components/marketing/Hero";
-import { SERVICE_AREAS, FIRM_DESCRIPTION } from "@/lib/constants";
+import { SERVICE_AREAS } from "@/lib/constants";
 
 describe("Hero", () => {
   it("renders without crashing", () => {
@@ -9,27 +9,22 @@ describe("Hero", () => {
     expect(screen.getByTestId("hero")).toBeInTheDocument();
   });
 
-  it("renders the headline with 'Respond.'", () => {
+  it("renders the main headline", () => {
     render(<Hero />);
-    expect(screen.getByText(/Respond\./)).toBeInTheDocument();
+    expect(screen.getByText(/Protecting/)).toBeInTheDocument();
   });
 
-  it("renders 'Protect.' with accent shimmer", () => {
+  it("renders 'Home.' with accent shimmer", () => {
     render(<Hero />);
-    const accent = screen.getByText("Protect.");
+    const accent = screen.getByText("Home.");
     expect(accent).toBeInTheDocument();
     expect(accent.classList.contains("accent-shimmer")).toBe(true);
   });
 
-  it("renders 'Restore.'", () => {
-    render(<Hero />);
-    expect(screen.getByText(/Restore\./)).toBeInTheDocument();
-  });
-
-  it("renders the firm description", () => {
+  it("renders the owner-side advisory eyebrow", () => {
     render(<Hero />);
     expect(
-      screen.getByText(FIRM_DESCRIPTION)
+      screen.getByText(/Owner-side advisory/)
     ).toBeInTheDocument();
   });
 
@@ -42,27 +37,22 @@ describe("Hero", () => {
     });
   });
 
-  it("renders 'The Practice' CTA button", () => {
+  it("renders a link to the practice section", () => {
     render(<Hero />);
-    expect(screen.getByText("The Practice")).toBeInTheDocument();
+    const link = screen.getByText(/View practice/);
+    expect(link).toBeInTheDocument();
+    expect(link.closest("a")?.getAttribute("href")).toBe("#practice");
   });
 
-  it("renders 'Private Inquiry' link", () => {
+  it("renders the location description", () => {
     render(<Hero />);
-    expect(screen.getByText("Private Inquiry")).toBeInTheDocument();
+    expect(screen.getByText(/Los Angeles coastal estates/)).toBeInTheDocument();
   });
 
-  it("renders the MMXXVI eyebrow", () => {
-    render(<Hero />);
-    expect(
-      screen.getByText("Private Engagement · MMXXVI")
-    ).toBeInTheDocument();
-  });
-
-  it("includes parallax background wrapper", () => {
+  it("renders the hero background element", () => {
     render(<Hero />);
     const hero = screen.getByTestId("hero");
-    const parallaxBg = hero.querySelector(".hero-parallax-bg");
-    expect(parallaxBg).toBeInTheDocument();
+    const bg = hero.querySelector(".hero-bg");
+    expect(bg).toBeInTheDocument();
   });
 });

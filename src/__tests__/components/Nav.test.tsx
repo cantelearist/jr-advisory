@@ -22,9 +22,9 @@ describe("Nav", () => {
     expect(screen.getByAltText("James Roman Advisory")).toBeInTheDocument();
   });
 
-  it("renders the Private Inquiry CTA", () => {
+  it("renders the Book Inquiry CTA", () => {
     render(<Nav />);
-    const links = screen.getAllByText("Private Inquiry");
+    const links = screen.getAllByText(/Book Inquiry/);
     expect(links.length).toBeGreaterThanOrEqual(1);
   });
 

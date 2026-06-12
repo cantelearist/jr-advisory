@@ -10,27 +10,32 @@ describe("Contact", () => {
 
   it("renders the heading", () => {
     render(<Contact />);
-    expect(screen.getByText("Begin a private")).toBeInTheDocument();
-    expect(screen.getByText("consultation.")).toBeInTheDocument();
+    expect(screen.getByRole("heading", { name: /Request a.*confidential.*consultation/s })).toBeInTheDocument();
   });
 
-  it("renders phone number", () => {
+  it("renders 'confidential' with accent shimmer", () => {
     render(<Contact />);
-    expect(screen.getByText("+1 (310) 430-2500")).toBeInTheDocument();
+    const accent = screen.getByText("confidential");
+    expect(accent).toBeInTheDocument();
+    expect(accent.classList.contains("accent-shimmer")).toBe(true);
   });
 
-  it("renders email", () => {
+  it("renders the form submit button", () => {
     render(<Contact />);
-    expect(screen.getByText("roman@jamesroman.la")).toBeInTheDocument();
+    expect(screen.getByText(/Submit request/)).toBeInTheDocument();
   });
 
-  it("renders CTA button", () => {
+  it("renders the secure sharing note", () => {
     render(<Contact />);
-    expect(screen.getByText("Request a Private Consultation")).toBeInTheDocument();
+    expect(
+      screen.getByText(/Full document exchange/)
+    ).toBeInTheDocument();
   });
 
-  it("renders the legal disclaimer", () => {
+  it("renders the consultation form fields", () => {
     render(<Contact />);
-    expect(screen.getByText(/Submission does not create an advisory relationship/)).toBeInTheDocument();
+    expect(screen.getByText("Name")).toBeInTheDocument();
+    expect(screen.getByText("Email")).toBeInTheDocument();
+    expect(screen.getByText("Brief context")).toBeInTheDocument();
   });
 });

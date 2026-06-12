@@ -9,50 +9,46 @@ describe("Founders", () => {
     expect(screen.getByTestId("founders")).toBeInTheDocument();
   });
 
-  it("renders both founder names", () => {
+  it("renders the section label", () => {
     render(<Founders />);
-    expect(screen.getByText("Stephen")).toBeInTheDocument();
-    expect(screen.getByText("Roman")).toBeInTheDocument();
+    expect(screen.getByText("The Origin")).toBeInTheDocument();
   });
 
-  it("renders co-founder titles", () => {
+  it("renders the origin headline", () => {
     render(<Founders />);
-    const titles = screen.getAllByText("CO-FOUNDER");
-    expect(titles.length).toBe(2);
+    expect(screen.getByText(/Twice in thirty years/)).toBeInTheDocument();
   });
 
-  it("renders founder portrait images", () => {
+  it("renders the founders combined portrait image", () => {
     render(<Founders />);
-    const imgs = screen.getAllByRole("img");
-    expect(imgs.length).toBe(2);
-    expect(imgs[0].getAttribute("src")).toContain("stephen.png");
-    expect(imgs[1].getAttribute("src")).toContain("roman.png");
+    const img = screen.getByRole("img");
+    expect(img).toBeInTheDocument();
+    expect(img.getAttribute("src")).toContain("founders-malibu-beach");
   });
 
-  it("renders the section heading", () => {
+  it("renders the founders caption", () => {
     render(<Founders />);
-    expect(screen.getByText(/two locals/i)).toBeInTheDocument();
+    expect(screen.getByText(/Roman.*Stephen.*Malibu/)).toBeInTheDocument();
   });
 
-  it("renders the OUR POSITION credo", () => {
+  it("renders Stephen's story", () => {
     render(<Founders />);
-    expect(screen.getByText("OUR POSITION")).toBeInTheDocument();
     expect(
-      screen.getByText(/there is no exit interview/i)
+      screen.getByText(/Stephen was born in Malibu/)
     ).toBeInTheDocument();
   });
 
-  it("renders Stephen's quote", () => {
+  it("renders Roman's story", () => {
     render(<Founders />);
     expect(
-      screen.getByText(/I was born in Malibu/i)
+      screen.getByText(/Roman spent years overseeing construction/)
     ).toBeInTheDocument();
   });
 
-  it("renders Roman's quote", () => {
+  it("renders the firm founding context", () => {
     render(<Founders />);
     expect(
-      screen.getByText(/I arrived in Santa Monica/i)
+      screen.getByText(/James Roman Advisory exists because both of them needed it/)
     ).toBeInTheDocument();
   });
 });
