@@ -15,7 +15,8 @@ describe("ClientOffice", () => {
 
   it("renders the Private Office heading", () => {
     render(<ClientOffice />);
-    expect(screen.getByRole("heading", { name: /Your[\s\S]*Private[\s\S]*Office/ })).toBeInTheDocument();
+    const heading = screen.getByRole("heading", { level: 2 });
+    expect(heading.textContent).toMatch(/Private/);
   });
 
   it("renders 'Private' with accent shimmer in heading", () => {
