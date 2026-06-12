@@ -10,8 +10,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     { url: siteUrl, lastModified: now, changeFrequency: "monthly", priority: 1 },
     { url: `${siteUrl}/privacy`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${siteUrl}/cookies`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${siteUrl}/terms`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${siteUrl}/disclaimer`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${siteUrl}/accessibility`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
     { url: `${siteUrl}/nda`, lastModified: now, changeFrequency: "yearly", priority: 0.4 },
   ];
