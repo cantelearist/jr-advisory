@@ -17,15 +17,19 @@
   "dependencies": {
     "@supabase/ssr": "^0.6.1",
     "@supabase/supabase-js": "^2.49.1",
+    "@tailwindcss/postcss": "^4.3.1",
     "grapesjs": "^0.23.1",
     "grapesjs-preset-webpage": "^1.0.3",
+    "lucide-react": "^1.18.0",
+    "motion": "^12.40.0",
     "next": "15.5.19",
     "postgres": "^3.4.5",
     "react": "^19",
     "react-dom": "^19",
     "resend": "^4.0.0",
     "sanitize-html": "^2.17.5",
-    "stripe": "^17.7.0"
+    "stripe": "^17.7.0",
+    "tailwindcss": "^4.3.1"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",

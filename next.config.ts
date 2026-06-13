@@ -6,6 +6,7 @@ import {
 } from "./src/lib/security-headers";
 
 const nextConfig: NextConfig = {
+  outputFileTracingRoot: process.cwd(),
   poweredByHeader: false,
   reactStrictMode: true,
 

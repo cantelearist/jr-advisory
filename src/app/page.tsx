@@ -1,22 +1,4 @@
-"use client";
-
-import { useRef } from "react";
-import { useReveal } from "@/hooks/useReveal";
-import { useSmoothScroll } from "@/hooks/useSmoothScroll";
-import {
-  Nav,
-  Hero,
-  Practice,
-  Founders,
-  Cornerstone,
-  ClientOffice,
-  Contact,
-  SiteFooter,
-  CookieBanner,
-  ScrollProgress,
-  BackToTop,
-  ExperienceGlow,
-} from "@/components/marketing";
+import ApprovedHomepage from "@/components/homepage/ApprovedHomepage";
 
 const jsonLd = {
   "@context": "https://schema.org",
@@ -54,41 +36,13 @@ const jsonLd = {
 };
 
 export default function HomePage() {
-  const ref = useRef<HTMLDivElement>(null);
-  useReveal(ref);
-  useSmoothScroll();
-
   return (
-    <div
-      ref={ref}
-      style={{
-        background: "var(--bg)",
-        color: "var(--fg)",
-        minHeight: "100vh",
-      }}
-    >
+    <>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
-      {/* Skip to content — a11y */}
-      <a href="#practice" className="skip-to-content">
-        Skip to content
-      </a>
-      <ExperienceGlow />
-      <ScrollProgress />
-      <Nav />
-      <Hero />
-      <main id="main-content">
-        <Practice />
-        <Founders />
-        <Cornerstone />
-        <ClientOffice />
-        <Contact />
-      </main>
-      <SiteFooter />
-      <CookieBanner />
-      <BackToTop />
-    </div>
+      <ApprovedHomepage />
+    </>
   );
 }
