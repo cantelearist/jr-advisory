@@ -2,6 +2,65 @@
 
 ---
 
+## Release: Visual Baseline Restoration
+
+**Date:** 2026-06-12  
+**PR:** #15  
+**Branch merged:** `recovery/visual-baseline-to-main`  
+**Merge commit SHA:** `c8df46a`  
+**Restored visual commit SHA:** `d980a20` (cherry-picked from `a75897f`)  
+**Final deployment ID:** `jr-advisory-azqc5wuoi`  
+**Approved by:** Roman Cantelearist  
+**Gate result:** ✅ Production visual smoke passed
+
+### Scope
+
+- Restored public homepage visual baseline from the reference deployment
+- Limited change surface to global visual styling and marketing homepage components
+- No API, Supabase, middleware, security, or deployment configuration files touched
+- Production deployment triggered by merge to `main`
+
+### Changed Files
+
+- `src/app/globals.css`
+- `src/components/marketing/ClientOffice.tsx`
+- `src/components/marketing/Contact.tsx`
+- `src/components/marketing/Cornerstone.tsx`
+- `src/components/marketing/Founders.tsx`
+- `src/components/marketing/Hero.tsx`
+- `src/components/marketing/Practice.tsx`
+
+### Production Visual Smoke
+
+| Check | Result |
+|---|---|
+| Desktop render at 1440x1200 | ✅ PASS |
+| Mobile render at 390x844 | ✅ PASS |
+| Mobile after cookie accept | ✅ PASS |
+| No horizontal mobile overflow | ✅ PASS |
+| Hero title and advisory copy visible | ✅ PASS |
+| Next assets present | ✅ PASS |
+| Founders image direct asset and lazy-load behavior | ✅ PASS |
+
+### Domain Verification
+
+| Domain | Status | HTTP |
+|---|---|---|
+| `https://www.jamesroman.la` | ✅ Verified | 200 |
+| `https://jamesroman.la` | ✅ Verified | 200 |
+| `http://www.jamesroman.la` | ✅ HTTPS upgrade | 308 |
+| `http://jamesroman.la` | ✅ HTTPS upgrade | 308 |
+
+### Apex Note
+
+`https://jamesroman.la` currently serves `200` instead of redirecting to `https://www.jamesroman.la`. This is not urgent because both canonical and Open Graph metadata point to `https://www.jamesroman.la`, but a later P2 tidy-up should add an apex-to-www `308` redirect.
+
+### Freeze State
+
+Security recovery and visual restoration are complete. Production is live. Freeze restored.
+
+---
+
 ## Release: Security Audit Recovery
 
 **Date:** 2026-06-11  
