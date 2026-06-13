@@ -203,14 +203,14 @@ function PortalLogin() {
           ) : (
             <form onSubmit={handleLogin} className="portal-login__form">
               <div className="portal-login__field">
-                <label className="portal-login__label">Email</label>
+                <label className="portal-login__label">Email or username</label>
                 <input
-                  type="email"
+                  type="text"
                   className="portal-login__input"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  placeholder="your@email.com"
-                  autoComplete="email"
+                  placeholder="client@jamesroman.la or Client"
+                  autoComplete="username"
                 />
               </div>
               <div className="portal-login__field">
