@@ -1,3 +1,9 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-heading: var(--font-display);
+}
+
 /* James Roman Advisory — prototype: louder typography + portal design language */
 
 :root {
