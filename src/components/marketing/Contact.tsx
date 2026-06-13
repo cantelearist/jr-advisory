@@ -13,7 +13,7 @@ export function Contact() {
   };
 
   return (
-    <section id="contact" data-testid="contact" className="contact-section scroll-reveal">
+    <section id="contact" data-testid="contact" className="contact-section">
       <div className="page">
         <div className="contact-layout">
           {/* Left: heading + badges */}
