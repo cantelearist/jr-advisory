@@ -4,7 +4,7 @@ import { Resend } from 'resend';
 import { escapeHtml } from './sanitize';
 
 function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
+  const key = process.env.RESEND_API_KEY || process.env.resend;
   if (!key) return null;
   return new Resend(key);
 }
