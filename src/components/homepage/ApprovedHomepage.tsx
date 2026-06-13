@@ -64,14 +64,38 @@ function BrandLogo({ className = "", priority = false }: { className?: string; p
 }
 
 function ConsultationForm() {
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState<"idle" | "submitting" | "submitted" | "error">("idle");
+  const [message, setMessage] = useState("");
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSubmitted(true);
+    setStatus("submitting");
+    setMessage("");
+
+    const form = event.currentTarget;
+    const formData = new FormData(form);
+
+    try {
+      const response = await fetch("/api/consultations", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(Object.fromEntries(formData.entries())),
+      });
+
+      const body = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(typeof body.error === "string" ? body.error : "Request could not be submitted.");
+      }
+
+      form.reset();
+      setStatus("submitted");
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : "Request could not be submitted.");
+      setStatus("error");
+    }
   }
 
-  if (submitted) {
+  if (status === "submitted") {
     return (
       <div className="border-t pt-8" style={{ borderColor:"rgba(178,168,152,0.13)" }}>
         <h3 className="font-heading text-[1.8rem] font-light" style={{ color:CREAM }}>
@@ -86,6 +110,7 @@ function ConsultationForm() {
 
   return (
     <form onSubmit={onSubmit} className="grid gap-5">
+      <input name="company" type="text" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="grid gap-2">
           <label htmlFor="name" className="text-[0.72rem] uppercase tracking-[0.22em]" style={{ color:TITAN, opacity:0.8 }}>
@@ -122,11 +147,17 @@ function ConsultationForm() {
       </div>
       <button
         type="submit"
+        disabled={status === "submitting"}
         className="justify-self-start border px-8 py-3.5 text-[0.86rem] uppercase tracking-[0.2em] transition-opacity hover:opacity-90"
-        style={{ borderColor:GOLD, background:GOLD, color:"#06111f" }}
+        style={{ borderColor:GOLD, background:GOLD, color:"#06111f", opacity:status === "submitting" ? 0.64 : 1 }}
       >
-        Submit request
+        {status === "submitting" ? "Submitting..." : "Submit request"}
       </button>
+      {status === "error" ? (
+        <p className="max-w-xl text-[0.92rem] leading-relaxed" role="alert" style={{ color:TITAN, opacity:0.86 }}>
+          {message || "Request could not be submitted."} Please email roman@jamesroman.la directly if this persists.
+        </p>
+      ) : null}
     </form>
   );
 }

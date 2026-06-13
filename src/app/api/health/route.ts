@@ -63,9 +63,9 @@ function checkStripe(): ServiceStatus {
 }
 
 function checkResend(): ServiceStatus {
-  const key = process.env.RESEND_API_KEY;
+  const key = process.env.RESEND_API_KEY || process.env.resend;
   if (!key) return { status: 'unconfigured', detail: 'Missing RESEND_API_KEY' };
-  return { status: 'ok', detail: 'API key configured' };
+  return { status: 'ok', detail: process.env.RESEND_API_KEY ? 'API key configured' : 'API key configured via legacy resend env var' };
 }
 
 function checkEnvVars(): Record<string, boolean> {
@@ -75,7 +75,7 @@ function checkEnvVars(): Record<string, boolean> {
     SUPABASE_SERVICE_ROLE_KEY: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
     STRIPE_SECRET_KEY: !!process.env.STRIPE_SECRET_KEY,
     STRIPE_WEBHOOK_SECRET: !!process.env.STRIPE_WEBHOOK_SECRET,
-    RESEND_API_KEY: !!process.env.RESEND_API_KEY,
+    RESEND_API_KEY: !!(process.env.RESEND_API_KEY || process.env.resend),
     NEXT_PUBLIC_SITE_URL: !!process.env.NEXT_PUBLIC_SITE_URL,
     NOTIFICATION_FROM_EMAIL: !!process.env.NOTIFICATION_FROM_EMAIL,
     NOTIFICATION_SECRET: !!process.env.NOTIFICATION_SECRET,
