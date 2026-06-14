@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Client, Engagement, Invoice, Todo } from '@/lib/database.types';
 
@@ -181,6 +181,17 @@ export default function AdminOverview({
   const router = useRouter();
   const [newTitle, setNewTitle] = useState('');
   const [newPriority, setNewPriority] = useState<string>('normal');
+  const [lastSyncTime, setLastSyncTime] = useState('');
+
+  useEffect(() => {
+    const updateLastSyncTime = () => {
+      setLastSyncTime(new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+    };
+
+    updateLastSyncTime();
+    const interval = window.setInterval(updateLastSyncTime, 60000);
+    return () => window.clearInterval(interval);
+  }, []);
 
   // ── KPI Data ──
   const activeClients = clients.filter(c => c.status === 'active').length;
@@ -285,7 +296,7 @@ export default function AdminOverview({
           <span className="romer-status-bar__label">System Active</span>
         </div>
         <span className="romer-status-bar__time">
-          Last sync: <span>{new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}</span>
+          Last sync: <span data-testid="admin-last-sync-time">{lastSyncTime || '--:--'}</span>
         </span>
       </div>
 
