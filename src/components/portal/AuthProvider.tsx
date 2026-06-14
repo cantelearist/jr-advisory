@@ -44,7 +44,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile(prof);
 
       // If client role, fetch their client record
-      const role = prof?.role || u.user_metadata?.role || 'client';
+      const role = prof?.role || u.app_metadata?.role || 'client';
       if (role === 'client') {
         const { data: cli } = await supabase
           .from('clients')
@@ -108,8 +108,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isAdmin =
     profile?.role === 'admin' ||
     profile?.role === 'manager' ||
-    user?.user_metadata?.role === 'admin' ||
-    user?.user_metadata?.role === 'manager';
+    user?.app_metadata?.role === 'admin' ||
+    user?.app_metadata?.role === 'manager';
 
   return (
     <AuthCtx.Provider
