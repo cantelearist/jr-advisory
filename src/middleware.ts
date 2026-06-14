@@ -20,6 +20,8 @@ const MFA_EXEMPT_PATHS = [
   '/portal/reset-password',
 ];
 
+const PRIVILEGED_ROLES = new Set(['admin', 'manager']);
+
 /**
  * Sanitize a redirect URL — must be a relative path starting with /
  * and not a protocol-relative URL (//).
@@ -82,11 +84,23 @@ export async function middleware(request: NextRequest) {
       data: { user },
     } = await supabase.auth.getUser();
 
+    let role = 'client';
+    if (user) {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', user.id)
+        .maybeSingle();
+
+      role =
+        (typeof profile?.role === 'string' && profile.role) ||
+        (typeof user.app_metadata?.role === 'string' && user.app_metadata.role) ||
+        'client';
+    }
+    const isPrivileged = PRIVILEGED_ROLES.has(role);
+
     // ── Login page: redirect authenticated users to their home ──
     if (path === '/portal' && user) {
-      const role = user.user_metadata?.role || 'client';
-      const isPrivileged = role === 'admin' || role === 'manager';
-
       // If privileged and has MFA enrolled, check AAL
       if (isPrivileged) {
         const { data: aal } =
@@ -124,15 +138,17 @@ export async function middleware(request: NextRequest) {
       return redirect(loginUrl);
     }
 
+    // ── Admin pages: require a trusted admin/manager role before serving the shell ──
+    if (user && path.startsWith('/portal/admin') && !isPrivileged) {
+      return redirect(new URL('/portal/dashboard', request.url));
+    }
+
     // ── MFA enforcement for admin/manager — NO FAIL-OPEN ──
     if (
       user &&
       path.startsWith('/portal/') &&
       !MFA_EXEMPT_PATHS.includes(path)
     ) {
-      const role = user.user_metadata?.role || 'client';
-      const isPrivileged = role === 'admin' || role === 'manager';
-
       if (isPrivileged) {
         const { data: aal } =
           await supabase.auth.mfa.getAuthenticatorAssuranceLevel();

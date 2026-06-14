@@ -7,7 +7,7 @@ import { createServerClient } from '@supabase/ssr';
 import { createClient } from '@supabase/supabase-js';
 
 export interface AuthResult {
-  user: { id: string; email?: string; user_metadata?: Record<string, unknown> };
+  user: { id: string; email?: string; app_metadata?: Record<string, unknown>; user_metadata?: Record<string, unknown> };
   profile: { id: string; role: string; full_name?: string; email?: string } | null;
   isAdmin: boolean;
   /** Service-role Supabase client for DB operations (only use after auth is verified) */
@@ -91,8 +91,8 @@ export async function requireAuth(
   const isAdmin =
     profile?.role === 'admin' ||
     profile?.role === 'manager' ||
-    user.user_metadata?.role === 'admin' ||
-    user.user_metadata?.role === 'manager';
+    user.app_metadata?.role === 'admin' ||
+    user.app_metadata?.role === 'manager';
 
   // ── MFA enforcement for admin/manager on API routes ──
   // If user is privileged and has MFA enrolled, they must have aal2.
