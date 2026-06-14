@@ -3,7 +3,7 @@
  * POST /api/auth/magic-link { email }
  *
  * Wraps Supabase signInWithOtp with rate limiting so magic link sends
- * can't bypass server-side throttling. Anti-enumeration: always returns 200.
+ * can't bypass server-side throttling.
  * P3: Session & Token Security hardening.
  */
 
@@ -11,6 +11,15 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit';
+
+function isNonMemberOtpError(message: string): boolean {
+  const normalized = message.toLowerCase();
+  return normalized.includes('signups not allowed') || normalized.includes('user not found');
+}
+
+function callbackBaseUrl(req: NextRequest): string {
+  return (process.env.NEXT_PUBLIC_SITE_URL || req.nextUrl.origin).replace(/\/$/, '');
+}
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -38,25 +47,40 @@ export async function POST(req: NextRequest) {
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
-  if (!url || !serviceKey) {
+  if (!url || !anonKey) {
     return NextResponse.json({ error: 'Not configured' }, { status: 503 });
   }
 
-  const supabase = createClient(url, serviceKey, {
+  const supabase = createClient(url, anonKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Use admin API to generate and send the magic link
-  // This doesn't reveal if the user exists (anti-enumeration)
-  await supabase.auth.admin.generateLink({
-    type: 'magiclink',
+  const { error } = await supabase.auth.signInWithOtp({
     email: email.trim(),
     options: {
-      redirectTo: `${req.nextUrl.origin}/auth/callback`,
+      emailRedirectTo: `${callbackBaseUrl(req)}/auth/callback`,
+      shouldCreateUser: false,
     },
   });
+
+  if (error?.status === 429) {
+    return NextResponse.json(
+      { error: 'Too many login link requests. Please wait a few minutes and try again.' },
+      { status: 429 },
+    );
+  }
+
+  if (error && !isNonMemberOtpError(error.message)) {
+    logAudit({
+      action: AUDIT_ACTIONS.MAGIC_LINK_SENT,
+      entity_type: 'auth',
+      metadata: { email: email.trim(), error: error.message },
+      ip_address: ip,
+    });
+    return NextResponse.json({ error: 'Failed to send login link.' }, { status: 502 });
+  }
 
   logAudit({
     action: AUDIT_ACTIONS.MAGIC_LINK_SENT,
