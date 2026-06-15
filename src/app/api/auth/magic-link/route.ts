@@ -14,7 +14,12 @@ import { logAudit, AUDIT_ACTIONS } from '@/lib/audit';
 
 function isNonMemberOtpError(message: string): boolean {
   const normalized = message.toLowerCase();
-  return normalized.includes('signups not allowed') || normalized.includes('user not found');
+  return (
+    normalized.includes('signups not allowed') ||
+    normalized.includes('user not found') ||
+    normalized.includes('email_address_invalid') ||
+    normalized.includes('email address') && normalized.includes('invalid')
+  );
 }
 
 function callbackBaseUrl(req: NextRequest): string {
