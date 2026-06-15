@@ -88,4 +88,25 @@ describe('POST /api/auth/magic-link', () => {
       error: 'Too many login link requests. Please wait a few minutes and try again.',
     });
   });
+
+  it('does not expose invalid or non-member email classifications', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+    signInWithOtpMock.mockResolvedValueOnce({
+      data: null,
+      error: {
+        message: 'Email address "client@jamesroman.la" is invalid',
+        status: 400,
+        code: 'email_address_invalid',
+      },
+    });
+
+    const response = await POST(magicLinkRequest('client@jamesroman.la'));
+
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      success: true,
+      message: 'If an account exists with this email, a login link has been sent.',
+    });
+  });
 });
