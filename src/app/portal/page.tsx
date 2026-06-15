@@ -3,7 +3,6 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import dynamic from 'next/dynamic';
-import { getAuthClient } from '@/lib/supabase-browser';
 
 /** Sanitize redirect to prevent open-redirect attacks */
 function sanitizeRedirect(url: string | null, fallback: string): string {
@@ -26,7 +25,6 @@ export default function PortalLoginPage() {
 function PortalLogin() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [supabase] = useState(() => getAuthClient());
   const [phase, setPhase] = useState<'intro' | 'form' | 'entering'>('intro');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -64,9 +62,6 @@ function PortalLogin() {
         setLoading(false);
         return;
       }
-
-      // Server sets the session cookie — refresh client-side auth state
-      await supabase.auth.getSession();
 
       setPhase('entering');
       const { role, onboarded } = result.user;
