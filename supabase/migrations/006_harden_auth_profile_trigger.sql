@@ -11,13 +11,21 @@ LANGUAGE plpgsql
 SECURITY DEFINER
 SET search_path = public, auth
 AS $$
+DECLARE
+  requested_role text;
 BEGIN
+  requested_role := COALESCE(NEW.raw_user_meta_data->>'role', 'client');
+
   INSERT INTO public.profiles (id, full_name, email, role)
   VALUES (
     NEW.id,
     COALESCE(NEW.raw_user_meta_data->>'full_name', NEW.email),
     NEW.email,
-    COALESCE((NEW.raw_user_meta_data->>'role')::public.user_role, 'client'::public.user_role)
+    CASE
+      WHEN requested_role IN ('admin', 'client', 'manager', 'contractor')
+        THEN requested_role::public.user_role
+      ELSE 'client'::public.user_role
+    END
   )
   ON CONFLICT (id) DO UPDATE SET
     full_name = EXCLUDED.full_name,
