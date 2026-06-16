@@ -5,8 +5,8 @@ import { AuthProvider } from '@/components/portal/AuthProvider';
 export const dynamic = 'force-dynamic';
 
 export const metadata: Metadata = {
-  title: 'Client Office — James Roman Advisory',
-  description: 'Private client portal for engagement management.',
+  title: 'The Private Office — James Roman Advisory',
+  description: 'Restricted private office for active James Roman Advisory engagements.',
 };
 
 export default function PortalLayout({

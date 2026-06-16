@@ -23,7 +23,7 @@ describe("Contact", () => {
 
   it("renders the form submit button", () => {
     render(<Contact />);
-    expect(screen.getByText(/Submit request/)).toBeInTheDocument();
+    expect(screen.getByText(/Request consultation/)).toBeInTheDocument();
   });
 
   it("renders the secure sharing note", () => {
@@ -37,6 +37,7 @@ describe("Contact", () => {
     render(<Contact />);
     expect(screen.getByText("Name")).toBeInTheDocument();
     expect(screen.getByText("Email")).toBeInTheDocument();
+    expect(screen.getByText("Property location")).toBeInTheDocument();
     expect(screen.getByText("Brief context")).toBeInTheDocument();
   });
 });

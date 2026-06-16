@@ -66,14 +66,37 @@ function BrandLogo({ className = "", priority = false }: { className?: string; p
 function ConsultationForm() {
   const [status, setStatus] = useState<"idle" | "submitting" | "submitted" | "error">("idle");
   const [message, setMessage] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<{ name?: string; email?: string }>({});
+
+  function validate(formData: FormData) {
+    const name = String(formData.get("name") || "").trim();
+    const email = String(formData.get("email") || "").trim();
+    const nextErrors: { name?: string; email?: string } = {};
+
+    if (!name) nextErrors.name = "We'll need your name.";
+    if (!email) {
+      nextErrors.email = "An email so we can reach you.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      nextErrors.email = "That email looks off — worth a second glance.";
+    }
+
+    setFieldErrors(nextErrors);
+    return Object.keys(nextErrors).length === 0;
+  }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setStatus("submitting");
-    setMessage("");
 
     const form = event.currentTarget;
     const formData = new FormData(form);
+
+    setMessage("");
+    if (!validate(formData)) {
+      setStatus("idle");
+      return;
+    }
+
+    setStatus("submitting");
 
     try {
       const response = await fetch("/api/consultations", {
@@ -90,7 +113,7 @@ function ConsultationForm() {
       form.reset();
       setStatus("submitted");
     } catch (error) {
-      setMessage(error instanceof Error ? error.message : "Request could not be submitted.");
+      setMessage("That didn't go through, and it's on our end. Try again in a moment — we'll be here.");
       setStatus("error");
     }
   }
@@ -99,63 +122,70 @@ function ConsultationForm() {
     return (
       <div className="border-t pt-8" style={{ borderColor:"rgba(178,168,152,0.13)" }}>
         <h3 className="font-heading text-[1.8rem] font-light" style={{ color:CREAM }}>
-          Request received.
+          Received.
         </h3>
         <p className="mt-4 leading-[1.85]" style={{ color:TITAN, opacity:0.78, fontSize:BODY }}>
-          Thank you. The advisory team will review the inquiry privately and respond directly.
+          A founding partner reviews every inquiry personally — usually within two business days.
+          If it&apos;s a fit, we&apos;ll arrange a confidential consultation. If it isn&apos;t, we&apos;ll tell
+          you that quickly, and point you somewhere useful if we can.
+        </p>
+        <p className="mt-5 leading-[1.85]" style={{ color:TITAN, opacity:0.68, fontSize:BODY }}>
+          No need to send anything yet. Secure document exchange opens only once an engagement is accepted.
         </p>
       </div>
     );
   }
 
   return (
-    <form onSubmit={onSubmit} className="grid gap-5">
+    <form onSubmit={onSubmit} noValidate className="grid gap-5">
       <input name="company" type="text" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="grid gap-2">
           <label htmlFor="name" className="text-[0.72rem] uppercase tracking-[0.22em]" style={{ color:TITAN, opacity:0.8 }}>
             Name
           </label>
-          <input id="name" name="name" autoComplete="name" required className="h-12 border bg-transparent px-3 text-[1rem] outline-none" style={{ borderColor:"rgba(178,168,152,0.2)", color:CREAM }} />
+          <input id="name" name="name" autoComplete="name" aria-invalid={fieldErrors.name ? "true" : "false"} className="h-12 border bg-transparent px-3 text-[1rem] outline-none focus-visible:ring-1 focus-visible:ring-[#c9b58a]" style={{ borderColor:fieldErrors.name ? "rgba(239,68,68,0.55)" : "rgba(178,168,152,0.2)", color:CREAM }} />
+          {fieldErrors.name ? <p className="text-[0.82rem]" role="alert" style={{ color:TITAN, opacity:0.84 }}>{fieldErrors.name}</p> : null}
         </div>
         <div className="grid gap-2">
           <label htmlFor="email" className="text-[0.72rem] uppercase tracking-[0.22em]" style={{ color:TITAN, opacity:0.8 }}>
             Email
           </label>
-          <input id="email" name="email" type="email" autoComplete="email" required className="h-12 border bg-transparent px-3 text-[1rem] outline-none" style={{ borderColor:"rgba(178,168,152,0.2)", color:CREAM }} />
+          <input id="email" name="email" type="email" autoComplete="email" aria-invalid={fieldErrors.email ? "true" : "false"} className="h-12 border bg-transparent px-3 text-[1rem] outline-none focus-visible:ring-1 focus-visible:ring-[#c9b58a]" style={{ borderColor:fieldErrors.email ? "rgba(239,68,68,0.55)" : "rgba(178,168,152,0.2)", color:CREAM }} />
+          {fieldErrors.email ? <p className="text-[0.82rem]" role="alert" style={{ color:TITAN, opacity:0.84 }}>{fieldErrors.email}</p> : null}
         </div>
       </div>
       <div className="grid gap-5 sm:grid-cols-2">
         <div className="grid gap-2">
           <label htmlFor="market" className="text-[0.72rem] uppercase tracking-[0.22em]" style={{ color:TITAN, opacity:0.8 }}>
-            Primary market
+            Property location
           </label>
-          <input id="market" name="market" placeholder="Malibu, Bel Air, Beverly Hills..." className="h-12 border bg-transparent px-3 text-[1rem] outline-none placeholder:text-[#b2a898]/35" style={{ borderColor:"rgba(178,168,152,0.2)", color:CREAM }} />
+          <input id="market" name="market" placeholder="Malibu, Bel Air, Beverly Hills..." className="h-12 border bg-transparent px-3 text-[1rem] outline-none placeholder:text-[#b2a898]/35 focus-visible:ring-1 focus-visible:ring-[#c9b58a]" style={{ borderColor:"rgba(178,168,152,0.2)", color:CREAM }} />
         </div>
         <div className="grid gap-2">
           <label htmlFor="matter" className="text-[0.72rem] uppercase tracking-[0.22em]" style={{ color:TITAN, opacity:0.8 }}>
             Matter type
           </label>
-          <input id="matter" name="matter" placeholder="Remediation, structural, diligence..." className="h-12 border bg-transparent px-3 text-[1rem] outline-none placeholder:text-[#b2a898]/35" style={{ borderColor:"rgba(178,168,152,0.2)", color:CREAM }} />
+          <input id="matter" name="matter" placeholder="Remediation, structural, diligence..." className="h-12 border bg-transparent px-3 text-[1rem] outline-none placeholder:text-[#b2a898]/35 focus-visible:ring-1 focus-visible:ring-[#c9b58a]" style={{ borderColor:"rgba(178,168,152,0.2)", color:CREAM }} />
         </div>
       </div>
       <div className="grid gap-2">
         <label htmlFor="message" className="text-[0.72rem] uppercase tracking-[0.22em]" style={{ color:TITAN, opacity:0.8 }}>
           Brief context
         </label>
-        <textarea id="message" name="message" rows={5} required className="resize-y border bg-transparent px-3 py-3 text-[1rem] leading-relaxed outline-none" style={{ borderColor:"rgba(178,168,152,0.2)", color:CREAM }} />
+        <textarea id="message" name="message" rows={5} required className="resize-y border bg-transparent px-3 py-3 text-[1rem] leading-relaxed outline-none focus-visible:ring-1 focus-visible:ring-[#c9b58a]" style={{ borderColor:"rgba(178,168,152,0.2)", color:CREAM }} />
       </div>
       <button
         type="submit"
         disabled={status === "submitting"}
-        className="justify-self-start border px-8 py-3.5 text-[0.86rem] uppercase tracking-[0.2em] transition-opacity hover:opacity-90"
+        className="min-h-11 w-full justify-self-start border px-8 py-3.5 text-[0.86rem] uppercase tracking-[0.2em] transition-opacity hover:opacity-90 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-[#c9b58a] sm:w-auto"
         style={{ borderColor:GOLD, background:GOLD, color:"#06111f", opacity:status === "submitting" ? 0.64 : 1 }}
       >
-        {status === "submitting" ? "Submitting..." : "Submit request"}
+        {status === "submitting" ? "Sending…" : "Request consultation"}
       </button>
       {status === "error" ? (
         <p className="max-w-xl text-[0.92rem] leading-relaxed" role="alert" style={{ color:TITAN, opacity:0.86 }}>
-          {message || "Request could not be submitted."} Please email roman@jamesroman.la directly if this persists.
+          {message}
         </p>
       ) : null}
     </form>
@@ -256,103 +286,6 @@ function ParallaxImg({ src, alt, speed=0.14, className="", imageClassName }: {
           sizes="(min-width: 1024px) 50vw, 100vw"
         />
       </motion.div>
-    </div>
-  );
-}
-
-// ─── Animated counter ────────────────────────────────────────────────────────
-function Counter({ value, suffix="" }: { value:number; suffix?:string }) {
-  const ref = useRef<HTMLSpanElement>(null);
-  const inView = useInView(ref, { once:true });
-  const [n, setN] = useState(0);
-  useEffect(() => {
-    if (!inView) return;
-    let s = 0;
-    const dur = 1400;
-    const step = (ts:number) => {
-      if (!s) s = ts;
-      const p = Math.min((ts-s)/dur,1);
-      setN(Math.round((1-Math.pow(1-p,3))*value));
-      if (p < 1) requestAnimationFrame(step);
-    };
-    requestAnimationFrame(step);
-  }, [inView, value]);
-  return <span ref={ref}>{n}{suffix}</span>;
-}
-
-// ─── Mini bar chart ───────────────────────────────────────────────────────────
-function BarChart() {
-  const ref = useRef<SVGSVGElement>(null);
-  const inView = useInView(ref, { once:true });
-  const bars = [55,78,42,95,68,82,51];
-  const W=148, H=52, bW=14, g=6;
-  return (
-    <svg ref={ref} width={W} height={H+16} className="overflow-visible">
-      {bars.map((v,i) => {
-        const bh=(v/100)*H, x=i*(bW+g);
-        return <g key={i}>
-          <motion.rect x={x} width={bW} rx={2}
-            style={{ fill: i===3 ? GOLD : `rgba(201,181,138,0.25)` }}
-            initial={{ height:0, y:H }} animate={inView ? { height:bh, y:H-bh } : {}}
-            transition={{ duration:1.0, delay:0.3+i*0.07, ease:EASE }} />
-          <text x={x+bW/2} y={H+12} textAnchor="middle"
-            style={{ fontSize:7, fill:TITAN, opacity:0.5, fontFamily:"inherit" }}>
-            {"MTWTFSS"[i]}
-          </text>
-        </g>;
-      })}
-    </svg>
-  );
-}
-
-// ─── Mini line chart ─────────────────────────────────────────────────────────
-function LineChart() {
-  const ref = useRef<SVGSVGElement>(null);
-  const inView = useInView(ref, { once:true });
-  const pts = [0.82,0.65,0.48,0.38,0.30,0.26,0.22,0.20,0.17,0.14,0.12,0.10];
-  const W=164, H=44;
-  const d = pts.map((v,i) => `${i===0?"M":"L"} ${(i/(pts.length-1))*W} ${v*H}`).join(" ");
-  const area = d + ` L ${W} ${H} L 0 ${H} Z`;
-  return (
-    <svg ref={ref} width={W} height={H} className="overflow-visible">
-      <defs>
-        <linearGradient id="lg" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={GOLD} stopOpacity={0.28}/>
-          <stop offset="100%" stopColor={GOLD} stopOpacity={0.02}/>
-        </linearGradient>
-      </defs>
-      <motion.path d={area} fill="url(#lg)" initial={{ opacity:0 }}
-        animate={inView ? { opacity:1 } : {}} transition={{ duration:1.2, delay:0.6, ease:EASE }} />
-      <motion.path d={d} fill="none" stroke={GOLD} strokeWidth={1.5} strokeLinecap="round"
-        initial={{ pathLength:0, opacity:0 }}
-        animate={inView ? { pathLength:1, opacity:0.75 } : {}}
-        transition={{ duration:2.0, delay:0.4, ease:EASE }} />
-      <motion.circle cx={W} cy={pts[pts.length-1]*H} r={3.5} fill={GOLD}
-        initial={{ scale:0 }} animate={inView ? { scale:1 } : {}}
-        transition={{ duration:0.4, delay:2.3, ease:[0.34,1.56,0.64,1] }} />
-    </svg>
-  );
-}
-
-// ─── Portal progress bar ─────────────────────────────────────────────────────
-function PortalProgressBar({ label, detail, delay=0 }: {
-  label:string; detail:string; delay?:number;
-}) {
-  const reduced = useHydratedReducedMotion();
-  return (
-    <div className="mb-4">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[0.72rem]" style={{ color:TITAN, opacity:0.55 }}>{label}</span>
-        <span className="text-[0.7rem]" style={{ color:GOLD, opacity:0.65 }}>{detail}</span>
-      </div>
-      <div className="h-px relative overflow-hidden" style={{ background:"rgba(201,181,138,0.07)" }}>
-        <motion.div className="absolute inset-y-0 left-0 origin-left"
-          style={{ background:"linear-gradient(to right,rgba(201,181,138,0.25),rgba(201,181,138,0.72))" }}
-          initial={reduced ? { scaleX:1 } : { scaleX:0 }}
-          whileInView={{ scaleX:1 }}
-          viewport={{ once:true, margin:"-8% 0px" }}
-          transition={{ duration:1.35, delay, ease:EASE }} />
-      </div>
     </div>
   );
 }
@@ -498,7 +431,7 @@ export default function Prototype() {
           <Link href={contactPath} data-cursor="inquire"
             className="hidden md:flex items-center gap-2 text-[0.86rem] uppercase tracking-[0.2em] hover:opacity-100 transition-opacity duration-400"
             style={{ color:GOLD, opacity:0.85 }}>
-            Book inquiry <ArrowRight className="size-3.5" />
+            Inquire <ArrowRight className="size-3.5" />
           </Link>
         </motion.header>
 
@@ -632,7 +565,7 @@ export default function Prototype() {
               <Link href={contactPath} data-cursor="inquire"
                 className="inline-flex items-center gap-2 text-[0.76rem] uppercase tracking-[0.24em] hover:opacity-100 transition-opacity duration-400"
                 style={{ color:GOLD, opacity:0.6 }}>
-                Book a private consultation <ArrowRight className="size-3" />
+                Request a private consultation <ArrowRight className="size-3" />
               </Link>
             </Fade>
           </div>
@@ -717,7 +650,7 @@ export default function Prototype() {
             <div>
               <Fade>
                 <p className="text-[0.78rem] uppercase tracking-[0.34em] mb-7"
-                  style={{ color:TITAN, opacity:0.82 }}>Concierge Experience</p>
+                  style={{ color:TITAN, opacity:0.82 }}>The Private Office</p>
               </Fade>
               <RichH baseDelay={0.1} className="mb-10"
                 lines={[
@@ -732,14 +665,14 @@ export default function Prototype() {
               </Fade>
               <Fade delay={0.65}>
                 <Link href="/portal" data-cursor="view"
-                  className="inline-flex items-center gap-3 border px-8 py-3.5 text-[0.86rem] uppercase tracking-[0.2em] hover:opacity-100 transition-opacity duration-400"
+                  className="inline-flex min-h-11 w-full items-center justify-center gap-3 border px-8 py-3.5 text-[0.86rem] uppercase tracking-[0.2em] hover:opacity-100 transition-opacity duration-400 focus-visible:outline focus-visible:outline-1 focus-visible:outline-offset-4 focus-visible:outline-[#c9b58a] sm:w-auto"
                   style={{ borderColor:"rgba(201,181,138,0.22)", color:GOLD, opacity:0.82 }}>
                   Access private office <ArrowRight className="size-3" />
                 </Link>
               </Fade>
             </div>
 
-            <motion.div data-portal-panel className="w-full max-w-[420px] mx-auto border backdrop-blur-sm p-5 aspect-[3/4] min-h-0 overflow-hidden flex flex-col"
+            <motion.div data-portal-panel className="w-full max-w-[420px] mx-auto border backdrop-blur-sm p-5 min-h-[560px] overflow-hidden flex flex-col"
               style={{ borderColor:"rgba(201,181,138,0.14)", background:"rgba(6,10,16,0.84)", boxShadow:"0 28px 80px rgba(0,0,0,0.38)" }}
               initial={{ opacity:0, x:50 }}
               whileInView={{ opacity:1, x:0 }}
@@ -749,56 +682,63 @@ export default function Prototype() {
               <div className="flex items-start justify-between pb-4 mb-4"
                 style={{ borderBottom:"1px solid rgba(201,181,138,0.08)" }}>
                 <div>
-                  <p className="text-[0.58rem] uppercase tracking-[0.24em] mb-2" style={{ color:GOLD, opacity:0.56 }}>Client portal</p>
+                  <p className="text-[0.58rem] uppercase tracking-[0.24em] mb-2" style={{ color:GOLD, opacity:0.56 }}>The Private Office</p>
                   <p className="font-heading text-[1.1rem] font-light" style={{ color:CREAM }}>Engagement file</p>
-                  <p className="text-[0.74rem] mt-1" style={{ color:TITAN, opacity:0.48 }}>Broad Beach Rd · Active · Week 7</p>
+                  <p className="text-[0.74rem] mt-1" style={{ color:TITAN, opacity:0.48 }}>Malibu estate · Active · Week 7</p>
                 </div>
-                <span className="text-[0.54rem] uppercase tracking-widest border px-2 py-1"
-                  style={{ borderColor:"rgba(201,181,138,0.15)", color:GOLD, opacity:0.6 }}>Restricted</span>
+                <div className="flex flex-col items-end gap-1.5">
+                  <span className="text-[0.54rem] uppercase tracking-widest border px-2 py-1"
+                    style={{ borderColor:"rgba(201,181,138,0.15)", color:GOLD, opacity:0.7 }}>Sample engagement</span>
+                  <span className="text-[0.54rem] uppercase tracking-widest border px-2 py-1"
+                    style={{ borderColor:"rgba(178,168,152,0.12)", color:TITAN, opacity:0.46 }}>Restricted access</span>
+                </div>
               </div>
 
-              <div className="grid grid-cols-3 gap-3 mb-4 pb-4"
+              <div className="grid grid-cols-2 min-[421px]:grid-cols-3 gap-3 mb-4 pb-4"
                 style={{ borderBottom:"1px solid rgba(201,181,138,0.07)" }}>
-                {[{l:"Progress",v:100,s:"%"},{l:"Documents",v:28,s:""},{l:"Site visits",v:14,s:""}].map(({ l,v,s }) => (
-                  <div key={l} className="text-center">
+                {[{l:"Progress",v:64,s:"%"},{l:"Documents logged",v:24,s:""},{l:"Site visits",v:9,s:""}].map(({ l,v,s }, index) => (
+                  <div key={l} className={`text-center ${index === 2 ? "max-[420px]:col-span-2" : ""}`}>
                     <p className="font-heading text-[1.46rem] font-light" style={{ color:GOLD }}>
-                      <Counter value={v} suffix={s} />
+                      {v}{s ? <span>{s}</span> : null}
                     </p>
                     <p className="text-[0.62rem] uppercase tracking-[0.2em] mt-1" style={{ color:TITAN, opacity:0.42 }}>{l}</p>
                   </div>
                 ))}
               </div>
 
-              <PortalProgressBar label="Evidence review" detail="100%" delay={0.15} />
-              <PortalProgressBar label="Document custody" detail="100%" delay={0.28} />
-              <PortalProgressBar label="Client clearance" detail="100%" delay={0.41} />
-
-              <div className="grid grid-cols-2 gap-4 pt-4 pb-4 mt-auto mb-4"
-                style={{ borderTop:"1px solid rgba(201,181,138,0.07)", borderBottom:"1px solid rgba(201,181,138,0.07)" }}>
-                <div>
-                  <p className="text-[0.62rem] uppercase tracking-[0.2em] mb-3" style={{ color:TITAN, opacity:0.4 }}>Weekly activity</p>
-                  <BarChart />
-                </div>
-                <div>
-                  <p className="text-[0.62rem] uppercase tracking-[0.2em] mb-3" style={{ color:TITAN, opacity:0.4 }}>Air quality mg/m³</p>
-                  <LineChart />
-                  <p className="text-[0.62rem] mt-2" style={{ color:GOLD, opacity:0.55 }}>0.003 — Below EPA threshold</p>
-                </div>
-              </div>
-
               <div className="space-y-2">
                 {[
-                  {l:"Safety compliance", v:"All staff cleared",         ok:true },
-                  {l:"Permit status",     v:"Active · AQMD #2024-MB-7743",  ok:true },
-                  {l:"Next inspection",   v:"Jun 8 · Coastal Commission",   ok:false},
-                ].map(({ l,v,ok }) => (
-                  <div key={l} className="flex items-center gap-3">
-                    <span className="size-1.5 rounded-full flex-shrink-0"
-                      style={{ background: ok ? "#4ade8072" : `${GOLD}66` }} />
-                    <span className="text-[0.72rem]" style={{ color:TITAN, opacity:0.5 }}>{l}</span>
-                    <span className="ml-auto text-[0.72rem]" style={{ color:TITAN, opacity:0.66 }}>{v}</span>
+                  ["Chain of custody", "Intact"],
+                  ["Evidence review", "Current"],
+                  ["Client sign-offs", "Current"],
+                ].map(([label, detail]) => (
+                  <div key={label} className="flex items-center gap-3 py-1.5">
+                    <span className="text-[0.72rem]" style={{ color:TITAN, opacity:0.5 }}>{label}</span>
+                    <span className="ml-auto text-[0.72rem] uppercase tracking-[0.16em]" style={{ color:GOLD, opacity:0.72 }}>{detail}</span>
                   </div>
                 ))}
+              </div>
+
+              <div className="grid min-[561px]:grid-cols-2 gap-4 pt-4 pb-4 mt-auto mb-4"
+                style={{ borderTop:"1px solid rgba(201,181,138,0.07)", borderBottom:"1px solid rgba(201,181,138,0.07)" }}>
+                <div className="border p-3" style={{ borderColor:"rgba(201,181,138,0.1)", background:"rgba(201,181,138,0.025)" }}>
+                  <p className="text-[0.62rem] uppercase tracking-[0.2em] mb-2" style={{ color:TITAN, opacity:0.42 }}>Airborne asbestos</p>
+                  <p className="font-mono text-[1.18rem] leading-none whitespace-nowrap" style={{ color:CREAM, fontVariantNumeric:"tabular-nums" }}>0.008 f/cc</p>
+                  <p className="text-[0.62rem] mt-2" style={{ color:GOLD, opacity:0.65 }}>Below the 0.01 f/cc clearance limit</p>
+                  <p className="text-[0.56rem] uppercase tracking-[0.18em] mt-1" style={{ color:TITAN, opacity:0.38 }}>independent PCM</p>
+                </div>
+                <div className="space-y-2">
+                  {[
+                    ["Site safety", "All personnel cleared"],
+                    ["Asbestos notification", "SCAQMD Rule 1403 · filed · #····7743"],
+                    ["Next milestone", "Independent clearance test · Week 8"],
+                  ].map(([label, value]) => (
+                    <div key={label}>
+                      <p className="text-[0.58rem] uppercase tracking-[0.18em]" style={{ color:TITAN, opacity:0.36 }}>{label}</p>
+                      <p className="text-[0.68rem] leading-snug" style={{ color:TITAN, opacity:0.66 }}>{value}</p>
+                    </div>
+                  ))}
+                </div>
               </div>
             </motion.div>
           </div>
@@ -823,7 +763,7 @@ export default function Prototype() {
                   accepted and secure client access is issued.
                 </p>
                 <div className="flex flex-wrap gap-2.5">
-                  {["CCPA/CPRA aware","WCAG 2.2 AA target","No portal trackers"].map((l) => (
+                  {["No portal trackers"].map((l) => (
                     <span key={l} className="text-[0.72rem] uppercase tracking-widest border px-2.5 py-1"
                       style={{ borderColor:"rgba(178,168,152,0.14)", color:TITAN, opacity:0.55 }}>{l}</span>
                   ))}
@@ -850,7 +790,7 @@ export default function Prototype() {
               <BrandLogo className="h-9 opacity-55" />
               <div>
                 <p className="text-[0.84rem]" style={{ color:TITAN, opacity:0.46 }}>© 2026 James Roman Advisory LLC</p>
-                <p className="text-[0.72rem] mt-0.5" style={{ color:TITAN, opacity:0.3 }}>Malibu, California · Fully Certified · Privacy Guaranteed</p>
+                <p className="text-[0.72rem] mt-0.5" style={{ color:TITAN, opacity:0.3 }}>Malibu, California · NDA-protected engagements</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-x-8 gap-y-3 text-[0.82rem] uppercase tracking-[0.18em]"

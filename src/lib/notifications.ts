@@ -126,17 +126,17 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
   }),
 
   welcome: (data) => ({
-    subject: 'Welcome to Your Client Portal — James Roman Advisory',
+    subject: 'Welcome to The Private Office — James Roman Advisory',
     html: baseTemplate(`
       <h2>Welcome</h2>
       <p>Hello ${escapeHtml(data.recipientName)},</p>
-      <p>Your secure client portal is now active. From here you can access documents, view your engagement timeline, and communicate directly with your advisory team.</p>
+      <p>Your Private Office is now active. From here you can access documents, view your engagement timeline, and communicate directly with your advisory team.</p>
       <div class="highlight">
-        <div class="label">Your Portal</div>
+        <div class="label">The Private Office</div>
         <p>Login: ${escapeHtml(data.email)}</p>
         <p style="color: #888; margin-top: 4px;">Use the magic link sent to your email to sign in.</p>
       </div>
-      <a href="${SITE_URL}/portal" class="btn">Access Portal</a>
+      <a href="${SITE_URL}/portal" class="btn">Access Private Office</a>
     `),
   }),
 };
