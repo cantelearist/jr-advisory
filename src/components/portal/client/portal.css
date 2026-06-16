@@ -48,9 +48,18 @@
 .portal-skeleton__label {
   font-family: var(--portal-font-mono);
   font-size: 10px;
-  letter-spacing: 0.4em;
+  letter-spacing: 0.28em;
   color: var(--portal-accent-dim);
   text-transform: uppercase;
+  text-align: center;
+}
+
+.portal-skeleton__sublabel {
+  font-family: var(--portal-font-sans);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--portal-text-dim);
+  margin-top: -10px;
 }
 
 .portal-skeleton__bar {
@@ -77,6 +86,14 @@
 @keyframes skeletonSlide {
   0% { left: -40%; }
   100% { left: 100%; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .portal-skeleton__bar::after {
+    animation: none;
+    left: 0;
+    width: 100%;
+  }
 }
 
 /* ── Search Bar ── */

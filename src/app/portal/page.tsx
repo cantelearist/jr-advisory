@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Link from 'next/link';
 import dynamic from 'next/dynamic';
 
 /** Sanitize redirect to prevent open-redirect attacks */
@@ -30,15 +31,23 @@ function PortalLogin() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [magicLinkSent, setMagicLinkSent] = useState(false);
+  const [linkExpired, setLinkExpired] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [showMagicLink, setShowMagicLink] = useState(false);
+  const [showMagicLink, setShowMagicLink] = useState(true);
   const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setPhase('form'), 2200);
-    // Check for auth errors in URL
     const err = searchParams.get('error');
-    if (err) setError('Authentication failed. Please try again.');
+    const mode = searchParams.get('mode');
+
+    if (mode === 'password') setShowMagicLink(false);
+    if (err) {
+      setShowMagicLink(true);
+      setLinkExpired(true);
+      setMagicLinkSent(false);
+    }
+
     return () => clearTimeout(timer);
   }, [searchParams]);
 
@@ -84,10 +93,11 @@ function PortalLogin() {
 
   const handleMagicLink = async () => {
     if (!email.trim()) {
-      setError('Enter your email address.');
+      setError('An email so we can reach you.');
       return;
     }
     setError('');
+    setLinkExpired(false);
     setLoading(true);
 
     try {
@@ -101,7 +111,7 @@ function PortalLogin() {
       const result = await res.json();
 
       if (!res.ok) {
-        setError(result.error || 'Failed to send login link.');
+        setError(result.error || "That didn't go through, and it's on our end. Try again in a moment — we'll be here.");
         setLoading(false);
         return;
       }
@@ -109,7 +119,7 @@ function PortalLogin() {
       setMagicLinkSent(true);
       setLoading(false);
     } catch {
-      setError('Failed to send login link.');
+      setError("That didn't go through, and it's on our end. Try again in a moment — we'll be here.");
       setLoading(false);
     }
   };
@@ -129,13 +139,13 @@ function PortalLogin() {
 
         {/* Title */}
         <h1 className={`portal-login__title ${phase === 'entering' ? 'portal-login__title--exit' : ''}`}>
-          <span className="portal-login__title-line portal-login__title-line--1">YOUR</span>
+          <span className="portal-login__title-line portal-login__title-line--1">THE PRIVATE</span>
           <span className="portal-login__title-line portal-login__title-line--2">OFFICE</span>
         </h1>
 
         {/* Subtitle */}
         <p className={`portal-login__subtitle ${phase === 'form' ? 'portal-login__subtitle--visible' : ''}`}>
-          Private client portal. Encrypted. Confidential.
+          Restricted access. Issued to active engagements only.
         </p>
 
         {/* Login form */}
@@ -145,14 +155,22 @@ function PortalLogin() {
             phase === 'form' ? 'portal-login__form-wrapper--visible' : ''
           } ${phase === 'entering' ? 'portal-login__form-wrapper--exit' : ''}`}
         >
-          {magicLinkSent ? (
+          {linkExpired ? (
             <div className="portal-login__magic-sent">
-              <div className="portal-login__magic-icon">✉</div>
+              <p className="portal-login__magic-text">This link has expired.</p>
+              <button
+                type="button"
+                className="portal-login__button"
+                onClick={() => { setLinkExpired(false); setMagicLinkSent(false); setShowMagicLink(true); setError(''); }}
+              >
+                <span className="portal-login__button-text">Send a new link</span>
+                <span className="portal-login__button-arrow">→</span>
+              </button>
+            </div>
+          ) : magicLinkSent ? (
+            <div className="portal-login__magic-sent">
               <p className="portal-login__magic-text">
-                Login link sent to <strong>{email}</strong>
-              </p>
-              <p className="portal-login__magic-sub">
-                Check your inbox and click the link to access your Office.
+                Check your inbox. If that address is tied to an active engagement, a secure link is on its way. It expires in 15 minutes.
               </p>
               <button
                 type="button"
@@ -165,7 +183,7 @@ function PortalLogin() {
           ) : showMagicLink ? (
             <div className="portal-login__form">
               <div className="portal-login__field">
-                <label className="portal-login__label">Email</label>
+                <label className="portal-login__label">Engagement email</label>
                 <input
                   type="email"
                   className="portal-login__input"
@@ -174,6 +192,9 @@ function PortalLogin() {
                   placeholder="your@email.com"
                   autoComplete="email"
                 />
+                <p className="portal-login__helper">
+                  We&apos;ll send a one-time secure link. No passwords. No trackers.
+                </p>
               </div>
               {error && <p className="portal-login__error">{error}</p>}
               <button
@@ -183,17 +204,14 @@ function PortalLogin() {
                 disabled={loading}
               >
                 <span className="portal-login__button-text">
-                  {loading ? 'Sending...' : 'Send Login Link'}
+                  {loading ? 'Sending…' : 'Send secure link'}
                 </span>
                 <span className="portal-login__button-arrow">→</span>
               </button>
-              <button
-                type="button"
-                className="portal-login__toggle"
-                onClick={() => { setShowMagicLink(false); setError(''); }}
-              >
-                Use password instead
-              </button>
+              <p className="portal-login__secondary">
+                Access is issued when an engagement begins.{' '}
+                <Link href="/#consultation">Request a consultation</Link>
+              </p>
             </div>
           ) : (
             <form onSubmit={handleLogin} className="portal-login__form">
@@ -249,7 +267,7 @@ function PortalLogin() {
             </form>
           )}
           <p className="portal-login__notice">
-            Access is by invitation only. Contact the firm for credentials.
+            NDA-protected · No portal trackers
           </p>
         </div>
       </div>
@@ -320,8 +338,8 @@ function PortalLogin() {
           opacity: 0;
         }
         .portal-login__title-line--1 {
-          font-size: clamp(60px, 12vw, 140px);
-          letter-spacing: 0.25em;
+          font-size: clamp(42px, 8vw, 92px);
+          letter-spacing: 0.16em;
           animation: titleReveal 1.8s cubic-bezier(0.16, 1, 0.3, 1) 0.5s forwards;
         }
         .portal-login__title-line--2 {
@@ -395,7 +413,23 @@ function PortalLogin() {
           background: rgba(201, 169, 110, 0.03);
           box-shadow: 0 0 30px rgba(201, 169, 110, 0.05);
         }
+        .portal-login__input:focus-visible,
+        .portal-login__button:focus-visible,
+        .portal-login__toggle:focus-visible,
+        .portal-login__magic-back:focus-visible,
+        .portal-login__secondary a:focus-visible {
+          outline: 1px solid rgba(201, 169, 110, 0.72);
+          outline-offset: 4px;
+        }
         .portal-login__input::placeholder { color: rgba(255, 255, 255, 0.15); }
+        .portal-login__helper {
+          font-family: 'Inter', sans-serif;
+          font-size: 11px;
+          line-height: 1.7;
+          color: rgba(255, 255, 255, 0.32);
+          letter-spacing: 0.04em;
+          margin: 10px 0 0;
+        }
         .portal-login__error {
           font-family: 'Inter', sans-serif;
           font-size: 12px;
@@ -470,6 +504,19 @@ function PortalLogin() {
           margin-top: -8px;
         }
         .portal-login__toggle:hover { color: rgba(201, 169, 110, 0.7); }
+        .portal-login__secondary {
+          font-family: 'Inter', sans-serif;
+          font-size: 11px;
+          color: rgba(255, 255, 255, 0.26);
+          letter-spacing: 0.05em;
+          line-height: 1.7;
+          margin: -4px 0 0;
+        }
+        .portal-login__secondary a {
+          color: rgba(201, 169, 110, 0.62);
+          text-decoration: none;
+        }
+        .portal-login__secondary a:hover { color: rgba(201, 169, 110, 0.86); }
         .portal-login__notice {
           font-family: 'Inter', sans-serif;
           font-size: 10px;
@@ -534,8 +581,9 @@ function PortalLogin() {
         }
         @media (max-width: 768px) {
           .portal-login__content { padding: 20px; }
-          .portal-login__title-line--1 { letter-spacing: 0.15em; }
+          .portal-login__title-line--1 { letter-spacing: 0.1em; }
           .portal-login__title-line--2 { letter-spacing: 0.1em; }
+          .portal-login__button { min-height: 44px; }
         }
       `}</style>
     </div>

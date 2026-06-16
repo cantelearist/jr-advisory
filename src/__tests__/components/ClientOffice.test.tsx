@@ -10,7 +10,7 @@ describe("ClientOffice", () => {
 
   it("renders the section label", () => {
     render(<ClientOffice />);
-    expect(screen.getByText("Concierge Experience")).toBeInTheDocument();
+    expect(screen.getAllByText("The Private Office").length).toBeGreaterThan(0);
   });
 
   it("renders the Private Office heading", () => {
@@ -42,12 +42,12 @@ describe("ClientOffice", () => {
 
   it("renders the Restricted portal badge", () => {
     render(<ClientOffice />);
-    expect(screen.getByText("Restricted")).toBeInTheDocument();
+    expect(screen.getByText("Restricted access")).toBeInTheDocument();
   });
 
   it("renders portal stat labels", () => {
     render(<ClientOffice />);
-    expect(screen.getByText("Documents")).toBeInTheDocument();
+    expect(screen.getByText("Documents logged")).toBeInTheDocument();
     expect(screen.getByText("Site visits")).toBeInTheDocument();
   });
 });

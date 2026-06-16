@@ -55,7 +55,7 @@ export function Founders() {
           </div>
 
           <a href="#contact" className="mono inquiry-link" style={{ marginTop: 40, display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, letterSpacing: ".22em", opacity: 0.6 }}>
-            Book a private consultation <span className="arr">→</span>
+            Request a private consultation <span className="arr">→</span>
           </a>
         </div>
       </div>

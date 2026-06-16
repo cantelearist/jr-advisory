@@ -318,7 +318,7 @@ export async function POST(request: Request) {
       { id: T(28), engagement_id: E(4), phase: '4', title: 'Final Clearance Issued',          description: 'All VOC levels within OEHHA residential standards. Air quality certificate issued. Engagement closed.',              event_type: 'milestone', event_date: '2026-05-18' },
       // ── Nakamura (Phase 1 — just started) ──
       { id: T(29), engagement_id: E(5), phase: '1', title: 'Engagement Inquiry',              description: 'Referred by attorney. Pre-purchase environmental diligence for $8.2M acquisition.',                                 event_type: 'update',    event_date: '2026-05-08' },
-      { id: T(30), engagement_id: E(5), phase: '1', title: 'NDA Executed',                    description: 'Confidentiality agreement signed. Client portal activated.',                                                         event_type: 'milestone', event_date: '2026-05-10' },
+      { id: T(30), engagement_id: E(5), phase: '1', title: 'NDA Executed',                    description: 'Confidentiality agreement signed. Private Office activated.',                                                        event_type: 'milestone', event_date: '2026-05-10' },
       { id: T(31), engagement_id: E(5), phase: '1', title: 'Property Disclosures Reviewed',   description: 'Seller disclosures flagged prior remediation work on page 12. Requires investigation.',                              event_type: 'document',  event_date: '2026-05-14' },
     ];
 

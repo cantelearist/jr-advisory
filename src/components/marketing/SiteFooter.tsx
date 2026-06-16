@@ -17,7 +17,7 @@ export function SiteFooter() {
             <div className="footer-copy">
               <p>© 2026 James Roman Advisory LLC</p>
               <p style={{ fontSize: 12, opacity: 0.5 }}>
-                Malibu, California · Fully Certified · Privacy Guaranteed
+                Malibu, California · NDA-protected engagements
               </p>
             </div>
           </div>

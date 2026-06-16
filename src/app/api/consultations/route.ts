@@ -77,7 +77,7 @@ function emailHtml(data: ConsultationRequest): string {
     <h2>New private consultation request</h2>
     ${detail('Name', data.name)}
     ${detail('Email', data.email)}
-    ${detail('Primary market', data.market)}
+    ${detail('Property location', data.market)}
     ${detail('Matter type', data.matter)}
     <hr />
     <p><strong>Brief context</strong></p>
@@ -91,7 +91,7 @@ function emailText(data: ConsultationRequest): string {
     '',
     `Name: ${data.name}`,
     `Email: ${data.email}`,
-    data.market ? `Primary market: ${data.market}` : '',
+    data.market ? `Property location: ${data.market}` : '',
     data.matter ? `Matter type: ${data.matter}` : '',
     '',
     'Brief context:',

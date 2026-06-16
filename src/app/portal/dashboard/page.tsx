@@ -42,7 +42,7 @@ export default function PortalDashboard() {
     return 'Good evening';
   };
 
-  if (!portalData) return <LoadingSkeleton label="LOADING PORTAL" />;
+  if (authLoading || !portalData) return <LoadingSkeleton />;
 
   const activeClient: Client | null = portalData.client || null;
   const engagement: Engagement | null = portalData.engagement || null;
@@ -55,6 +55,91 @@ export default function PortalDashboard() {
     ? Math.floor((Date.now() - new Date(engagement.start_date).getTime()) / 86400000)
     : 0;
   const displayName = portalData.client?.name || profile?.full_name || user?.user_metadata?.full_name || 'there';
+
+  if (!isAdmin && !engagement) {
+    return (
+      <div className="dash">
+        <Scene3D variant="dashboard" />
+        <PortalNav />
+        <div className="dash__vignette" />
+
+        <main className="dash__main dash__main--empty">
+          <section className="dash__empty-file" aria-labelledby="empty-file-heading">
+            <span className="dash__empty-eyebrow">The Private Office</span>
+            <h1 id="empty-file-heading" className="dash__empty-heading">Your file is open.</h1>
+            <p className="dash__empty-body">
+              Nothing here yet — and that&apos;s expected. From the first site visit forward, every test result,
+              document, and decision is logged to this file and nowhere else. You won&apos;t chase paperwork or
+              upload anything. We bring the evidence to you.
+            </p>
+            <p className="dash__empty-status">
+              Your first site review is being scheduled. Your engagement lead will confirm the date directly.
+            </p>
+          </section>
+        </main>
+
+        <style jsx>{`
+          .dash { position: relative; min-height: 100vh; background: #000; }
+          .dash__vignette {
+            position: fixed; inset: 0;
+            background: radial-gradient(ellipse at 30% 20%, transparent 20%, rgba(0,0,0,0.85) 100%);
+            z-index: 1; pointer-events: none;
+          }
+          .dash__main {
+            position: relative; z-index: 10;
+            padding: 120px 60px 60px; max-width: 1400px; margin: 0 auto;
+          }
+          .dash__main--empty {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .dash__empty-file {
+            max-width: 680px;
+            border-top: 1px solid rgba(201,169,110,0.18);
+            border-bottom: 1px solid rgba(201,169,110,0.1);
+            padding: 44px 0;
+          }
+          .dash__empty-eyebrow {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 10px;
+            letter-spacing: 0.34em;
+            text-transform: uppercase;
+            color: rgba(201,169,110,0.58);
+          }
+          .dash__empty-heading {
+            margin: 20px 0 24px;
+            font-family: 'Cormorant Garamond', Georgia, serif;
+            font-size: clamp(40px, 6vw, 76px);
+            font-weight: 300;
+            letter-spacing: -0.01em;
+            color: #fff;
+          }
+          .dash__empty-body {
+            max-width: 58ch;
+            margin: 0;
+            color: rgba(255,255,255,0.68);
+            font-size: 16px;
+            line-height: 1.9;
+          }
+          .dash__empty-status {
+            margin: 28px 0 0;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            color: rgba(201,169,110,0.72);
+            font-size: 13px;
+            line-height: 1.7;
+            letter-spacing: 0.05em;
+          }
+          @media (max-width: 900px) {
+            .dash__main { padding: 100px 24px 40px; }
+            .dash__empty-file { padding: 34px 0; }
+          }
+        `}</style>
+      </div>
+    );
+  }
 
   return (
     <div className="dash">

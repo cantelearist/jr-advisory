@@ -95,7 +95,7 @@ export function Nav() {
                 padding: "6px 0",
               }}
             >
-              Book Inquiry <span className="arr">→</span>
+              Inquire <span className="arr">→</span>
             </a>
 
             {/* Mobile hamburger */}
@@ -140,7 +140,7 @@ export function Nav() {
           })}
           <div className="hr" style={{ width: 60, margin: "8px 0" }} />
           <a href="#contact" className="btn ghost" onClick={closeMenu}>
-            Book Inquiry <span className="arr">→</span>
+            Inquire <span className="arr">→</span>
           </a>
         </nav>
       </div>

@@ -5,9 +5,23 @@ import React, { useState } from "react";
 export function Contact() {
   const [form, setForm] = useState({ name: "", email: "", market: "", matter: "", context: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<{ name?: string; email?: string }>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    const nextErrors: { name?: string; email?: string } = {};
+    const email = form.email.trim();
+
+    if (!form.name.trim()) nextErrors.name = "We'll need your name.";
+    if (!email) {
+      nextErrors.email = "An email so we can reach you.";
+    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      nextErrors.email = "That email looks off — worth a second glance.";
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) return;
+
     // Client-side only — no backend submission yet
     setSubmitted(true);
   };
@@ -32,8 +46,6 @@ export function Contact() {
               client access is issued.
             </p>
             <div className="contact-badges">
-              <span className="contact-badge">CCPA/CPRA aware</span>
-              <span className="contact-badge">WCAG 2.2 AA target</span>
               <span className="contact-badge">No portal trackers</span>
             </div>
           </div>
@@ -42,9 +54,13 @@ export function Contact() {
           <div className="contact-form-wrap" data-reveal style={{ "--rd": "200ms" } as React.CSSProperties}>
             {submitted ? (
               <div className="contact-form-success">
-                <h3 className="display" style={{ fontSize: 28, marginBottom: 16 }}>Request received.</h3>
+                <h3 className="display" style={{ fontSize: 28, marginBottom: 16 }}>Received.</h3>
                 <p className="small-copy" style={{ opacity: 0.7 }}>
-                  We will respond within 24 hours under standing NDA.
+                  A founding partner reviews every inquiry personally — usually within two business days. If it&apos;s a fit,
+                  we&apos;ll arrange a confidential consultation. If it isn&apos;t, we&apos;ll tell you that quickly, and point you somewhere useful if we can.
+                </p>
+                <p className="small-copy" style={{ opacity: 0.62, marginTop: 16 }}>
+                  No need to send anything yet. Secure document exchange opens only once an engagement is accepted.
                 </p>
               </div>
             ) : (
@@ -57,7 +73,7 @@ export function Contact() {
                     Submissions are validated locally and prepared for secure advisor review.
                   </p>
                 </div>
-                <form onSubmit={handleSubmit} className="consultation-form">
+                <form onSubmit={handleSubmit} noValidate className="consultation-form">
                   <div className="form-row">
                     <div className="form-group">
                       <label className="mono form-label">Name</label>
@@ -66,8 +82,9 @@ export function Contact() {
                         className="form-input"
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        required
+                        aria-invalid={errors.name ? "true" : "false"}
                       />
+                      {errors.name ? <p className="small-copy" role="alert" style={{ fontSize: 13, opacity: 0.8 }}>{errors.name}</p> : null}
                     </div>
                     <div className="form-group">
                       <label className="mono form-label">Email</label>
@@ -76,13 +93,14 @@ export function Contact() {
                         className="form-input"
                         value={form.email}
                         onChange={(e) => setForm({ ...form, email: e.target.value })}
-                        required
+                        aria-invalid={errors.email ? "true" : "false"}
                       />
+                      {errors.email ? <p className="small-copy" role="alert" style={{ fontSize: 13, opacity: 0.8 }}>{errors.email}</p> : null}
                     </div>
                   </div>
                   <div className="form-row">
                     <div className="form-group">
-                      <label className="mono form-label">Primary market</label>
+                      <label className="mono form-label">Property location</label>
                       <input
                         type="text"
                         className="form-input"
@@ -112,7 +130,7 @@ export function Contact() {
                     />
                   </div>
                   <button type="submit" className="btn primary" style={{ marginTop: 8 }}>
-                    Submit request <span className="arr">→</span>
+                    Request consultation <span className="arr">→</span>
                   </button>
                 </form>
               </>
