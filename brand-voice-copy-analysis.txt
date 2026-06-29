@@ -1,0 +1,356 @@
+==============================================================================
+BRAND VOICE & COPY ANALYSIS — jamesroman.la
+==============================================================================
+
+Date:   2026-06-28
+Scope:  Marketing copy on the public site (www.jamesroman.la) — hero, practice,
+        origin, cornerstone, private office, contact, and microcopy.
+Method: Verbatim copy pulled from the live site and the source components
+        (src/components/marketing/*.tsx), benchmarked against direct
+        competitors and cross-industry language. No live components were
+        edited — this is analysis plus a rewrite bank of options.
+
+NOTE ON OWNERSHIP: Per docs/operations/source-of-truth.md, marketing copy sits
+on a separate track and the live components are sensitive. Everything below is
+recommendation, not applied change. Nothing here touches production copy.
+
+
+------------------------------------------------------------------------------
+1. EXECUTIVE SUMMARY
+------------------------------------------------------------------------------
+
+The brand has one of the best positioning lines in this category —
+"Advocacy, not remediation. We carry no hammers and file no invoices for work."
+That single contrast does more than the entire homepage of either direct
+competitor. The voice is disciplined, restrained, and correctly priced for an
+$8M–$20M estate owner.
+
+And then it buries that line below the fold and opens with a conservation-NGO
+headline that CONTRADICTS it.
+
+The hero says "hazardous materials REMEDIATION advisory." The next section's
+entire thesis is "Advocacy, NOT remediation." A cold visitor reading for five
+seconds files the firm as a remediation contractor — the precise failure
+category your own FIRST_20_VISITOR_REVIEW.md was built to detect. The strongest
+weapon is in the weakest position, and a word in the hero is actively arguing
+against the brand.
+
+IF YOU CHANGE ONE THING: lead with advocacy and kill "remediation" from the
+hero. Everything else in this document is secondary to that.
+
+
+------------------------------------------------------------------------------
+2. VERBATIM COPY INVENTORY
+------------------------------------------------------------------------------
+
+HERO EYEBROW
+  "Owner-side advisory · No contractors · No conflicts"
+  "Private advisory · Los Angeles coastal estates"
+
+HERO HEADLINE
+  "Protecting The Coast We Call Home."
+
+HERO SUBCOPY
+  "Ultra-discreet hazardous materials remediation advisory and structural
+   inspection oversight for coastal estate owners where cost, liability, and
+   pressure arrive together."
+
+HERO CTA
+  "View practice →"
+
+PRACTICE
+  "Advocacy, not remediation."
+  "We carry no hammers and file no invoices for work. Our only product is
+   judgment applied exclusively on behalf of the owner."
+  Cards: 01 Mold and Water Damage · 02 Fire and Smoke Residue ·
+         03 Asbestos and Legacy Materials · 04 Indoor Air Quality and VOCs ·
+         05 Pre-Sale Diligence · 06 Contractor Procurement
+
+ORIGIN
+  "Twice in thirty years, the canyon claimed the ridge."
+  Stephen/Roman 1993 & 2018 fire story; "James Roman Advisory exists because
+  both of them needed it, years before they built it."
+  CTA: "Request a private consultation →"
+
+CORNERSTONE
+  "The terms we don't negotiate." → Privacy / Transparency / Concierge
+  ("A direct line to the founding partner. We limit engagements to six projects
+   annually — intentionally. Judgment cannot be scaled.")
+
+PRIVATE OFFICE
+  "Your Private Office."
+  "Every client receives a dedicated digital workspace — real-time transparency
+   on compliance status, document custody, and site activity. Nothing
+   circulates informally."
+  + live-looking dashboard (64% progress, asbestos 0.008 f/cc below clearance,
+    SCAQMD Rule 1403 filed)
+  CTA: "Access private office →"
+
+CONTACT
+  "Request a confidential consultation."
+  "Share only what is necessary. Full document exchange happens after an
+   engagement is accepted and secure client access is issued."
+  Badge: "No portal trackers"
+  Success state: "A founding partner reviews every inquiry personally — usually
+   within two business days. If it's a fit, we'll arrange a confidential
+   consultation. If it isn't, we'll tell you that quickly, and point you
+   somewhere useful if we can."
+
+FORM MICROCOPY
+  "We'll need your name." / "An email so we can reach you." /
+  "That email looks off — worth a second glance."
+
+
+------------------------------------------------------------------------------
+3. STRENGTHS (no inflation — these genuinely work)
+------------------------------------------------------------------------------
+
+1. THE CORE POSITIONING LINE IS CATEGORY-DEFINING.
+   "Advocacy, not remediation" + "We carry no hammers and file no invoices for
+   work. Our only product is judgment applied exclusively on behalf of the
+   owner." This is the independent-advisor playbook executed better than the
+   people who wrote it. Independent wealth management spends fortunes trying to
+   communicate "whose side of the table are they on" — JRA says it in eleven
+   words with a physical image (no hammers). Keep this line forever.
+
+2. RESTRAINT MATCHES THE PRICE POINT.
+   Short lines, mono-spaced eyebrows, no exclamation marks, no "Contact us
+   today!" desperation. Textbook luxury voice — "luxury behaves like it doesn't
+   need you." For a buyer with an $8M–$20M property, the calm is itself a
+   credential.
+
+3. THE ORIGIN STORY IS THE SINGLE STRONGEST ASSET ON THE SITE.
+   "Twice in thirty years, the canyon claimed the ridge" + the specific 1993
+   and 2018 burns is earned, concrete, and emotionally legitimate. Specificity
+   — real dates, a real place, a real loss — is exactly what trust copy is
+   supposed to do, and most firms can only fake it. JRA doesn't have to.
+
+4. "THE TERMS WE DON'T NEGOTIATE" TURNS BOILERPLATE INTO CONVICTION.
+   Privacy / Transparency / Concierge are the three most generic words in
+   professional services. Framing them as non-negotiable terms makes them feel
+   like a spine instead of a checklist. The scarcity line — "six projects
+   annually — intentionally. Judgment cannot be scaled" — is a real
+   concierge-medicine move and it mostly lands (see weakness #10 for the tweak).
+
+5. THE MICROCOPY IS HONEST AND HUMAN, WHICH IS RARE AND DISARMING.
+   "If it isn't a fit, we'll tell you that quickly, and point you somewhere
+   useful if we can" and "That email looks off — worth a second glance" build
+   more trust than any trust badge. A genuine voice advantage; protect it.
+
+6. THE PRIVATE OFFICE SHOWS INSTEAD OF TELLS.
+   The transparency claim is DEMONSTRATED with a concrete artifact — chain of
+   custody intact, 0.008 f/cc below the clearance limit, Rule 1403 filed —
+   rather than asserted. The right instinct everywhere: proof beats adjectives.
+
+
+------------------------------------------------------------------------------
+4. WEAKNESSES, RANKED BY IMPACT
+------------------------------------------------------------------------------
+
+#1 — THE HERO HEADLINE CONTRADICTS THE CORE POSITIONING (highest priority)
+   The hero subcopy says "hazardous materials REMEDIATION advisory." The
+   Practice section's whole thesis is "Advocacy, NOT remediation." You are
+   spending your most valuable pixels arguing the opposite of your
+   differentiator. A 5-second visitor files you as a remediation contractor —
+   the exact failure mode FIRST_20_VISITOR_REVIEW.md is designed to catch.
+   FIX: remove "remediation" from the hero entirely. The firm advises owners
+   ABOUT remediation; it does not remediate. Use "advisory," "oversight,"
+   "owner's counsel."
+
+#2 — THE HERO HEADLINE SAYS NOTHING ABOUT WHAT THE FIRM DOES
+   "Protecting The Coast We Call Home" over a coastline photo reads like a land
+   trust or a conservation NGO. A cold visitor cannot tell this is
+   hazmat/structural advisory in five seconds. The knockout line ("Advocacy,
+   not remediation") is one section down.
+   FIX: put the differentiator in the hero. Lead with what you are.
+
+#3 — TWO TAGLINES COMPETING FOR THE SAME JOB, NO HIERARCHY
+   "Protecting the Coast" and "Advocacy, not remediation" fight each other for
+   the role of brand line. You have a knockout punch and you're throwing a jab
+   first.
+   FIX: pick one primary line (advocacy); demote the place/emotional line to a
+   supporting role in the Origin section, where it belongs.
+
+#4 — THE HERO SUBCOPY IS JARGON-DENSE
+   "Ultra-discreet hazardous materials remediation advisory and structural
+   inspection oversight for coastal estate owners where cost, liability, and
+   pressure arrive together" stacks three nominalizations before it says
+   anything a human feels. Compare the clean Practice line directly below it —
+   same brand, far better writing.
+   FIX: shorter, plainer, one idea. (See rewrite bank.)
+
+#5 — "ULTRA-DISCREET" TELLS INSTEAD OF SHOWS
+   Truly discreet brands DEMONSTRATE discretion — NDA-protected, no public
+   client list, "not filed, not referenced, not discussed." JRA already does
+   this beautifully in the Cornerstone. The adjective "ultra-discreet" in the
+   hero undercuts the very thing it claims; discretion announced is discretion
+   diminished.
+   FIX: cut the adjective. Let the NDA / no-client-list facts carry it.
+
+#6 — NAME VS. FOUNDER IDENTITY IS AMBIGUOUS
+   The firm is "James Roman Advisory," the founders are "Roman & Stephen." A
+   sharp visitor asks: who is James? Is "James Roman" a person, or a
+   portmanteau? Unresolved, it reads slightly invented.
+   FIX: one deliberate line that resolves the name — quietly, once.
+
+#7 — ORIGIN PRONOUN WHIPLASH
+   "Stephen was born in Malibu... Roman spent years overseeing construction...
+   both of them needed it." Two first names plus a company called "James Roman"
+   makes the reader work to track who's who, in the one section where you most
+   want them absorbed in the story, not parsing it.
+   FIX: establish both people with a clear noun early (roles, last names, or a
+   one-line "the two founders") so the pronouns have stable referents.
+
+#8 — CTA PROLIFERATION DILUTES THE PATH
+   Across the page: "View practice," "Request a private consultation," "Access
+   private office," "Request consultation," "Inquire." That's five verbs for
+   roughly two real actions (inquire / enter portal).
+   FIX: standardize one primary CTA verb for inquiry sitewide; make "Access
+   private office" the clearly secondary, returning-client action.
+
+#9 — STRONG ON "WHY WE CARE," THIN ON "WHY WE'RE QUALIFIED"
+   The Origin earns emotional trust. But an affluent buyer wants BOTH the
+   side-of-the-table AND the competence signal — credentials, certifications,
+   years, jurisdictions, sample outcomes. Competitors over-index on capability
+   lists; JRA under-indexes. You don't need their volume — you need three or
+   four hard credibility facts so the discretion doesn't read as thinness.
+   FIX: add a small, restrained credibility layer (certs / standards / years /
+   jurisdiction) near the Practice or Cornerstone — facts, not adjectives.
+
+#10 — "JUDGMENT CANNOT BE SCALED" CAN READ AS THE FIRM'S LIMITATION
+   To a buyer worried about availability, "we don't scale" can sound like "you
+   might not get us." Concierge medicine solved this years ago by always
+   framing the cap as a PATIENT benefit ("we keep the panel small SO THAT you
+   get...").
+   FIX: reframe the cap around what the client GETS (access, the founder's
+   actual attention), not what the firm WON'T do.
+
+
+------------------------------------------------------------------------------
+5. COMPETITOR LANGUAGE TEARDOWN — AND THE GAP JRA CAN OWN
+------------------------------------------------------------------------------
+
+PEAK PROJECTS
+  Lead: "Owner's Representatives for World-Class Projects" / "meticulous,
+  empathetic, and proven approach."
+  Voice: capability-led, adjective-driven. Verdict: generic — could be any PM
+  firm.
+
+MGMT PARTNERS
+  Lead: "Los Angeles-based owner's representative and development management
+  firm" + a feasibility/underwriting/entitlements/procurement service list.
+  Voice: comprehensive, service-catalog. Verdict: undifferentiated competence.
+
+THE PATTERN: competitors lead with CAPABILITY LISTS and the commodity term
+"owner's representative." None of them lead with conflict-free ADVOCACY as the
+emotional hook. The category sounds like a services menu.
+
+THE OPENING: JRA's "we carry no hammers and file no invoices for work" is a
+genuine moat — an emotional, ethical, memorable contrast that no competitor is
+making. AND IT'S HIDDEN BELOW THE FOLD. The competitive fix is not new copy;
+it's positioning discipline. Move the moat to the front door. The competition
+has handed JRA the entire "whose side are you on" territory by default — take
+it explicitly.
+
+
+------------------------------------------------------------------------------
+6. CROSS-INDUSTRY STEALS (with attributed source language)
+------------------------------------------------------------------------------
+
+INDEPENDENT WEALTH MANAGEMENT
+  The whole sector sells "no products to sell," fee-only / fiduciary
+  transparency, and "who's really sitting on their side of the table." JRA
+  already has the SUBSTANCE ("no invoices for work") — borrow the
+  side-of-the-table FRAMING for the hero. It's the most direct articulation of
+  advocacy that exists.
+
+CONCIERGE MEDICINE
+  "We see a limited number of patients so we can give you..." — the cap is
+  ALWAYS framed as the patient's benefit, never the practice's constraint. The
+  exact fix for weakness #10. Steal the "...so that you get..." construction.
+
+LUXURY COPY DOCTRINE
+  Restraint, withholding, "behaves like it doesn't need you," Rolex's "A crown
+  for every achievement" (powerful for what it WITHHOLDS), discretion-as-product
+  (the private-jet category never says "discreet" — it just is). JRA is already
+  strong here; the lesson is KEEP CUTTING and SHOW discretion, never label it
+  (weakness #5).
+
+ANTI-PITCH TRUST SIGNALING (carried across all three)
+  The single most persuasive move for a skeptical wealthy buyer is the
+  willingness to say "if it isn't a fit, we'll tell you." JRA already does this
+  in the contact success state — PROMOTE THAT HONESTY EARLIER, not just
+  post-submit. It's the most disarming sentence on the site and it's hidden
+  until after someone commits.
+
+
+------------------------------------------------------------------------------
+7. REWRITE BANK (options, not applied edits)
+------------------------------------------------------------------------------
+
+HERO HEADLINE — lead with advocacy, drop "remediation"
+  1. "One side of the table. Yours."
+  2. "We carry no hammers."  (lifts the strongest existing line into the hero)
+  3. "Advocacy, not remediation."  (simply promote the line you already have)
+  4. "Owner's counsel for when the canyon takes the ridge."  (ties to Origin)
+  5. "The only advisor in the room who works for you."
+
+HERO SUBCOPY — plainer, one idea, no jargon stack
+  - "Independent advisory for coastal estate owners facing fire, water, mold,
+     or hazardous materials. We don't do the work — we make sure the people who
+     do are working for you."
+  - "When cost, liability, and pressure arrive together, we're the only party
+     in the room with no invoice riding on the outcome."
+
+HERO EYEBROW — keep; it's already good
+  - "Owner-side advisory · No contractors · No conflicts" is strong. Leave it.
+
+CONCIERGE / SCARCITY LINE — reframe the cap as the client's benefit
+  From: "We limit engagements to six projects annually — intentionally.
+         Judgment cannot be scaled."
+  To:   "Six engagements a year — so the founding partner is on your matter,
+         not managing a queue."
+  Or:   "We cap at six projects a year so the person you hire is the person who
+         shows up."
+
+"ULTRA-DISCREET" — cut, let facts carry it
+  - Delete the adjective. The Cornerstone's "not filed, not referenced, not
+    discussed" already proves it.
+
+CTAs — standardize
+  - Primary (everywhere inquiry is offered): "Request a consultation" — one
+    verb, one phrasing.
+  - Secondary (returning clients only): "Enter the Private Office" — visually
+    subordinate.
+
+PROMOTE THE HONESTY EARLIER
+  - Surface a version of "If it isn't a fit, we'll tell you — and point you
+    somewhere useful" near the inquiry form BEFORE submission, not only in the
+    success state.
+
+
+------------------------------------------------------------------------------
+8. SOURCES
+------------------------------------------------------------------------------
+
+JRA copy verified against the live site and source components: Hero.tsx,
+Practice.tsx, Founders.tsx, Cornerstone.tsx, ClientOffice.tsx, Contact.tsx, and
+docs/FIRST_20_VISITOR_REVIEW.md.
+
+External research:
+  - Peak Projects ......... https://www.peakprojects.com/
+  - MGMT Partners ......... https://mgmtpartners.com/
+  - Best Independent Advisors (InvestmentNews)
+      https://www.investmentnews.com/best-in-wealth/best-independent-advisors/260646
+  - Financial Advisor Copywriting (Wavelength Financial)
+      https://wavelengthfinancial.com/financial-advisor-copywriting-affluent/
+  - Why Concierge Medicine Limits Patient Panels (Helical Health)
+      https://helicalhealth.com/blog/why-concierge-practices-limit-patient-panels-for-superior-care/
+  - Johns Hopkins Personalized Care & Concierge Medicine
+      https://www.hopkinsmedicine.org/personalized-care
+  - Why luxury copywriting sounds cold and why it works (Social Listener)
+      https://sociallistener.in/why-luxury-copywriting-sounds-cold-and-why-it-works/
+  - Copywriting for Luxury Brands (She's a Writer)
+      https://shesawriter.co.uk/copywriting-for-luxury-brands/
+
+==============================================================================
