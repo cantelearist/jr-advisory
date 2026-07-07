@@ -19,8 +19,10 @@ description: >
 # Counterparty Vetting — Person-Level Due Diligence
 
 ## Doctrine (mandatory)
-Load and apply `~/.claude/skills/rca-evidence-doctrine/SKILL.md` before
-anything else. Tagging, absence rule, identity discipline, cross-check,
+Load and apply the `rca-evidence-doctrine` skill before anything else —
+its `rca-evidence-doctrine/SKILL.md` sits in the SAME skills root this
+skill was loaded from (a project's `.claude/skills/` or the user-level
+`~/.claude/skills/`). Tagging, absence rule, identity discipline, cross-check,
 verdict grammar, gap mapping, adversarial review, and delivery standard all
 come from the doctrine core and are not restated here. Doctrine §2's
 search-protocol rule bears hardest on this skill: every NOT FOUND names the

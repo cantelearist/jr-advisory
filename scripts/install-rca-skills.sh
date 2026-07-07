@@ -28,7 +28,7 @@ for skill in "${SKILLS[@]}"; do
 done
 
 echo
-echo "Done. The skills reference each other at ~/.claude/skills/... paths,"
-echo "so the default target requires no edits. If you installed elsewhere,"
-echo "update the doctrine-load paths inside each SKILL.md."
+echo "Done. Inter-skill references resolve relative to whichever skills root"
+echo "a skill is loaded from, so any target directory works without edits —"
+echo "just keep the three skill folders side by side in the same root."
 echo "New skills are picked up at the next Claude Code session start."

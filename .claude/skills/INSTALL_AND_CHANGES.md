@@ -96,6 +96,16 @@ cp -r rca_skills/pitch-deck-analysis    ~/.claude/skills/   # overwrites existin
     document-level DD, not person-level; harden the rings after the next
     1–2 vetting jobs as planned.
 
+### v2.1 (post-review fix)
+15. **Inter-skill references made root-relative.** The skills previously
+    hard-coded `~/.claude/skills/...` paths to the doctrine core and the
+    counterparty sub-skill, which broke repo-local installs (a project's
+    `.claude/skills/` copy would reference a user-level directory that may
+    not exist). References now resolve to "the same skills root this skill
+    was loaded from" — any target works, provided the three folders stay
+    side by side. Caught by automated PR review; same defect class as the
+    Stage-3 ghost pointer.
+
 ## Routing rule for future banked lessons
 - Evidentiary (any DD target)        → rca-evidence-doctrine
 - Deal-economics (benchmarks, EV…)   → pitch-deck-analysis

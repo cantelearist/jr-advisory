@@ -19,8 +19,10 @@ description: >
 # Pitch Deck Analysis — Investor-Side Assessment
 
 ## Doctrine (mandatory)
-Load and apply `~/.claude/skills/rca-evidence-doctrine/SKILL.md` before
-anything else. Tagging, absence rule, identity discipline, cross-check,
+Load and apply the `rca-evidence-doctrine` skill before anything else —
+its `rca-evidence-doctrine/SKILL.md` sits in the SAME skills root this
+skill was loaded from (a project's `.claude/skills/` or the user-level
+`~/.claude/skills/`). Tagging, absence rule, identity discipline, cross-check,
 verdict grammar, gap mapping, adversarial review, and the delivery standard
 come from the doctrine core and are not restated here.
 
@@ -97,7 +99,8 @@ what the terms would have to be — then give a defensible verdict.
    backdrop. Maintain a disconfirmation budget: spend real effort trying to
    break the claims you most want to be true.
 4. **Counterparty pass → INVOKE the counterparty-vetting skill**
-   (`~/.claude/skills/counterparty-vetting/SKILL.md`) on the sponsor's
+   (`counterparty-vetting/SKILL.md`, beside this skill in the same skills
+   root) on the sponsor's
    principals and entities. Default scope = screening; escalate to full when
    the check is large, the counterparty is thin, or Roman asks. Its findings
    come back tagged per doctrine and slot into the memo as the counterparty
