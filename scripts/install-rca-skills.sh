@@ -17,6 +17,16 @@ SKILLS=(rca-evidence-doctrine counterparty-vetting pitch-deck-analysis)
 
 mkdir -p "$DEST"
 
+# Refuse self-installs: with DEST == SRC the rm -rf below would delete the
+# source skill before the cp runs, leaving the checkout missing that skill.
+SRC_REAL="$(cd "$SRC" && pwd -P)"
+DEST_REAL="$(cd "$DEST" && pwd -P)"
+if [ "$SRC_REAL" = "$DEST_REAL" ]; then
+  echo "Nothing to do: target resolves to this repo's own .claude/skills" \
+       "($DEST_REAL) — the skills already live there." >&2
+  exit 0
+fi
+
 for skill in "${SKILLS[@]}"; do
   if [ ! -f "$SRC/$skill/SKILL.md" ]; then
     echo "ERROR: $SRC/$skill/SKILL.md not found — run from a full checkout." >&2
