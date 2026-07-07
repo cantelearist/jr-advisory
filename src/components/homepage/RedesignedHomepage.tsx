@@ -399,8 +399,8 @@ function About() {
         <p className="mb-4 text-gray-700">
           Contractors are incentivized to remediate. Sellers are incentivized to
           minimize. Inspectors walk a line between certainty and liability. The
-          owner—the one bearing the actual risk and cost—often relies on
-          guidance shaped by someone else's incentives.
+          owner&mdash;the one bearing the actual risk and cost&mdash;often relies on
+          guidance shaped by someone else&apos;s incentives.
         </p>
         <p className="text-gray-700">
           Independent counsel on these matters is rare. It should not be. This
