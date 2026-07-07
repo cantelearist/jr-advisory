@@ -78,7 +78,7 @@ function ConsultationModal({
               Thank You
             </h3>
             <p className="mb-6 text-gray-700">
-              We've received your consultation request. We'll review your matter
+              We&apos;ve received your consultation request. We&apos;ll review your matter
               and be in touch within 48 hours.
             </p>
           </div>
@@ -88,7 +88,7 @@ function ConsultationModal({
               Request a Consultation
             </h2>
             <p className="mb-6 text-sm text-gray-700">
-              Tell us about your property and what brought you here. We'll
+              Tell us about your property and what brought you here. We&apos;ll
               review and be in touch within 48 hours.
             </p>
 
@@ -241,8 +241,8 @@ function Hero({ onConsultClick }: { onConsultClick: () => void }) {
           Property Advocacy for Those Who Deserve Better
         </h1>
         <p className="mb-8 max-w-xl text-lg leading-relaxed text-gray-700">
-          When hazards emerge—moisture, fire, legacy materials, air
-          quality—owners need judgment applied exclusively on their behalf. Not
+          When hazards emerge&mdash;moisture, fire, legacy materials, air
+          quality&mdash;owners need judgment applied exclusively on their behalf. Not
           sellers covering risk. Not contractors protecting margin. Independent
           counsel.
         </p>
@@ -359,7 +359,7 @@ function Services() {
       </h2>
       <p className="mb-16 max-w-3xl text-lg text-gray-700">
         We specialize in the environmental and structural hazards that matter
-        most to sophisticated property owners—matters that demand both technical
+        most to sophisticated property owners&mdash;matters that demand both technical
         depth and independent judgment. Six specializations. One commitment: your
         protection.
       </p>
@@ -419,8 +419,8 @@ function FinalCTA({ onConsultClick }: { onConsultClick: () => void }) {
         Begin a Conversation
       </h2>
       <p className="mb-8 inline-block max-w-xl text-lg text-gray-700">
-        If your property presents hazards you need to understand, or if you're
-        evaluating an acquisition and want clarity before deciding, we're ready
+        If your property presents hazards you need to understand, or if you&apos;re
+        evaluating an acquisition and want clarity before deciding, we&apos;re ready
         to listen.
       </p>
       <br />
