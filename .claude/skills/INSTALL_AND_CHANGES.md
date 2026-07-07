@@ -8,7 +8,7 @@ of the skill's own USpace memo against a rival AI-generated memo, which
 surfaced residual defects in both documents and in this pack itself.
 
 ```
-rca_skills/
+.claude/skills/                     (this repo's checked-in skills root)
   rca-evidence-doctrine/SKILL.md    REVISED — independence test, NOT FOUND
                                     search protocol, prose-vs-exhibit check,
                                     analytical final QC
@@ -19,18 +19,21 @@ rca_skills/
 ```
 
 ## Install
-Copy the three folders into your skills directory. This zip's layout matches
-these commands exactly (v1's did not — the folders were nested under a
-sandbox `mnt/user-data/outputs/` path and the doctrine sat at the zip root):
+**This repo:** nothing to do — the skills live at `.claude/skills/` and are
+picked up automatically by Claude Code at session start.
+
+**All other projects on a machine (user-level):** run the installer from the
+repo root; it copies the three folders to `~/.claude/skills/` (or a custom
+target passed as `$1`) and refuses self-installs:
 
 ```bash
-cp -r rca_skills/rca-evidence-doctrine  ~/.claude/skills/
-cp -r rca_skills/counterparty-vetting   ~/.claude/skills/
-cp -r rca_skills/pitch-deck-analysis    ~/.claude/skills/   # overwrites existing
+./scripts/install-rca-skills.sh
 ```
 
-(Adjust the destination if your skills root differs — your UI/UX skill sits at
-`~/.claude/skills/.claude/skills/`, so verify which root your loader reads.)
+Inter-skill references resolve relative to whichever skills root a skill is
+loaded from, so no path edits are needed for any target — just keep the
+three folders side by side. (If your skills root differs — your UI/UX skill
+sits at `~/.claude/skills/.claude/skills/` — pass that root as `$1`.)
 
 ## What changed in v2 (all from the USpace cross-examination session)
 
