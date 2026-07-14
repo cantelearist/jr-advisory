@@ -113,16 +113,29 @@ export async function POST(req: NextRequest) {
     ip_address: ip,
   });
 
-  // Check MFA status
-  const { data: aal } = await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
-  const mfaRequired = aal?.nextLevel === 'aal2' && aal?.currentLevel !== 'aal2';
+  // Resolve role from the trusted profile (or controlled app_metadata), never
+  // from user_metadata, which authenticated users can edit themselves.
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', data.user.id)
+    .maybeSingle();
+  const role =
+    profile?.role ||
+    (typeof data.user.app_metadata?.role === 'string' ? data.user.app_metadata.role : 'client');
+  const isPrivileged = role === 'admin' || role === 'manager';
+
+  // Mandatory privileged MFA includes enrollment: aal1/aal1 is not sufficient.
+  const { data: aal, error: aalError } =
+    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
+  const mfaRequired = isPrivileged && (Boolean(aalError) || aal?.currentLevel !== 'aal2');
 
   return respond({
     success: true,
     user: {
       id: data.user.id,
       email: data.user.email,
-      role: data.user.user_metadata?.role || 'client',
+      role,
       onboarded: data.user.user_metadata?.onboarded !== false,
     },
     mfaRequired,

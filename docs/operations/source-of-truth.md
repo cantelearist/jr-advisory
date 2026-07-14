@@ -1,6 +1,6 @@
 # Source of Truth — James Roman Advisory
-**Version:** 1.0  
-**Date:** 2026-06-11  
+**Version:** 1.1
+**Date:** 2026-07-13
 **Author:** Claude (Infrastructure & Security)  
 **Status:** Authoritative — supersedes any prior SOURCE_OF_TRUTH document
 
@@ -17,7 +17,7 @@ Do not deploy from any other local path. Do not deploy from `JR Design`. See the
 
 ## The Two Repos — What They Are and Why It Matters
 
-There are two local directories linked to the same Vercel project. They are not the same codebase.
+There are two local directories with separate Vercel links. They are not the same codebase, and only the canonical directory is attached to the project serving the production domains.
 
 ### Canonical: `james-roman-advisory`
 
@@ -27,9 +27,9 @@ There are two local directories linked to the same Vercel project. They are not 
 | GitHub remote | `https://github.com/cantelearist/jr-advisory.git` |
 | Auth stack | Supabase SSR (`@supabase/ssr`, `@supabase/supabase-js`) |
 | Active branch | `main` |
-| Latest commit | `e7616e6` — Merge security/priority-5-error-logging into main |
-| Vercel project | `james-roman-advisory` |
-| Vercel project ID | `prj_4DZx9UF5TR7cDCTMCklYtp4KX1hD` |
+| Current main at last verification | `2f5bdb6` — re-check with `git rev-parse origin/main` before deployment |
+| Vercel project | `jr-advisory` |
+| Vercel project ID | `prj_9oplefLCCXZllJhnAkcf85RYVpwb` |
 | Org ID | `team_ftaa0jTNxLRxCmbAJci8SgMY` |
 
 This repo matches the live production deployment inspected by the 2026-06-11 security audit. All security hardening work (P1–P5) was performed here. All future work must come from here.
@@ -43,9 +43,9 @@ This repo matches the live production deployment inspected by the 2026-06-11 sec
 | Auth stack | Clerk + Neon (older architecture — different route set) |
 | Active branch | `security/priority-3-session-audit` |
 | Latest commit | `b971c37` — security(p3): fix auth inconsistency, broken download, MFA URL |
-| Vercel project | `james-roman-advisory` (same project ID — this is the danger) |
+| Vercel project | `james-roman-advisory` (legacy project ID `prj_4DZx9UF5TR7cDCTMCklYtp4KX1hD`) |
 
-`JR Design` is linked to the same Vercel project via an identical `.vercel/project.json`. If someone runs `vercel --prod` from that directory, it deploys a Clerk-based app over the Supabase-based live site. The route sets are incompatible. The auth systems are incompatible.
+`JR Design` is linked to a legacy Vercel project, not the project currently serving the production domains. It remains a shadow codebase with an incompatible Clerk + Neon architecture and must not be treated as a deployment source. Re-check domain ownership before any project relinking; attaching the production domains to this project would overwrite the Supabase application.
 
 **JR Design must not be deployed.** It is preserved for reference only. If the decision is ever made to retire or reconcile it, that is a deliberate owner-approved action, not an accident.
 
@@ -75,8 +75,8 @@ Branches prefixed `archive/` are frozen — do not modify or deploy from them.
 
 | Property | Value |
 |---|---|
-| Project name | `james-roman-advisory` |
-| Project ID | `prj_4DZx9UF5TR7cDCTMCklYtp4KX1hD` |
+| Project name | `jr-advisory` |
+| Project ID | `prj_9oplefLCCXZllJhnAkcf85RYVpwb` |
 | Org ID | `team_ftaa0jTNxLRxCmbAJci8SgMY` |
 | Production URL | `https://jamesroman.la` and `https://www.jamesroman.la` |
 | Build command | `bun run build` (set in `vercel.json`) |
@@ -84,7 +84,7 @@ Branches prefixed `archive/` are frozen — do not modify or deploy from them.
 
 Both aliases must be verified after every production deploy:
 ```sh
-npx vercel alias ls | grep jamesroman.la
+npx vercel@latest alias ls --scope roman-2757s-projects | grep jamesroman.la
 ```
 
 If either alias is missing, re-apply:
@@ -97,7 +97,7 @@ npx vercel alias set <deployment-url> www.jamesroman.la
 
 ## Canonical Supabase Project
 
-The Supabase project reference is not stored in source control (by design — env vars only). It is found in the Vercel dashboard under the `james-roman-advisory` project → Settings → Environment Variables.
+The Supabase project reference is not stored in source control (by design — env vars only). It is found in the Vercel dashboard under the `jr-advisory` project → Settings → Environment Variables.
 
 Three required variables (all three must be present before any API route or portal page will function):
 
@@ -107,7 +107,7 @@ Three required variables (all three must be present before any API route or port
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | Supabase Dashboard → Project Settings → API → anon/public |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase Dashboard → Project Settings → API → service_role |
 
-**Current production status as of 2026-06-11:** All three variables are absent from Vercel production. All API routes return `503 Supabase not configured`. Production is not live for authenticated use until these are added and production is redeployed.
+**Verification status as of 2026-07-13:** Vercel deployment `dpl_FDHTfZSkLeAREryXvamSPhXkEhr1` is Ready and serves both production aliases. Environment values are intentionally not recorded here; verify their presence in the `jr-advisory` project and use the authenticated `/api/health` endpoint before every production promotion.
 
 ---
 

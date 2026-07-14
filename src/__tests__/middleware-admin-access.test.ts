@@ -58,7 +58,7 @@ describe('portal middleware admin access', () => {
     expect(response.headers.get('location')).toBe('https://www.jamesroman.la/portal/dashboard');
   });
 
-  it('allows profile-backed admins to reach the admin route', async () => {
+  it('redirects an unenrolled profile-backed admin to MFA enrollment', async () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
     getUserMock.mockResolvedValueOnce({
@@ -75,6 +75,30 @@ describe('portal middleware admin access', () => {
     });
     getAalMock.mockResolvedValueOnce({
       data: { currentLevel: 'aal1', nextLevel: 'aal1' },
+      error: null,
+    });
+
+    const response = await middleware(portalRequest('/portal/admin'));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe(
+      'https://www.jamesroman.la/portal/mfa?redirect=%2Fportal%2Fadmin',
+    );
+  });
+
+  it('allows profile-backed admins with an aal2 session', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: 'admin-1' } },
+    });
+    profileMaybeSingleMock.mockResolvedValueOnce({
+      data: { role: 'admin' },
+      error: null,
+    });
+    getAalMock.mockResolvedValueOnce({
+      data: { currentLevel: 'aal2', nextLevel: 'aal2' },
+      error: null,
     });
 
     const response = await middleware(portalRequest('/portal/admin'));

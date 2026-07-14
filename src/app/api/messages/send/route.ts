@@ -22,26 +22,42 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { client_id, engagement_id, sender_type, sender_name, subject, body: msgBody } = body;
+    const { client_id, engagement_id, subject, body: msgBody } = body;
 
-    if (!client_id || !engagement_id || !sender_type || !sender_name || !subject || !msgBody) {
+    if (!client_id || !engagement_id || !subject || !msgBody) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
-    // Non-admin users can only send as 'client' and only for their own client record
+    let senderType: 'firm' | 'client' = 'firm';
+    let senderName = auth.profile?.full_name || auth.user.email || 'James Roman Advisory';
+
+    // Non-admin users can only send for their own client record. Sender
+    // identity is derived server-side instead of accepted from the request.
     if (!isAdmin) {
-      if (sender_type !== 'client') {
-        return NextResponse.json({ error: 'Clients can only send as client' }, { status: 403 });
-      }
       const { data: clientRec } = await sb
         .from('clients')
-        .select('id')
+        .select('id, name')
         .eq('profile_id', auth.user.id)
         .single();
 
       if (!clientRec || clientRec.id !== client_id) {
         return NextResponse.json({ error: 'Access denied' }, { status: 403 });
       }
+
+      senderType = 'client';
+      senderName = clientRec.name;
+    }
+
+    // Prevent cross-client foreign-key linkage and misleading audit history.
+    const { data: engagement } = await sb
+      .from('engagements')
+      .select('id')
+      .eq('id', engagement_id)
+      .eq('client_id', client_id)
+      .maybeSingle();
+
+    if (!engagement) {
+      return NextResponse.json({ error: 'Engagement does not belong to client' }, { status: 400 });
     }
 
     const { data: msg, error } = await sb
@@ -49,11 +65,11 @@ export async function POST(req: NextRequest) {
       .insert({
         client_id,
         engagement_id,
-        sender_type,
-        sender_name,
+        sender_type: senderType,
+        sender_name: senderName,
         subject,
         body: msgBody,
-        read: sender_type === 'firm',
+        read: senderType === 'firm',
         encrypted: true,
       })
       .select()
@@ -68,12 +84,12 @@ export async function POST(req: NextRequest) {
       action: 'message_sent',
       entity_type: 'message',
       entity_id: msg.id,
-      metadata: { client_id, sender_type, subject },
+      metadata: { client_id, sender_type: senderType, subject },
     });
 
     // Email + in-app notifications — notify the other party
     try {
-      if (sender_type === 'firm') {
+      if (senderType === 'firm') {
         // Admin sent → notify client
         const { data: client } = await sb
           .from('clients')
@@ -87,7 +103,7 @@ export async function POST(req: NextRequest) {
             recipientName: client.name,
             data: {
               subject,
-              senderName: sender_name,
+              senderName,
               preview: msgBody.slice(0, 120),
             },
           });
@@ -99,7 +115,7 @@ export async function POST(req: NextRequest) {
           title: `New message: ${subject}`,
           body: msgBody.slice(0, 120),
           link: '/portal/messages',
-          metadata: { sender_name, message_id: msg.id },
+          metadata: { sender_name: senderName, message_id: msg.id },
         });
       } else {
         // Client sent → notify admins (email)
@@ -115,7 +131,7 @@ export async function POST(req: NextRequest) {
               recipientName: admin.full_name,
               data: {
                 subject,
-                senderName: sender_name,
+                senderName,
                 preview: msgBody.slice(0, 120),
               },
             });
@@ -125,10 +141,10 @@ export async function POST(req: NextRequest) {
         await createInAppNotification({
           target: 'firm',
           type: 'message',
-          title: `New message from ${sender_name}`,
+          title: `New message from ${senderName}`,
           body: subject,
           link: '/portal/admin?tab=messages',
-          metadata: { client_id, sender_name, message_id: msg.id },
+          metadata: { client_id, sender_name: senderName, message_id: msg.id },
         });
       }
     } catch (notifErr) {

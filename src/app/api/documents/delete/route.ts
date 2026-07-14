@@ -2,10 +2,8 @@
 /* DELETE /api/documents/delete?id=<document_id> */
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { internalError } from '@/lib/api-error';
+import { requireAdmin, isAuthError } from '@/lib/api-auth';
 
 export async function DELETE(req: NextRequest) {
   const documentId = req.nextUrl.searchParams.get('id');
@@ -13,32 +11,9 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: 'Document ID required' }, { status: 400 });
   }
 
-  // Verify admin
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)); } catch { /* ok */ }
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  const { user, sb: admin } = auth;
 
   // Get document
   const { data: doc, error: docError } = await admin
@@ -59,8 +34,17 @@ export async function DELETE(req: NextRequest) {
         .remove([doc.file_path]);
 
       if (storageError) {
-        console.error('Storage delete error:', storageError);
-        // Continue — still delete the DB record
+        console.error('documents.storage_delete_failed', {
+          documentId,
+          filePath: doc.file_path,
+          error: storageError,
+        });
+        // Preserve the database record so the object remains discoverable and
+        // the operation can be retried safely.
+        return NextResponse.json(
+          { error: 'Document storage deletion failed' },
+          { status: 502 },
+        );
       }
     }
 

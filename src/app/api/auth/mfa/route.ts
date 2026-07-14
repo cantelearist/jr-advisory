@@ -11,6 +11,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { createServerClient } from '@supabase/ssr';
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
+import { requireAuth, isAuthError } from '@/lib/api-auth';
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -54,13 +55,11 @@ export async function POST(req: NextRequest) {
     return res;
   }
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  }
+  // This route is the only privileged API allowed at aal1 so administrators
+  // can enroll or verify a factor. Role still comes from the trusted profile.
+  const auth = await requireAuth(req, { skipMfaCheck: true });
+  if (isAuthError(auth)) return auth;
+  const { user, isAdmin } = auth;
 
   const body = await req.json();
   const { action } = body;
@@ -68,8 +67,7 @@ export async function POST(req: NextRequest) {
   switch (action) {
     /* ── ENROLL: start TOTP enrollment ── */
     case 'enroll': {
-      const role = user.user_metadata?.role || 'client';
-      if (role !== 'admin' && role !== 'manager') {
+      if (!isAdmin) {
         return NextResponse.json(
           { error: 'MFA enrollment is restricted to admin and manager accounts.' },
           { status: 403 },
