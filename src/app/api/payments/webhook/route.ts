@@ -83,7 +83,6 @@ export async function POST(req: NextRequest) {
       session.client_reference_id === invoice.id &&
       session.metadata?.client_id === invoice.client_id &&
       session.metadata?.engagement_id === invoice.engagement_id &&
-      invoice.stripe_session_id === session.id &&
       session.currency?.toLowerCase() === 'usd' &&
       session.amount_total === expectedAmount &&
       Boolean(paymentIntentId);
@@ -112,7 +111,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invoice is not payable' }, { status: 409 });
     }
 
-    // Mark invoice as paid only if its state and checkout session are unchanged.
+    // Mark invoice as paid only if its state is unchanged. A client can open
+    // more than one valid Checkout session; the signed event metadata and
+    // amount checks above establish that the session belongs to this invoice.
     const now = new Date().toISOString().split('T')[0];
     const { data: paidInvoice, error: updateErr } = await sb
       .from('invoices')
@@ -124,7 +125,6 @@ export async function POST(req: NextRequest) {
       })
       .eq('id', invoiceId)
       .eq('status', invoice.status)
-      .eq('stripe_session_id', session.id)
       .select('id')
       .single();
 

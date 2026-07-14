@@ -113,6 +113,74 @@ export async function requireAuth(
 }
 
 /**
+ * Verify an admin session carried as a bearer token.
+ *
+ * Most route handlers use the cookie-aware requireAdmin helper above. A small
+ * number of server-to-server endpoints also support an Authorization header;
+ * they must use the same trusted-role and AAL2 checks rather than reimplementing
+ * an admin check that can silently bypass MFA.
+ */
+export async function requireAdminWithAccessToken(
+  accessToken: string,
+): Promise<AuthResult | NextResponse> {
+  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!url || !anonKey || !serviceKey) {
+    return NextResponse.json(
+      { error: 'Supabase not configured' },
+      { status: 503 },
+    );
+  }
+
+  const supabaseAuth = createClient(url, anonKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+  });
+
+  const {
+    data: { user },
+  } = await supabaseAuth.auth.getUser();
+
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
+  const sb = createClient(url, serviceKey, {
+    auth: { autoRefreshToken: false, persistSession: false },
+  });
+
+  const { data: profile } = await sb
+    .from('profiles')
+    .select('id, role, full_name, email')
+    .eq('id', user.id)
+    .single();
+
+  const isAdmin =
+    profile?.role === 'admin' ||
+    profile?.role === 'manager' ||
+    user.app_metadata?.role === 'admin' ||
+    user.app_metadata?.role === 'manager';
+
+  if (!isAdmin) {
+    return NextResponse.json({ error: 'Admin access required' }, { status: 403 });
+  }
+
+  const { data: aal, error: aalError } =
+    await supabaseAuth.auth.mfa.getAuthenticatorAssuranceLevel();
+
+  if (aalError || aal?.currentLevel !== 'aal2') {
+    return NextResponse.json(
+      { error: 'MFA enrollment and verification required' },
+      { status: 403 },
+    );
+  }
+
+  return { user, profile, isAdmin, sb };
+}
+
+/**
  * Require an authenticated admin. Returns AuthResult or a 401/403 response.
  */
 export async function requireAdmin(

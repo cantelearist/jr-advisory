@@ -1,13 +1,11 @@
 /* ── Invite Client — Admin creates auth account for a client ── */
-/* POST /api/auth/invite { clientId, password? } */
+/* POST /api/auth/invite { clientId } */
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { checkRateLimit, getClientIp, RATE_LIMITS } from '@/lib/rate-limit';
 import { logAudit, AUDIT_ACTIONS } from '@/lib/audit';
 import { internalError } from '@/lib/api-error';
+import { requireAdmin, isAuthError } from '@/lib/api-auth';
 
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
@@ -24,48 +22,12 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: rl.message }, { status: 429 });
   }
 
-  // Verify the caller is an authenticated admin
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return cookieStore.getAll();
-        },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          try {
-            cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options)
-            );
-          } catch {
-            /* server component */
-          }
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) {
-    return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-  }
-
-  // Check admin role
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-  if (profile?.role !== 'admin') {
-    return NextResponse.json({ error: 'Admin only' }, { status: 403 });
-  }
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  const { user, sb: admin } = auth;
 
   const body = await req.json();
-  const { clientId, password } = body;
+  const { clientId } = body;
 
   if (!clientId) {
     return NextResponse.json(
@@ -73,13 +35,6 @@ export async function POST(req: NextRequest) {
       { status: 400 }
     );
   }
-
-  // Admin client for user creation
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
 
   // Get client record
   const { data: client } = await admin
@@ -103,14 +58,17 @@ export async function POST(req: NextRequest) {
     });
   }
 
-  // Create auth user
-  const clientPassword = password || `jr-${client.name.split(' ')[0].toLowerCase()}-2026`;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL;
+  if (!siteUrl) {
+    return NextResponse.json({ error: 'Site URL not configured' }, { status: 503 });
+  }
+
+  // Create the account through Supabase's invitation flow. Never generate or
+  // return a reusable password from an API response.
   try {
-    const { data: newUser, error } = await admin.auth.admin.createUser({
-      email: client.email,
-      password: clientPassword,
-      email_confirm: true,
-      user_metadata: {
+    const { data: newUser, error } = await admin.auth.admin.inviteUserByEmail(client.email, {
+      redirectTo: `${siteUrl.replace(/\/$/, '')}/portal`,
+      data: {
         full_name: client.name,
         role: 'client',
         onboarded: false,
@@ -136,8 +94,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       success: true,
       email: client.email,
-      password: clientPassword,
-      message: `Account created for ${client.name}. Share credentials securely.`,
+      message: `Invitation sent to ${client.email}.`,
     });
   } catch (e: unknown) {
     return internalError(e, 'auth.invite');

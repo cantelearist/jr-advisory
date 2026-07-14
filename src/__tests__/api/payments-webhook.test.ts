@@ -170,4 +170,28 @@ describe('POST /api/payments/webhook', () => {
     await expect(response.json()).resolves.toEqual({ error: 'Payment does not match invoice' });
     expect(updateInvoiceMock).not.toHaveBeenCalled();
   });
+
+  it('accepts a valid paid session when another checkout replaced the stored session id', async () => {
+    configureEnvironment();
+    mockDatabase();
+    constructEventMock.mockReturnValueOnce({
+      ...signedEvent(),
+      data: {
+        object: {
+          ...signedEvent().data.object,
+          id: 'cs_previous',
+        },
+      },
+    });
+    createNotificationMock.mockResolvedValueOnce(undefined);
+
+    const response = await POST(request('t=1,v1=valid'));
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ received: true });
+    expect(updateInvoiceMock).toHaveBeenCalledWith(expect.objectContaining({
+      status: 'paid',
+      stripe_session_id: 'cs_previous',
+    }));
+  });
 });
