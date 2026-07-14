@@ -4,7 +4,7 @@
  * 2. Redirects unauthenticated users to /portal login.
  * 3. Redirects authenticated users away from /portal login.
  * 4. Enforces MFA for admin/manager — no fail-open.
- *    If TOTP is enrolled, AAL must be aal2 or user goes to /portal/mfa.
+ *    AAL must be aal2 or the user goes to /portal/mfa to enroll or verify.
  * 5. Validates redirect URLs to prevent open-redirect attacks. (P3)
  */
 
@@ -101,16 +101,12 @@ export async function middleware(request: NextRequest) {
 
     // ── Login page: redirect authenticated users to their home ──
     if (path === '/portal' && user) {
-      // If privileged and has MFA enrolled, check AAL
+      // Privileged users must enroll and verify MFA before entering the portal.
       if (isPrivileged) {
-        const { data: aal } =
+        const { data: aal, error: aalError } =
           await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
 
-        if (
-          aal?.currentLevel === 'aal1' &&
-          aal?.nextLevel === 'aal2'
-        ) {
-          // MFA enrolled but not yet verified this session — send to MFA page
+        if (aalError || aal?.currentLevel !== 'aal2') {
           const dest = role === 'admin' ? '/portal/admin' : '/portal/dashboard';
           return redirect(
             new URL(`/portal/mfa?redirect=${encodeURIComponent(dest)}`, request.url),
@@ -150,15 +146,10 @@ export async function middleware(request: NextRequest) {
       !MFA_EXEMPT_PATHS.includes(path)
     ) {
       if (isPrivileged) {
-        const { data: aal } =
+        const { data: aal, error: aalError } =
           await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
 
-        // If MFA is enrolled (nextLevel === 'aal2') but not verified (currentLevel !== 'aal2')
-        // → redirect to MFA verification. This is the no-fail-open gate.
-        if (
-          aal?.nextLevel === 'aal2' &&
-          aal?.currentLevel !== 'aal2'
-        ) {
+        if (aalError || aal?.currentLevel !== 'aal2') {
           return redirect(
             new URL(
               `/portal/mfa?redirect=${encodeURIComponent(path)}`,

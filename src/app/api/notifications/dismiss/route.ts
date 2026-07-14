@@ -14,25 +14,31 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     const { notification_id, dismiss_all, target } = body;
+    let callerTarget: string | null = null;
 
-    // Non-admin users can only dismiss their own notifications
-    if (!isAdmin && target) {
+    // Resolve the caller's target once and apply it to every mutation path.
+    if (!isAdmin) {
       const { data: clientRec } = await sb
         .from('clients')
         .select('id')
         .eq('profile_id', auth.user.id)
         .single();
-      if (!clientRec || target !== clientRec.id) {
+      if (!clientRec || (target && target !== clientRec.id)) {
         return NextResponse.json({ error: 'Access denied' }, { status: 403 });
       }
+      callerTarget = clientRec.id;
     }
 
-    if (dismiss_all && target) {
+    if (dismiss_all) {
+      const effectiveTarget = isAdmin ? target : callerTarget;
+      if (!effectiveTarget) {
+        return NextResponse.json({ error: 'Target required' }, { status: 400 });
+      }
       /* Dismiss all for a target */
       const { error } = await sb
         .from('notifications')
         .update({ read: true })
-        .eq('target', target)
+        .eq('target', effectiveTarget)
         .eq('read', false);
 
       if (error && !error.message.includes('does not exist')) {
@@ -40,16 +46,25 @@ export async function POST(req: NextRequest) {
       }
     } else if (notification_id) {
       /* Dismiss single */
-      const { error } = await sb
+      let update = sb
         .from('notifications')
         .update({ read: true })
         .eq('id', notification_id);
 
+      if (callerTarget) {
+        update = update.eq('target', callerTarget);
+      }
+
+      const { data, error } = await update.select('id');
+
       if (error && !error.message.includes('does not exist')) {
         return internalError(error, 'notifications.dismiss');
       }
+      if (!error && (!data || data.length === 0)) {
+        return NextResponse.json({ error: 'Notification not found' }, { status: 404 });
+      }
     } else {
-      return NextResponse.json({ error: 'Provide notification_id or dismiss_all + target' }, { status: 400 });
+      return NextResponse.json({ error: 'Provide notification_id or dismiss_all' }, { status: 400 });
     }
 
     return NextResponse.json({ success: true });

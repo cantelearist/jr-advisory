@@ -1,32 +1,12 @@
 /* ── E-Signature Decline — client declines a signature request ── */
 import { NextResponse, type NextRequest } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
 import { internalError } from '@/lib/api-error';
+import { requireAuth, isAuthError } from '@/lib/api-auth';
 
 export async function POST(req: NextRequest) {
-  const response = NextResponse.next();
-  const supabaseAuth = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return req.cookies.getAll(); },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabaseAuth.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-
-  const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const auth = await requireAuth(req);
+  if (isAuthError(auth)) return auth;
+  const { sb, user } = auth;
 
   try {
     const { signature_request_id, reason } = await req.json();
@@ -34,17 +14,26 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Missing signature_request_id' }, { status: 400 });
     }
 
-    /* Verify the request exists and is pending */
+    const { data: clientRecord } = await sb
+      .from('clients')
+      .select('id')
+      .eq('profile_id', user.id)
+      .maybeSingle();
+
+    if (!clientRecord) {
+      return NextResponse.json({ error: 'Signature request not found' }, { status: 404 });
+    }
+
+    /* Verify the request belongs to the caller and is pending */
     const { data: sigReq } = await sb
       .from('signature_requests')
       .select('*, documents(name)')
       .eq('id', signature_request_id)
-      .single();
+      .eq('client_id', clientRecord.id)
+      .eq('status', 'pending')
+      .maybeSingle();
 
-    if (!sigReq) return NextResponse.json({ error: 'Not found' }, { status: 404 });
-    if (sigReq.status !== 'pending') {
-      return NextResponse.json({ error: 'Request is no longer pending' }, { status: 400 });
-    }
+    if (!sigReq) return NextResponse.json({ error: 'Signature request not found or no longer pending' }, { status: 404 });
 
     /* Update status to declined */
     const { data: updated, error } = await sb
@@ -56,10 +45,15 @@ export async function POST(req: NextRequest) {
         ip_address: req.headers.get('x-forwarded-for') || 'unknown',
       })
       .eq('id', signature_request_id)
+      .eq('client_id', clientRecord.id)
+      .eq('status', 'pending')
       .select()
-      .single();
+      .maybeSingle();
 
     if (error) return internalError(error, 'signatures.decline');
+    if (!updated) {
+      return NextResponse.json({ error: 'Signature request is no longer pending' }, { status: 409 });
+    }
 
     /* Audit log */
     await sb.from('audit_log').insert({

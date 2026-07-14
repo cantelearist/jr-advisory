@@ -10,6 +10,7 @@
 import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { getAuthClient } from '@/lib/supabase-browser';
+import MfaSetup from '@/components/portal/admin/MfaSetup';
 
 /** Sanitize redirect to prevent open-redirect attacks */
 function sanitizeRedirect(url: string | null, fallback: string): string {
@@ -35,21 +36,21 @@ function MfaVerify() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [factorId, setFactorId] = useState<string | null>(null);
+  const [factorStatus, setFactorStatus] = useState<'checking' | 'missing' | 'verified'>('checking');
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     // Get the user's enrolled TOTP factor
     supabase.auth.mfa.listFactors().then(({ data }) => {
-      const totp = data?.totp?.[0];
+      const totp = data?.totp?.find((factor) => factor.status === 'verified');
       if (totp) {
         setFactorId(totp.id);
+        setFactorStatus('verified');
       } else {
-        // No MFA enrolled — redirect to dashboard
-        const redirect = sanitizeRedirect(searchParams.get('redirect'), '/portal/dashboard');
-        router.replace(redirect);
+        setFactorStatus('missing');
       }
     });
-  }, [supabase, router, searchParams]);
+  }, [supabase]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -96,7 +97,21 @@ function MfaVerify() {
     }
   };
 
-  if (!factorId) {
+  if (factorStatus === 'missing') {
+    const redirect = sanitizeRedirect(searchParams.get('redirect'), '/portal/admin');
+    return (
+      <div style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+        <div style={{ width: '100%', maxWidth: 520 }}>
+          <MfaSetup
+            allowDisable={false}
+            onEnrolled={() => router.replace(redirect)}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  if (!factorId || factorStatus === 'checking') {
     return (
       <div style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <p style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'Inter, sans-serif', fontSize: 13 }}>

@@ -6,6 +6,11 @@ export default defineConfig({
   plugins: [react()],
   test: {
     environment: "jsdom",
+    environmentOptions: {
+      jsdom: {
+        url: "https://www.jamesroman.la",
+      },
+    },
     setupFiles: ["./src/__tests__/setup.ts"],
     include: ["src/__tests__/**/*.test.{ts,tsx}"],
     globals: true,

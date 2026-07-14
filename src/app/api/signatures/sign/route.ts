@@ -1,33 +1,13 @@
 /* ── E-Signature Sign — client signs a document ── */
 import { NextResponse, type NextRequest } from 'next/server';
-import { createServerClient } from '@supabase/ssr';
-import { createClient } from '@supabase/supabase-js';
 import { validateSignatureData } from '@/lib/sanitize';
 import { internalError } from '@/lib/api-error';
+import { requireAuth, isAuthError } from '@/lib/api-auth';
 
 export async function POST(req: NextRequest) {
-  const response = NextResponse.next();
-  const supabaseAuth = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return req.cookies.getAll(); },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          cookiesToSet.forEach(({ name, value, options }) => response.cookies.set(name, value, options));
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabaseAuth.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-
-  const sb = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
+  const auth = await requireAuth(req);
+  if (isAuthError(auth)) return auth;
+  const { sb, user } = auth;
 
   try {
     const { signature_request_id, signature_data } = await req.json();
@@ -40,12 +20,25 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invalid signature data format' }, { status: 400 });
     }
 
+    const { data: clientRecord } = await sb
+      .from('clients')
+      .select('id')
+      .eq('profile_id', user.id)
+      .maybeSingle();
+
+    if (!clientRecord) {
+      return NextResponse.json({ error: 'Signature request not found' }, { status: 404 });
+    }
+
     const { data: sigReq } = await sb
       .from('signature_requests')
       .select('*, documents(name)')
-      .eq('id', signature_request_id).single();
+      .eq('id', signature_request_id)
+      .eq('client_id', clientRecord.id)
+      .eq('status', 'pending')
+      .maybeSingle();
 
-    if (!sigReq) return NextResponse.json({ error: 'Not found' }, { status: 404 });
+    if (!sigReq) return NextResponse.json({ error: 'Signature request not found or no longer pending' }, { status: 404 });
 
     // Use server-detected IP only — never trust client-supplied IP
     const clientIp = req.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 'unknown';
@@ -56,9 +49,16 @@ export async function POST(req: NextRequest) {
         signed_at: new Date().toISOString(),
         ip_address: clientIp,
       })
-      .eq('id', signature_request_id).select().single();
+      .eq('id', signature_request_id)
+      .eq('client_id', clientRecord.id)
+      .eq('status', 'pending')
+      .select()
+      .maybeSingle();
 
     if (error) return internalError(error, 'signatures.sign');
+    if (!updated) {
+      return NextResponse.json({ error: 'Signature request is no longer pending' }, { status: 409 });
+    }
 
     await sb.from('documents').update({ status: 'final' }).eq('id', sigReq.document_id);
     await sb.from('audit_log').insert({

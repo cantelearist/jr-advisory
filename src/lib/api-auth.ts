@@ -95,18 +95,15 @@ export async function requireAuth(
     user.app_metadata?.role === 'manager';
 
   // ── MFA enforcement for admin/manager on API routes ──
-  // If user is privileged and has MFA enrolled, they must have aal2.
-  // This closes the gap where middleware gates pages but not API routes.
+  // Privileged sessions must be at aal2. An aal1/aal1 response means no factor
+  // is enrolled, which is still insufficient for an admin or manager session.
   if (isAdmin && !options?.skipMfaCheck) {
-    const { data: aal } =
+    const { data: aal, error: aalError } =
       await supabaseAuth.auth.mfa.getAuthenticatorAssuranceLevel();
 
-    if (
-      aal?.nextLevel === 'aal2' &&
-      aal?.currentLevel !== 'aal2'
-    ) {
+    if (aalError || aal?.currentLevel !== 'aal2') {
       return NextResponse.json(
-        { error: 'MFA verification required' },
+        { error: 'MFA enrollment and verification required' },
         { status: 403 },
       );
     }

@@ -74,4 +74,59 @@ describe('requireAdmin', () => {
       error: 'Admin access required',
     });
   });
+
+  it('rejects an administrator who has not enrolled and verified MFA', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-key');
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: 'admin-1', email: 'admin@jamesroman.la' } },
+    });
+    profileSingleMock.mockResolvedValueOnce({
+      data: {
+        id: 'admin-1',
+        role: 'admin',
+        full_name: 'Administrator',
+        email: 'admin@jamesroman.la',
+      },
+    });
+    getAalMock.mockResolvedValueOnce({
+      data: { currentLevel: 'aal1', nextLevel: 'aal1' },
+      error: null,
+    });
+
+    const result = await requireAdmin(apiRequest());
+
+    expect(result).toBeInstanceOf(NextResponse);
+    expect((result as NextResponse).status).toBe(403);
+    await expect((result as NextResponse).json()).resolves.toEqual({
+      error: 'MFA enrollment and verification required',
+    });
+  });
+
+  it('allows a profile-backed administrator with an aal2 session', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubEnv('SUPABASE_SERVICE_ROLE_KEY', 'service-key');
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: 'admin-1', email: 'admin@jamesroman.la' } },
+    });
+    profileSingleMock.mockResolvedValueOnce({
+      data: {
+        id: 'admin-1',
+        role: 'admin',
+        full_name: 'Administrator',
+        email: 'admin@jamesroman.la',
+      },
+    });
+    getAalMock.mockResolvedValueOnce({
+      data: { currentLevel: 'aal2', nextLevel: 'aal2' },
+      error: null,
+    });
+
+    const result = await requireAdmin(apiRequest());
+
+    expect(result).not.toBeInstanceOf(NextResponse);
+    expect((result as { isAdmin: boolean }).isAdmin).toBe(true);
+  });
 });

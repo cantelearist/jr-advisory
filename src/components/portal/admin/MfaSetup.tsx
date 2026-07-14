@@ -7,7 +7,7 @@
  * - If enrolled: shows status + option to disable
  */
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { getAuthClient } from '@/lib/supabase-browser';
 
 type MfaState = 'loading' | 'not-enrolled' | 'enrolling' | 'verifying' | 'enrolled';
@@ -18,7 +18,12 @@ interface FactorInfo {
   createdAt: string;
 }
 
-export default function MfaSetup() {
+interface MfaSetupProps {
+  allowDisable?: boolean;
+  onEnrolled?: () => void;
+}
+
+export default function MfaSetup({ allowDisable = true, onEnrolled }: MfaSetupProps) {
   const [supabase] = useState(() => getAuthClient());
   const [state, setState] = useState<MfaState>('loading');
   const [factor, setFactor] = useState<FactorInfo | null>(null);
@@ -30,11 +35,7 @@ export default function MfaSetup() {
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    checkMfaStatus();
-  }, []);
-
-  async function checkMfaStatus() {
+  const checkMfaStatus = useCallback(async () => {
     const { data } = await supabase.auth.mfa.listFactors();
     const verifiedTotp = data?.totp?.find(f => f.status === 'verified');
     if (verifiedTotp) {
@@ -47,7 +48,11 @@ export default function MfaSetup() {
     } else {
       setState('not-enrolled');
     }
-  }
+  }, [supabase]);
+
+  useEffect(() => {
+    void checkMfaStatus();
+  }, [checkMfaStatus]);
 
   async function startEnrollment() {
     setError('');
@@ -127,6 +132,7 @@ export default function MfaSetup() {
       setNewFactorId('');
       setCode('');
       setLoading(false);
+      onEnrolled?.();
     } catch {
       setError('Verification failed');
       setLoading(false);
@@ -237,13 +243,15 @@ export default function MfaSetup() {
           <p style={styles.muted}>
             Enrolled: {new Date(factor.createdAt).toLocaleDateString()}
           </p>
-          <button
-            onClick={disableMfa}
-            disabled={loading}
-            style={styles.dangerButton}
-          >
-            {loading ? 'Disabling...' : 'Disable MFA'}
-          </button>
+          {allowDisable && (
+            <button
+              onClick={disableMfa}
+              disabled={loading}
+              style={styles.dangerButton}
+            >
+              {loading ? 'Disabling...' : 'Disable MFA'}
+            </button>
+          )}
         </div>
       )}
     </div>

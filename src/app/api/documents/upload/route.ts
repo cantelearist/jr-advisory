@@ -2,33 +2,15 @@
 /* POST /api/documents/upload (multipart form data) */
 
 import { NextResponse, type NextRequest } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { validateUploadFile } from '@/lib/sanitize';
 import { internalError } from '@/lib/api-error';
+import { requireAdmin, isAuthError } from '@/lib/api-auth';
 
 export async function POST(req: NextRequest) {
-  // 1) Verify caller is an authenticated admin
-  const cookieStore = await cookies();
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() { return cookieStore.getAll(); },
-        setAll(cookiesToSet: { name: string; value: string; options?: Record<string, unknown> }[]) {
-          try { cookiesToSet.forEach(({ name, value, options }) => cookieStore.set(name, value, options)); } catch { /* ok */ }
-        },
-      },
-    }
-  );
-
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
-
-  const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single();
-  if (profile?.role !== 'admin') return NextResponse.json({ error: 'Admin only' }, { status: 403 });
+  // 1) Verify caller through the shared trusted-role and MFA gate.
+  const auth = await requireAdmin(req);
+  if (isAuthError(auth)) return auth;
+  const { user, sb: admin } = auth;
 
   // 2) Parse multipart form
   const formData = await req.formData();
@@ -47,13 +29,6 @@ export async function POST(req: NextRequest) {
   if (uploadError) {
     return NextResponse.json({ error: uploadError }, { status: 400 });
   }
-
-  // 3) Admin client for storage + DB
-  const admin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
 
   try {
     // Generate safe filename
@@ -90,7 +65,20 @@ export async function POST(req: NextRequest) {
       .select()
       .single();
 
-    if (dbError) throw dbError;
+    if (dbError) {
+      // Storage and Postgres cannot share a transaction. Compensate immediately
+      // so a failed row insert does not leave a confidential orphaned object.
+      const { error: cleanupError } = await admin.storage
+        .from('documents')
+        .remove([storagePath]);
+      if (cleanupError) {
+        console.error('documents.upload_cleanup_failed', {
+          storagePath,
+          error: cleanupError,
+        });
+      }
+      throw dbError;
+    }
 
     // 6) Audit log
     await admin.from('audit_log').insert({
