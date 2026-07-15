@@ -12,14 +12,44 @@ export interface PortalData {
   timeline: TimelineEvent[];
   invoices: Invoice[];
   todos: Todo[];
+  /** Present when the authenticated API could not be reached. */
+  error?: 'unauthorized' | 'forbidden' | 'unavailable';
+}
+
+export const PORTAL_DATA_TIMEOUT_MS = 10_000;
+
+function emptyPortalData(error?: PortalData['error']): PortalData {
+  return {
+    client: null,
+    engagement: null,
+    documents: [],
+    messages: [],
+    timeline: [],
+    invoices: [],
+    todos: [],
+    ...(error ? { error } : {}),
+  };
 }
 
 /** Primary: fetch all portal data via authenticated API route (bypasses RLS) */
 export async function fetchPortalData(clientId?: string): Promise<PortalData> {
+  const controller = typeof AbortController !== 'undefined' ? new AbortController() : null;
+  const timeoutId = controller ? setTimeout(() => controller.abort(), PORTAL_DATA_TIMEOUT_MS) : null;
+
   try {
     const url = clientId ? `/api/portal/data?client_id=${clientId}` : '/api/portal/data';
-    const res = await fetch(url);
-    if (!res.ok) throw new Error('API error');
+    const res = await fetch(url, {
+      credentials: 'same-origin',
+      cache: 'no-store',
+      ...(controller ? { signal: controller.signal } : {}),
+    });
+
+    if (!res.ok) {
+      if (res.status === 401) return emptyPortalData('unauthorized');
+      if (res.status === 403) return emptyPortalData('forbidden');
+      return emptyPortalData('unavailable');
+    }
+
     const data = await res.json();
     return {
       client: data.client || null,
@@ -31,7 +61,9 @@ export async function fetchPortalData(clientId?: string): Promise<PortalData> {
       todos: (data.todos as Todo[]) || [],
     };
   } catch {
-    return { client: null, engagement: null, documents: [], messages: [], timeline: [], invoices: [], todos: [] };
+    return emptyPortalData('unavailable');
+  } finally {
+    if (timeoutId) clearTimeout(timeoutId);
   }
 }
 

@@ -14,6 +14,77 @@ import type { Client, Engagement, Todo } from '@/lib/database.types';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
+function PortalDataErrorState({ error }: { error: NonNullable<PortalData['error']> }) {
+  const authIssue = error === 'unauthorized' || error === 'forbidden';
+
+  return (
+    <div className="dash dash--error">
+      <main className="dash__error-main" role="alert">
+        <span className="dash__empty-eyebrow">The Private Office</span>
+        <h1 className="dash__error-heading">
+          {authIssue ? 'Your access needs to be renewed.' : 'Your file is taking longer than expected.'}
+        </h1>
+        <p className="dash__error-body">
+          {authIssue
+            ? 'The secure session is no longer valid. Return to the Private Office and sign in again.'
+            : 'The file service did not respond. Nothing has been changed — try the connection again.'}
+        </p>
+        {authIssue ? (
+          <a className="dash__error-action" href="/portal">Return to sign in</a>
+        ) : (
+          <button className="dash__error-action" type="button" onClick={() => window.location.reload()}>
+            Try again
+          </button>
+        )}
+      </main>
+      <style jsx>{`
+        .dash--error {
+          min-height: 100vh;
+          background: #000;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 40px 24px;
+        }
+        .dash__error-main {
+          width: min(680px, 100%);
+          border-top: 1px solid rgba(201,169,110,0.18);
+          border-bottom: 1px solid rgba(201,169,110,0.1);
+          padding: 44px 0;
+        }
+        .dash__error-heading {
+          margin: 20px 0 24px;
+          font-family: 'Cormorant Garamond', Georgia, serif;
+          font-size: clamp(40px, 6vw, 72px);
+          font-weight: 300;
+          line-height: 1;
+          color: #fff;
+        }
+        .dash__error-body {
+          max-width: 58ch;
+          margin: 0 0 28px;
+          color: rgba(255,255,255,0.68);
+          font-size: 16px;
+          line-height: 1.8;
+        }
+        .dash__error-action {
+          display: inline-block;
+          padding: 11px 20px;
+          border: 1px solid rgba(201,169,110,0.35);
+          background: transparent;
+          color: #c9a96e;
+          font: 10px 'JetBrains Mono', monospace;
+          letter-spacing: 0.18em;
+          text-transform: uppercase;
+          text-decoration: none;
+          cursor: pointer;
+        }
+        .dash__error-action:hover { background: rgba(201,169,110,0.08); }
+      `}</style>
+    </div>
+  );
+}
+
 export default function PortalDashboard() {
   const { user, profile, isAdmin, loading: authLoading } = useAuth();
   const [loaded, setLoaded] = useState(false);
@@ -43,6 +114,8 @@ export default function PortalDashboard() {
   };
 
   if (authLoading || !portalData) return <LoadingSkeleton />;
+
+  if (portalData.error) return <PortalDataErrorState error={portalData.error} />;
 
   const activeClient: Client | null = portalData.client || null;
   const engagement: Engagement | null = portalData.engagement || null;

@@ -1,6 +1,6 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import { AuthProvider, useAuth } from '@/components/portal/AuthProvider';
+import { act, render, screen, waitFor } from '@testing-library/react';
+import { AuthProvider, AUTH_REQUEST_TIMEOUT_MS, useAuth } from '@/components/portal/AuthProvider';
 
 const getAuthClientMock = vi.hoisted(() => vi.fn());
 
@@ -57,6 +57,7 @@ function AuthProbe() {
 
 describe('AuthProvider magic-link URL handling', () => {
   afterEach(() => {
+    vi.useRealTimers();
     getAuthClientMock.mockReset();
     window.history.replaceState({}, '', '/');
   });
@@ -116,5 +117,31 @@ describe('AuthProvider magic-link URL handling', () => {
     });
     expect(window.location.hash).toBe('');
     expect(screen.getByText('no-user')).toBeInTheDocument();
+  });
+
+  it('releases the auth gate when Supabase does not answer', async () => {
+    vi.useFakeTimers();
+    const supabase = makeSupabaseClient();
+    supabase.auth.setSession = vi.fn(() => new Promise(() => {}));
+    supabase.auth.getSession.mockResolvedValueOnce({
+      data: { session: null },
+      error: null,
+    });
+    getAuthClientMock.mockReturnValue(supabase);
+    window.history.replaceState({}, '', '/portal#access_token=slow&refresh_token=slow');
+
+    render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>,
+    );
+
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(AUTH_REQUEST_TIMEOUT_MS);
+    });
+
+    expect(screen.getByText('loaded')).toBeInTheDocument();
+    expect(screen.getByText('no-user')).toBeInTheDocument();
+    expect(window.location.hash).toBe('');
   });
 });
