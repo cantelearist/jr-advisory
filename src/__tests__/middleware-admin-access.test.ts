@@ -28,12 +28,47 @@ function portalRequest(path: string) {
   return new NextRequest(`https://www.jamesroman.la${path}`);
 }
 
+function authenticatedPortalRequest(path: string) {
+  return new NextRequest(`https://www.jamesroman.la${path}`, {
+    headers: {
+      cookie: 'sb-example-auth-token=%5B%5D',
+    },
+  });
+}
+
 describe('portal middleware admin access', () => {
   afterEach(() => {
     getUserMock.mockReset();
     getAalMock.mockReset();
     profileMaybeSingleMock.mockReset();
     vi.unstubAllEnvs();
+  });
+
+  it('serves the public login page without waiting on Supabase', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+
+    const response = await middleware(portalRequest('/portal'));
+
+    expect(response.status).toBe(200);
+    expect(getUserMock).not.toHaveBeenCalled();
+  });
+
+  it('still redirects an authenticated client from the login page', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+    getUserMock.mockResolvedValueOnce({
+      data: { user: { id: 'client-1' } },
+    });
+    profileMaybeSingleMock.mockResolvedValueOnce({
+      data: { role: 'client' },
+      error: null,
+    });
+
+    const response = await middleware(authenticatedPortalRequest('/portal'));
+
+    expect(response.status).toBe(307);
+    expect(response.headers.get('location')).toBe('https://www.jamesroman.la/portal/dashboard');
   });
 
   it('redirects authenticated clients away from the admin route before serving it', async () => {
@@ -52,7 +87,7 @@ describe('portal middleware admin access', () => {
       error: null,
     });
 
-    const response = await middleware(portalRequest('/portal/admin'));
+    const response = await middleware(authenticatedPortalRequest('/portal/admin'));
 
     expect(response.status).toBe(307);
     expect(response.headers.get('location')).toBe('https://www.jamesroman.la/portal/dashboard');
@@ -101,7 +136,7 @@ describe('portal middleware admin access', () => {
       error: null,
     });
 
-    const response = await middleware(portalRequest('/portal/admin'));
+    const response = await middleware(authenticatedPortalRequest('/portal/admin'));
 
     expect(response.status).toBe(200);
     expect(response.headers.get('location')).toBeNull();

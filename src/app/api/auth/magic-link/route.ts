@@ -63,11 +63,14 @@ export async function POST(req: NextRequest) {
   });
 
   const { error } = await supabase.auth.signInWithOtp({
-    email: email.trim(),
-    options: {
-      emailRedirectTo: `${callbackBaseUrl(req)}/auth/callback`,
-      shouldCreateUser: false,
-    },
+      email: email.trim(),
+      options: {
+        // The browser client uses Supabase's implicit flow, which returns
+        // access and refresh tokens in the URL hash. Send users directly to
+        // the portal so AuthProvider can consume and clear those tokens.
+        emailRedirectTo: `${callbackBaseUrl(req)}/portal`,
+        shouldCreateUser: false,
+      },
   });
 
   if (error?.status === 429) {

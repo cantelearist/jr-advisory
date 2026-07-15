@@ -53,7 +53,7 @@ describe('POST /api/auth/magic-link', () => {
     expect(signInWithOtpMock).toHaveBeenCalledWith({
       email: 'client@jamesroman.la',
       options: {
-        emailRedirectTo: 'https://www.jamesroman.la/auth/callback',
+        emailRedirectTo: 'https://www.jamesroman.la/portal',
         shouldCreateUser: false,
       },
     });

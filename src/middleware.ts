@@ -49,6 +49,17 @@ export async function middleware(request: NextRequest) {
   const nextResponse = () => withPrivateHeaders(NextResponse.next({ request }));
   const redirect = (url: URL) => withPrivateHeaders(NextResponse.redirect(url));
 
+  // The login page is public. Do not make an unauthenticated request wait on
+  // Supabase just to discover that there is no session; a slow auth provider
+  // must not take the Private Office entry point down with it. Authenticated
+  // requests still carry the SSR auth cookie and follow the normal checks.
+  const hasAuthCookie = request.cookies
+    .getAll()
+    .some(({ name }) => name.startsWith('sb-') && name.includes('-auth-token'));
+  if (path === '/portal' && !hasAuthCookie) {
+    return nextResponse();
+  }
+
   let response = nextResponse();
 
   try {
