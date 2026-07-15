@@ -7,10 +7,10 @@
  * No fail-open: cannot bypass this page.
  */
 
-import { useState, useEffect, useRef, Suspense } from 'react';
+import { useState, useEffect, useRef, useCallback, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { getAuthClient } from '@/lib/supabase-browser';
 import MfaSetup from '@/components/portal/admin/MfaSetup';
+import { useAuth } from '@/components/portal/AuthProvider';
 
 /** Sanitize redirect to prevent open-redirect attacks */
 function sanitizeRedirect(url: string | null, fallback: string): string {
@@ -31,26 +31,63 @@ export default function MfaPage() {
 function MfaVerify() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [supabase] = useState(() => getAuthClient());
+  const { user, loading: authLoading } = useAuth();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [factorId, setFactorId] = useState<string | null>(null);
-  const [factorStatus, setFactorStatus] = useState<'checking' | 'missing' | 'verified'>('checking');
+  const [factorStatus, setFactorStatus] = useState<'checking' | 'missing' | 'verified' | 'error'>('checking');
+  const [statusError, setStatusError] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    // Get the user's enrolled TOTP factor
-    supabase.auth.mfa.listFactors().then(({ data }) => {
-      const totp = data?.totp?.find((factor) => factor.status === 'verified');
+  const checkMfaStatus = useCallback(async () => {
+    setFactorStatus('checking');
+    setStatusError('');
+
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const response = await fetch('/api/auth/mfa', {
+        method: 'GET',
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+      const result = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        throw new Error(typeof result.error === 'string' ? result.error : 'Unable to verify MFA status');
+      }
+
+      const totp = Array.isArray(result.factors)
+        ? result.factors.find((factor: { status?: string }) => factor.status === 'verified')
+        : null;
+
       if (totp) {
         setFactorId(totp.id);
         setFactorStatus('verified');
       } else {
+        setFactorId(null);
         setFactorStatus('missing');
       }
-    });
-  }, [supabase]);
+    } catch {
+      setFactorId(null);
+      setStatusError('We could not verify your authentication status. Try again.');
+      setFactorStatus('error');
+    } finally {
+      window.clearTimeout(timeout);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (authLoading) return;
+    if (!user) {
+      setStatusError('Your session has expired. Request a new sign-in link.');
+      setFactorStatus('error');
+      return;
+    }
+    void checkMfaStatus();
+  }, [authLoading, user, checkMfaStatus]);
 
   useEffect(() => {
     inputRef.current?.focus();
@@ -63,25 +100,38 @@ function MfaVerify() {
     setLoading(true);
 
     try {
-      // Step 1: Create challenge
-      const { data: challengeData, error: challengeError } =
-        await supabase.auth.mfa.challenge({ factorId });
+      // Step 1: Create challenge through the authenticated server route.
+      const challengeResponse = await fetch('/api/auth/mfa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'challenge', factorId }),
+      });
+      const challengeData = await challengeResponse.json().catch(() => ({}));
 
-      if (challengeError) {
-        setError(challengeError.message);
+      if (!challengeResponse.ok || typeof challengeData.challengeId !== 'string') {
+        setError(challengeData.error || 'Unable to start MFA verification.');
         setLoading(false);
         return;
       }
 
-      // Step 2: Verify the code
-      const { error: verifyError } = await supabase.auth.mfa.verify({
-        factorId,
-        challengeId: challengeData.id,
-        code: code.trim(),
+      // Step 2: Verify the code and persist the aal2 cookie on the server.
+      const verifyResponse = await fetch('/api/auth/mfa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'verify',
+          factorId,
+          challengeId: challengeData.challengeId,
+          code: code.trim(),
+        }),
       });
 
-      if (verifyError) {
+      if (!verifyResponse.ok) {
+        const verifyData = await verifyResponse.json().catch(() => ({}));
         setError('Invalid code. Please try again.');
+        if (typeof verifyData.error === 'string' && verifyData.error !== 'Invalid code') {
+          setError(verifyData.error);
+        }
         setCode('');
         setLoading(false);
         inputRef.current?.focus();
@@ -106,6 +156,35 @@ function MfaVerify() {
             allowDisable={false}
             onEnrolled={() => router.replace(redirect)}
           />
+        </div>
+      </div>
+    );
+  }
+
+  if (factorStatus === 'error') {
+    return (
+      <div style={{ minHeight: '100vh', background: '#000', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+        <div style={{ width: '100%', maxWidth: 420, textAlign: 'center' }}>
+          <p style={{ color: 'rgba(255,255,255,0.55)', fontFamily: 'Inter, sans-serif', fontSize: 13, lineHeight: 1.6 }}>
+            {statusError}
+          </p>
+          {user ? (
+            <button
+              type="button"
+              onClick={() => void checkMfaStatus()}
+              style={{ marginTop: 20, padding: '14px 24px', background: 'transparent', border: '1px solid rgba(201, 169, 110, 0.3)', color: '#c9a96e', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}
+            >
+              Retry
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => router.replace('/portal')}
+              style={{ marginTop: 20, padding: '14px 24px', background: 'transparent', border: '1px solid rgba(201, 169, 110, 0.3)', color: '#c9a96e', cursor: 'pointer', fontFamily: 'Inter, sans-serif', fontSize: 11, letterSpacing: '0.2em', textTransform: 'uppercase' }}
+            >
+              Return to sign in
+            </button>
+          )}
         </div>
       </div>
     );

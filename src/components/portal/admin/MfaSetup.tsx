@@ -8,9 +8,8 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { getAuthClient } from '@/lib/supabase-browser';
 
-type MfaState = 'loading' | 'not-enrolled' | 'enrolling' | 'verifying' | 'enrolled';
+type MfaState = 'loading' | 'not-enrolled' | 'enrolling' | 'verifying' | 'enrolled' | 'error';
 
 interface FactorInfo {
   id: string;
@@ -24,7 +23,6 @@ interface MfaSetupProps {
 }
 
 export default function MfaSetup({ allowDisable = true, onEnrolled }: MfaSetupProps) {
-  const [supabase] = useState(() => getAuthClient());
   const [state, setState] = useState<MfaState>('loading');
   const [factor, setFactor] = useState<FactorInfo | null>(null);
   const [qrCode, setQrCode] = useState('');
@@ -36,19 +34,37 @@ export default function MfaSetup({ allowDisable = true, onEnrolled }: MfaSetupPr
   const inputRef = useRef<HTMLInputElement>(null);
 
   const checkMfaStatus = useCallback(async () => {
-    const { data } = await supabase.auth.mfa.listFactors();
-    const verifiedTotp = data?.totp?.find(f => f.status === 'verified');
-    if (verifiedTotp) {
-      setFactor({
-        id: verifiedTotp.id,
-        friendlyName: verifiedTotp.friendly_name || undefined,
-        createdAt: verifiedTotp.created_at,
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const response = await fetch('/api/auth/mfa', {
+        method: 'GET',
+        cache: 'no-store',
+        signal: controller.signal,
       });
-      setState('enrolled');
-    } else {
-      setState('not-enrolled');
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error('MFA status unavailable');
+
+      const verifiedTotp = data.factors?.find((f: { status?: string }) => f.status === 'verified');
+      if (verifiedTotp) {
+        setFactor({
+          id: verifiedTotp.id,
+          friendlyName: verifiedTotp.friendly_name || undefined,
+          createdAt: verifiedTotp.created_at,
+        });
+        setState('enrolled');
+      } else {
+        setState('not-enrolled');
+      }
+    } catch {
+      setError('We could not verify MFA status. Try again.');
+      setState('error');
+    } finally {
+      window.clearTimeout(timeout);
     }
-  }, [supabase]);
+  }, []);
 
   useEffect(() => {
     void checkMfaStatus();
@@ -180,6 +196,16 @@ export default function MfaSetup({ allowDisable = true, onEnrolled }: MfaSetupPr
 
       {state === 'loading' && (
         <p style={styles.muted}>Checking MFA status...</p>
+      )}
+
+      {state === 'error' && (
+        <button
+          onClick={() => { setError(''); setState('loading'); void checkMfaStatus(); }}
+          disabled={loading}
+          style={styles.button}
+        >
+          Retry
+        </button>
       )}
 
       {state === 'not-enrolled' && (
