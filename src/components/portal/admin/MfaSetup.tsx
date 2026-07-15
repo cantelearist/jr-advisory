@@ -7,10 +7,9 @@
  * - If enrolled: shows status + option to disable
  */
 
-import { useState, useEffect, useRef } from 'react';
-import { getAuthClient } from '@/lib/supabase-browser';
+import { useState, useEffect, useRef, useCallback } from 'react';
 
-type MfaState = 'loading' | 'not-enrolled' | 'enrolling' | 'verifying' | 'enrolled';
+type MfaState = 'loading' | 'not-enrolled' | 'enrolling' | 'verifying' | 'enrolled' | 'error';
 
 interface FactorInfo {
   id: string;
@@ -18,8 +17,12 @@ interface FactorInfo {
   createdAt: string;
 }
 
-export default function MfaSetup() {
-  const [supabase] = useState(() => getAuthClient());
+interface MfaSetupProps {
+  allowDisable?: boolean;
+  onEnrolled?: () => void;
+}
+
+export default function MfaSetup({ allowDisable = true, onEnrolled }: MfaSetupProps) {
   const [state, setState] = useState<MfaState>('loading');
   const [factor, setFactor] = useState<FactorInfo | null>(null);
   const [qrCode, setQrCode] = useState('');
@@ -30,24 +33,42 @@ export default function MfaSetup() {
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    checkMfaStatus();
+  const checkMfaStatus = useCallback(async () => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 10000);
+
+    try {
+      const response = await fetch('/api/auth/mfa', {
+        method: 'GET',
+        cache: 'no-store',
+        signal: controller.signal,
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error('MFA status unavailable');
+
+      const verifiedTotp = data.factors?.find((f: { status?: string }) => f.status === 'verified');
+      if (verifiedTotp) {
+        setFactor({
+          id: verifiedTotp.id,
+          friendlyName: verifiedTotp.friendly_name || undefined,
+          createdAt: verifiedTotp.created_at,
+        });
+        setState('enrolled');
+      } else {
+        setState('not-enrolled');
+      }
+    } catch {
+      setError('We could not verify MFA status. Try again.');
+      setState('error');
+    } finally {
+      window.clearTimeout(timeout);
+    }
   }, []);
 
-  async function checkMfaStatus() {
-    const { data } = await supabase.auth.mfa.listFactors();
-    const verifiedTotp = data?.totp?.find(f => f.status === 'verified');
-    if (verifiedTotp) {
-      setFactor({
-        id: verifiedTotp.id,
-        friendlyName: verifiedTotp.friendly_name || undefined,
-        createdAt: verifiedTotp.created_at,
-      });
-      setState('enrolled');
-    } else {
-      setState('not-enrolled');
-    }
-  }
+  useEffect(() => {
+    void checkMfaStatus();
+  }, [checkMfaStatus]);
 
   async function startEnrollment() {
     setError('');
@@ -127,6 +148,7 @@ export default function MfaSetup() {
       setNewFactorId('');
       setCode('');
       setLoading(false);
+      onEnrolled?.();
     } catch {
       setError('Verification failed');
       setLoading(false);
@@ -174,6 +196,16 @@ export default function MfaSetup() {
 
       {state === 'loading' && (
         <p style={styles.muted}>Checking MFA status...</p>
+      )}
+
+      {state === 'error' && (
+        <button
+          onClick={() => { setError(''); setState('loading'); void checkMfaStatus(); }}
+          disabled={loading}
+          style={styles.button}
+        >
+          Retry
+        </button>
       )}
 
       {state === 'not-enrolled' && (
@@ -237,13 +269,15 @@ export default function MfaSetup() {
           <p style={styles.muted}>
             Enrolled: {new Date(factor.createdAt).toLocaleDateString()}
           </p>
-          <button
-            onClick={disableMfa}
-            disabled={loading}
-            style={styles.dangerButton}
-          >
-            {loading ? 'Disabling...' : 'Disable MFA'}
-          </button>
+          {allowDisable && (
+            <button
+              onClick={disableMfa}
+              disabled={loading}
+              style={styles.dangerButton}
+            >
+              {loading ? 'Disabling...' : 'Disable MFA'}
+            </button>
+          )}
         </div>
       )}
     </div>
