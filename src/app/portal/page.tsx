@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useAuth } from '@/components/portal/AuthProvider';
 
 /** Sanitize redirect to prevent open-redirect attacks */
 function sanitizeRedirect(url: string | null, fallback: string): string {
@@ -26,6 +27,7 @@ export default function PortalLoginPage() {
 function PortalLogin() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, clientRecord, isAdmin, loading: authLoading } = useAuth();
   const [phase, setPhase] = useState<'intro' | 'form' | 'entering'>('intro');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -50,6 +52,19 @@ function PortalLogin() {
 
     return () => clearTimeout(timer);
   }, [searchParams]);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+
+    const redirect = sanitizeRedirect(searchParams.get('redirect'), '');
+    const fallback = isAdmin ? '/portal/admin' : (clientRecord ? '/portal/dashboard' : '/portal/welcome');
+    const destination = redirect && redirect !== '/portal' ? redirect : fallback;
+
+    setPhase('entering');
+    const timer = setTimeout(() => router.replace(destination), 700);
+
+    return () => clearTimeout(timer);
+  }, [authLoading, user, clientRecord, isAdmin, router, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
