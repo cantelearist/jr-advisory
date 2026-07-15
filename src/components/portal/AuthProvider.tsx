@@ -26,6 +26,26 @@ interface AuthContextValue {
 
 const AuthCtx = createContext<AuthContextValue | null>(null);
 
+/** Keep a transient Supabase/network failure from trapping the portal behind its loading gate. */
+export const AUTH_REQUEST_TIMEOUT_MS = 10_000;
+
+function withTimeout<T>(task: () => PromiseLike<T>, timeoutMs = AUTH_REQUEST_TIMEOUT_MS): Promise<T | null> {
+  return new Promise((resolve) => {
+    let settled = false;
+    const finish = (value: T | null) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      resolve(value);
+    };
+    const timer = setTimeout(() => finish(null), timeoutMs);
+
+    Promise.resolve()
+      .then(task)
+      .then((value) => finish(value), () => finish(null));
+  });
+}
+
 function implicitSessionFromUrl(): { access_token: string; refresh_token: string } | null {
   if (typeof window === 'undefined' || !window.location.hash) return null;
 
@@ -59,22 +79,29 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const loadProfile = useCallback(
     async (u: User) => {
       // Fetch profile (RLS: users can read own profile, admins read all)
-      const { data: prof } = await supabase
+      const profileResponse = await withTimeout(() => supabase
         .from('profiles')
         .select('*')
         .eq('id', u.id)
-        .single();
-      setProfile(prof);
+        .single());
+      if (!profileResponse) {
+        setProfile(null);
+        setClientRecord(null);
+        return;
+      }
+      const prof = profileResponse?.data as Profile | null | undefined;
+      setProfile(prof ?? null);
 
       // If client role, fetch their client record
       const role = prof?.role || u.app_metadata?.role || 'client';
       if (role === 'client') {
-        const { data: cli } = await supabase
+        const clientResponse = await withTimeout(() => supabase
           .from('clients')
           .select('*')
           .eq('profile_id', u.id)
-          .single();
-        setClientRecord(cli);
+          .single());
+        const cli = clientResponse?.data as DBClient | null | undefined;
+        setClientRecord(cli ?? null);
       } else {
         setClientRecord(null);
       }
@@ -89,7 +116,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const urlSession = implicitSessionFromUrl();
         if (urlSession) {
           try {
-            await supabase.auth.setSession(urlSession);
+            await withTimeout(() => supabase.auth.setSession(urlSession));
           } catch {
             // Keep the gate usable and avoid leaving tokens in browser history.
           } finally {
@@ -97,9 +124,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
 
-        const {
-          data: { session },
-        } = await supabase.auth.getSession();
+        const sessionResponse = await withTimeout(() => supabase.auth.getSession());
+        const session = sessionResponse?.data?.session;
         const currentUser = session?.user ?? null;
         setUser(currentUser);
         if (currentUser) {
