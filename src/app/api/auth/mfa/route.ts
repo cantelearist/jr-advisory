@@ -13,6 +13,46 @@ import { logAudit, AUDIT_ACTIONS } from '@/lib/audit';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
 
+/**
+ * Read MFA status through the authenticated server path. The browser-side
+ * GoTrue call can hang when the client session or network is stale, which
+ * otherwise leaves the login gate stuck on an indefinite loading state.
+ */
+export async function GET(req: NextRequest) {
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return req.cookies.getAll();
+        },
+        setAll() {
+          // The status read does not need to mutate the auth cookie.
+        },
+      },
+    },
+  );
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Not authenticated' }, { status: 401 });
+
+  const { data, error } = await supabase.auth.mfa.listFactors();
+  if (error) {
+    return NextResponse.json(
+      { error: 'Unable to read MFA status' },
+      { status: 502, headers: { 'Cache-Control': 'no-store' } },
+    );
+  }
+
+  return NextResponse.json(
+    { factors: data?.totp ?? [] },
+    { headers: { 'Cache-Control': 'no-store' } },
+  );
+}
+
 export async function POST(req: NextRequest) {
   const ip = getClientIp(req);
 
