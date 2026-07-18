@@ -3,6 +3,18 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { POST } from '@/app/api/auth/magic-link/route';
 
 const signInWithOtpMock = vi.hoisted(() => vi.fn());
+const afterCallbacks = vi.hoisted(() => [] as Array<() => unknown | Promise<unknown>>);
+const afterMock = vi.hoisted(() => vi.fn((task: () => unknown | Promise<unknown>) => {
+  afterCallbacks.push(task);
+}));
+
+vi.mock('next/server', async () => {
+  const actual = await vi.importActual<typeof import('next/server')>('next/server');
+  return {
+    ...actual,
+    after: afterMock,
+  };
+});
 
 vi.mock('@supabase/supabase-js', () => ({
   createClient: vi.fn(() => ({
@@ -20,24 +32,31 @@ vi.mock('@/lib/audit', () => ({
   logAudit: vi.fn(),
 }));
 
-function magicLinkRequest(email = 'client@jamesroman.la') {
+function magicLinkRequest(email = 'client@jamesroman.la', ip = crypto.randomUUID()) {
   return new NextRequest('https://www.jamesroman.la/api/auth/magic-link', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-forwarded-for': crypto.randomUUID(),
+      'x-forwarded-for': ip,
     },
     body: JSON.stringify({ email }),
   });
 }
 
+async function flushAfterCallbacks() {
+  const callbacks = afterCallbacks.splice(0);
+  await Promise.all(callbacks.map((callback) => callback()));
+}
+
 describe('POST /api/auth/magic-link', () => {
   afterEach(() => {
     signInWithOtpMock.mockReset();
+    afterMock.mockClear();
+    afterCallbacks.splice(0);
     vi.unstubAllEnvs();
   });
 
-  it('sends a magic link through Supabase OTP email', async () => {
+  it('returns the neutral response before dispatching Supabase OTP email', async () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
     vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://www.jamesroman.la');
@@ -50,18 +69,36 @@ describe('POST /api/auth/magic-link', () => {
       success: true,
       message: 'If an account exists with this email, a login link has been sent.',
     });
+    expect(afterMock).toHaveBeenCalledOnce();
+    expect(signInWithOtpMock).not.toHaveBeenCalled();
+
+    await flushAfterCallbacks();
+
     expect(signInWithOtpMock).toHaveBeenCalledWith({
       email: 'client@jamesroman.la',
       options: {
-        emailRedirectTo: 'https://www.jamesroman.la/auth/callback',
+        emailRedirectTo: 'https://www.jamesroman.la/portal',
         shouldCreateUser: false,
       },
     });
   });
 
-  it('reports real OTP delivery failures without leaking provider details', async () => {
+  it('fails closed when the canonical site URL is not configured', async () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+
+    const response = await POST(magicLinkRequest('client@jamesroman.la'));
+
+    expect(response.status).toBe(503);
+    expect(await response.json()).toEqual({ error: 'Not configured' });
+    expect(afterMock).not.toHaveBeenCalled();
+    expect(signInWithOtpMock).not.toHaveBeenCalled();
+  });
+
+  it('keeps provider delivery failures off the public response path', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://www.jamesroman.la');
     signInWithOtpMock.mockResolvedValueOnce({
       data: null,
       error: { message: 'Email provider is disabled' },
@@ -69,13 +106,27 @@ describe('POST /api/auth/magic-link', () => {
 
     const response = await POST(magicLinkRequest('admin@jamesroman.la'));
 
-    expect(response.status).toBe(502);
-    expect(await response.json()).toEqual({ error: 'Failed to send login link.' });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      success: true,
+      message: 'If an account exists with this email, a login link has been sent.',
+    });
+
+    await flushAfterCallbacks();
+
+    expect(signInWithOtpMock).toHaveBeenCalledWith({
+      email: 'admin@jamesroman.la',
+      options: {
+        emailRedirectTo: 'https://www.jamesroman.la/portal',
+        shouldCreateUser: false,
+      },
+    });
   });
 
-  it('returns a clear rate-limit response when Supabase throttles OTP email', async () => {
+  it('keeps Supabase OTP throttling off the public response path', async () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://www.jamesroman.la');
     signInWithOtpMock.mockResolvedValueOnce({
       data: null,
       error: { message: 'email rate limit exceeded', status: 429 },
@@ -83,15 +134,21 @@ describe('POST /api/auth/magic-link', () => {
 
     const response = await POST(magicLinkRequest('client@jamesroman.la'));
 
-    expect(response.status).toBe(429);
+    expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
-      error: 'Too many login link requests. Please wait a few minutes and try again.',
+      success: true,
+      message: 'If an account exists with this email, a login link has been sent.',
     });
+
+    await flushAfterCallbacks();
+
+    expect(signInWithOtpMock).toHaveBeenCalledOnce();
   });
 
   it('does not expose invalid or non-member email classifications', async () => {
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
     vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://www.jamesroman.la');
     signInWithOtpMock.mockResolvedValueOnce({
       data: null,
       error: {
@@ -108,5 +165,26 @@ describe('POST /api/auth/magic-link', () => {
       success: true,
       message: 'If an account exists with this email, a login link has been sent.',
     });
+
+    await flushAfterCallbacks();
+
+    expect(signInWithOtpMock).toHaveBeenCalledOnce();
+  });
+
+  it('still rate-limits repeated requests per IP before scheduling background work', async () => {
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_URL', 'https://example.supabase.co');
+    vi.stubEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY', 'anon-key');
+    vi.stubEnv('NEXT_PUBLIC_SITE_URL', 'https://www.jamesroman.la');
+    signInWithOtpMock.mockResolvedValue({ data: {}, error: null });
+    const ip = crypto.randomUUID();
+
+    expect((await POST(magicLinkRequest('client@jamesroman.la', ip))).status).toBe(200);
+    expect((await POST(magicLinkRequest('client@jamesroman.la', ip))).status).toBe(200);
+    expect((await POST(magicLinkRequest('client@jamesroman.la', ip))).status).toBe(200);
+
+    const limited = await POST(magicLinkRequest('client@jamesroman.la', ip));
+
+    expect(limited.status).toBe(429);
+    expect(afterMock).toHaveBeenCalledTimes(3);
   });
 });

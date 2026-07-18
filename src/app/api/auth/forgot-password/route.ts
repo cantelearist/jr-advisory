@@ -32,32 +32,46 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const body = await req.json();
-  const { email } = body;
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+  }
 
-  if (!email) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+  }
+
+  const { email } = body as { email?: unknown };
+
+  if (typeof email !== 'string' || !email.trim()) {
     return NextResponse.json({ error: 'Email required' }, { status: 400 });
   }
 
   const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL?.trim().replace(/\/$/, '');
 
-  if (!url || !serviceKey) {
+  if (!url || !anonKey || !siteUrl) {
     return NextResponse.json({ error: 'Not configured' }, { status: 503 });
   }
 
-  const supabase = createClient(url, serviceKey, {
+  const supabase = createClient(url, anonKey, {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Use service role to send reset email — doesn't reveal if user exists
-  await supabase.auth.admin.generateLink({
-    type: 'recovery',
-    email: email.trim(),
-    options: {
-      redirectTo: `${req.nextUrl.origin}/portal/reset-password`,
-    },
+  // Supabase sends the recovery email itself. `admin.generateLink()` only
+  // creates a link and would leave the user with no email to click.
+  const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+    redirectTo: `${siteUrl}/portal/reset-password`,
   });
+
+  if (error) {
+    // Keep the public response neutral, but retain the failure in server logs
+    // for operational diagnosis without exposing account existence.
+    console.error('[auth/forgot-password] reset email dispatch failed:', error.message);
+  }
 
   logAudit({
     action: AUDIT_ACTIONS.PASSWORD_RESET_REQUESTED,

@@ -29,10 +29,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const body = await req.json();
-  const { password } = body;
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+  }
 
-  if (!password || password.length < 8) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+  }
+
+  const { password } = body as { password?: unknown };
+
+  if (typeof password !== 'string' || password.length < 8) {
     return NextResponse.json(
       { error: 'Password must be at least 8 characters.' },
       { status: 400 },

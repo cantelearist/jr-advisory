@@ -124,7 +124,7 @@ export async function PATCH(req: NextRequest) {
       action: 'message_read',
       entity_type: 'message',
       entity_id: message_id ?? client_id,
-      actor_id: auth.user.id,
+      user_id: auth.user.id,
       metadata: {
         message_id: message_id ?? null,
         client_id: client_id ?? null,

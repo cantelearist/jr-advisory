@@ -42,10 +42,20 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  const body = await req.json();
-  const { email, password } = body;
+  let body: unknown;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+  }
 
-  if (!email || !password) {
+  if (!body || typeof body !== 'object' || Array.isArray(body)) {
+    return NextResponse.json({ error: 'Invalid request.' }, { status: 400 });
+  }
+
+  const { email, password } = body as { email?: unknown; password?: unknown };
+
+  if (typeof email !== 'string' || typeof password !== 'string' || !email || !password) {
     return NextResponse.json({ error: 'Email or username and password required' }, { status: 400 });
   }
 

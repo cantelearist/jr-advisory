@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
+import { useAuth } from '@/components/portal/AuthProvider';
 
 /** Sanitize redirect to prevent open-redirect attacks */
 function sanitizeRedirect(url: string | null, fallback: string): string {
@@ -26,6 +27,7 @@ export default function PortalLoginPage() {
 function PortalLogin() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { user, clientRecord, isAdmin, loading: authLoading, supabase } = useAuth();
   const [phase, setPhase] = useState<'intro' | 'form' | 'entering'>('intro');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,6 +35,7 @@ function PortalLogin() {
   const [magicLinkSent, setMagicLinkSent] = useState(false);
   const [linkExpired, setLinkExpired] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
   const [showMagicLink, setShowMagicLink] = useState(true);
   const formRef = useRef<HTMLDivElement>(null);
 
@@ -42,14 +45,31 @@ function PortalLogin() {
     const mode = searchParams.get('mode');
 
     if (mode === 'password') setShowMagicLink(false);
-    if (err) {
+    if (err === 'link_expired') {
       setShowMagicLink(true);
       setLinkExpired(true);
       setMagicLinkSent(false);
+    } else if (err) {
+      setLinkExpired(false);
+      setMagicLinkSent(false);
+      setError('We could not verify that sign-in. Please try again.');
     }
 
     return () => clearTimeout(timer);
   }, [searchParams]);
+
+  useEffect(() => {
+    if (authLoading || !user) return;
+
+    const redirect = sanitizeRedirect(searchParams.get('redirect'), '');
+    const fallback = isAdmin ? '/portal/admin' : (clientRecord ? '/portal/dashboard' : '/portal/welcome');
+    const destination = redirect && redirect !== '/portal' ? redirect : fallback;
+
+    setPhase('entering');
+    const timer = setTimeout(() => router.replace(destination), 700);
+
+    return () => clearTimeout(timer);
+  }, [authLoading, user, clientRecord, isAdmin, router, searchParams]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -121,6 +141,28 @@ function PortalLogin() {
     } catch {
       setError("That didn't go through, and it's on our end. Try again in a moment — we'll be here.");
       setLoading(false);
+    }
+  };
+
+  const handleOAuthLogin = async (provider: 'google' | 'apple') => {
+    setError('');
+    setOauthLoading(provider);
+
+    try {
+      const { error: oauthError } = await supabase.auth.signInWithOAuth({
+        provider,
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
+      });
+
+      if (oauthError) {
+        setError(`We could not connect to ${provider === 'google' ? 'Google' : 'Apple'}. Please try again.`);
+        setOauthLoading(null);
+      }
+    } catch {
+      setError(`We could not connect to ${provider === 'google' ? 'Google' : 'Apple'}. Please try again.`);
+      setOauthLoading(null);
     }
   };
 
@@ -265,6 +307,44 @@ function PortalLogin() {
                 </button>
               </div>
             </form>
+          )}
+          {!linkExpired && !magicLinkSent && (
+            <div className="portal-login__oauth">
+              <div className="portal-login__divider" aria-hidden="true">
+                <span />
+                <span className="portal-login__divider-text">or</span>
+                <span />
+              </div>
+              <div className="portal-login__oauth-options">
+                <button
+                  type="button"
+                  className="portal-login__oauth-button"
+                  aria-label="Continue with Google"
+                  onClick={() => handleOAuthLogin('google')}
+                  disabled={loading || oauthLoading !== null}
+                >
+                  <svg className="portal-login__oauth-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="#4285F4" d="M21.6 12.23c0-.71-.06-1.4-.18-2.06H12v3.9h5.38a4.6 4.6 0 0 1-2 3.02v2.53h3.24c1.9-1.75 2.98-4.33 2.98-7.39Z" />
+                    <path fill="#34A853" d="M12 22c2.7 0 4.98-.9 6.63-2.38l-3.24-2.53c-.9.6-2.05.96-3.39.96-2.61 0-4.82-1.77-5.62-4.14H3.04v2.61A10 10 0 0 0 12 22Z" />
+                    <path fill="#FBBC05" d="M6.38 13.91A6.02 6.02 0 0 1 6.07 12c0-.66.11-1.31.31-1.91V7.48H3.04A10 10 0 0 0 2 12c0 1.61.38 3.14 1.04 4.52l3.34-2.61Z" />
+                    <path fill="#EA4335" d="M12 5.95c1.47 0 2.79.5 3.82 1.49l2.88-2.88A9.65 9.65 0 0 0 12 2a10 10 0 0 0-8.96 5.48l3.34 2.61C7.18 7.72 9.39 5.95 12 5.95Z" />
+                  </svg>
+                  <span>{oauthLoading === 'google' ? 'Connecting…' : 'Google'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="portal-login__oauth-button"
+                  aria-label="Continue with Apple"
+                  onClick={() => handleOAuthLogin('apple')}
+                  disabled={loading || oauthLoading !== null}
+                >
+                  <svg className="portal-login__oauth-icon portal-login__oauth-icon--apple" viewBox="0 0 24 24" aria-hidden="true">
+                    <path fill="currentColor" d="M16.7 12.86c.02-2.06 1.68-3.05 1.76-3.1a3.78 3.78 0 0 0-2.97-1.61c-1.25-.13-2.47.75-3.1.75-.64 0-1.6-.74-2.65-.72a3.9 3.9 0 0 0-3.28 2c-1.44 2.5-.36 6.18 1.01 8.2.69.98 1.49 2.08 2.54 2.04 1.03-.04 1.42-.65 2.66-.65 1.23 0 1.6.65 2.68.62 1.1-.02 1.8-.98 2.46-1.97a8.2 8.2 0 0 0 1.13-2.3 3.55 3.55 0 0 1-2.24-3.26ZM14.67 6.82a3.6 3.6 0 0 0 .82-2.58 3.68 3.68 0 0 0-2.39 1.23 3.46 3.46 0 0 0-.85 2.48 3.04 3.04 0 0 0 2.42-1.13Z" />
+                  </svg>
+                  <span>{oauthLoading === 'apple' ? 'Connecting…' : 'Apple'}</span>
+                </button>
+              </div>
+            </div>
           )}
           <p className="portal-login__notice">
             NDA-protected · No portal trackers
@@ -415,6 +495,7 @@ function PortalLogin() {
         }
         .portal-login__input:focus-visible,
         .portal-login__button:focus-visible,
+        .portal-login__oauth-button:focus-visible,
         .portal-login__toggle:focus-visible,
         .portal-login__magic-back:focus-visible,
         .portal-login__secondary a:focus-visible {
@@ -517,6 +598,66 @@ function PortalLogin() {
           text-decoration: none;
         }
         .portal-login__secondary a:hover { color: rgba(201, 169, 110, 0.86); }
+        .portal-login__oauth {
+          margin-top: 24px;
+        }
+        .portal-login__divider {
+          display: grid;
+          grid-template-columns: 1fr auto 1fr;
+          align-items: center;
+          gap: 14px;
+          margin-bottom: 16px;
+        }
+        .portal-login__divider > span:not(.portal-login__divider-text) {
+          height: 1px;
+          background: rgba(255, 255, 255, 0.08);
+        }
+        .portal-login__divider-text {
+          font-family: 'Inter', sans-serif;
+          font-size: 9px;
+          letter-spacing: 0.24em;
+          text-transform: uppercase;
+          color: rgba(255, 255, 255, 0.24);
+        }
+        .portal-login__oauth-options {
+          display: grid;
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          gap: 12px;
+        }
+        .portal-login__oauth-button {
+          min-height: 48px;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          gap: 10px;
+          padding: 12px 18px;
+          border: 1px solid rgba(255, 255, 255, 0.11);
+          background: rgba(255, 255, 255, 0.035);
+          color: rgba(255, 255, 255, 0.82);
+          font-family: 'Inter', sans-serif;
+          font-size: 11px;
+          font-weight: 400;
+          letter-spacing: 0.12em;
+          cursor: pointer;
+          transition: border-color 0.3s ease, background 0.3s ease, color 0.3s ease;
+        }
+        .portal-login__oauth-button:hover:not(:disabled) {
+          border-color: rgba(201, 169, 110, 0.38);
+          background: rgba(201, 169, 110, 0.05);
+          color: #fff;
+        }
+        .portal-login__oauth-button:disabled {
+          opacity: 0.5;
+          cursor: wait;
+        }
+        .portal-login__oauth-icon {
+          width: 17px;
+          height: 17px;
+          flex: 0 0 auto;
+        }
+        .portal-login__oauth-icon--apple {
+          color: currentColor;
+        }
         .portal-login__notice {
           font-family: 'Inter', sans-serif;
           font-size: 10px;
@@ -584,6 +725,7 @@ function PortalLogin() {
           .portal-login__title-line--1 { letter-spacing: 0.1em; }
           .portal-login__title-line--2 { letter-spacing: 0.1em; }
           .portal-login__button { min-height: 44px; }
+          .portal-login__oauth-button { min-height: 46px; }
         }
       `}</style>
     </div>

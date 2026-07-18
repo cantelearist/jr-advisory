@@ -30,6 +30,7 @@ interface RateLimitResult {
 
 // Separate stores per route category to avoid cross-contamination
 const stores = new Map<string, Map<string, RateLimitEntry>>();
+let callsSinceCleanup = 0;
 
 function getStore(category: string): Map<string, RateLimitEntry> {
   let store = stores.get(category);
@@ -52,6 +53,12 @@ export function checkRateLimit(
   category: string,
   config?: RateLimitConfig,
 ): RateLimitResult {
+  // Keep high-cardinality traffic from retaining expired IP keys forever.
+  if (++callsSinceCleanup >= 100) {
+    callsSinceCleanup = 0;
+    cleanupExpiredEntries();
+  }
+
   const windowMs = config?.windowMs ?? 15 * 60 * 1000; // 15 minutes
   const maxAttempts = config?.maxAttempts ?? 5;
   const now = Date.now();
@@ -89,13 +96,14 @@ export function checkRateLimit(
 
 /**
  * Extract client IP from a Next.js request.
- * Checks x-forwarded-for (Vercel), then x-real-ip, then falls back to 'unknown'.
+ * Prefer the platform-provided x-real-ip value. Fall back to the first
+ * x-forwarded-for entry for Vercel-compatible proxies, then 'unknown'.
  */
 export function getClientIp(req: Request): string {
-  const forwarded = req.headers.get('x-forwarded-for');
-  if (forwarded) return forwarded.split(',')[0].trim();
   const realIp = req.headers.get('x-real-ip');
-  if (realIp) return realIp;
+  if (realIp?.trim()) return realIp.trim();
+  const forwarded = req.headers.get('x-forwarded-for');
+  if (forwarded?.trim()) return forwarded.split(',')[0].trim();
   return 'unknown';
 }
 

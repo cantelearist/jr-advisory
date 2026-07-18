@@ -3,12 +3,10 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { NextResponse, type NextRequest } from 'next/server';
-import { sanitizeRedirect } from '@/lib/api-auth';
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get('code');
-  const next = sanitizeRedirect(searchParams.get('next'), '/portal/dashboard');
 
   if (code) {
     const cookieStore = await cookies();
@@ -32,10 +30,9 @@ export async function GET(request: NextRequest) {
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
     if (!error && data?.user) {
-      // Determine redirect based on role
-      const role = data.user.user_metadata?.role || 'client';
-      const dest = role === 'admin' ? '/portal/admin' : next;
-      return NextResponse.redirect(new URL(dest, origin));
+      // Let the portal middleware resolve the destination from the trusted
+      // profile and enforce MFA. Never route by user-editable metadata here.
+      return NextResponse.redirect(new URL('/portal', origin));
     }
   }
 

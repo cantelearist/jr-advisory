@@ -26,8 +26,40 @@ interface AuthContextValue {
 
 const AuthCtx = createContext<AuthContextValue | null>(null);
 
+function implicitSessionFromUrl(): { access_token: string; refresh_token: string } | null {
+  if (typeof window === 'undefined' || !window.location.hash) return null;
+
+  const params = new URLSearchParams(window.location.hash.slice(1));
+  const accessToken = params.get('access_token');
+  const refreshToken = params.get('refresh_token');
+
+  if (!accessToken || !refreshToken) return null;
+
+  return {
+    access_token: accessToken,
+    refresh_token: refreshToken,
+  };
+}
+
+function clearAuthTokensFromUrl() {
+  if (typeof window === 'undefined') return;
+
+  const url = new URL(window.location.href);
+  url.hash = '';
+  window.history.replaceState(window.history.state, '', url.toString());
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [supabase] = useState(() => getAuthClient());
+  // The browser client is PKCE-based, while the server-side magic-link
+  // dispatcher returns an implicit-flow hash. Capture and remove that hash
+  // before Supabase's automatic URL detector initializes so it cannot reject
+  // the callback as the wrong flow; setSession below consumes the captured
+  // tokens explicitly.
+  const [initialUrlSession] = useState(() => implicitSessionFromUrl());
+  const [supabase] = useState(() => {
+    if (initialUrlSession) clearAuthTokensFromUrl();
+    return getAuthClient();
+  });
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [clientRecord, setClientRecord] = useState<DBClient | null>(null);
@@ -62,14 +94,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     // Initial session load
     const init = async () => {
-      const {
-        data: { user: currentUser },
-      } = await supabase.auth.getUser();
-      setUser(currentUser);
-      if (currentUser) {
-        await loadProfile(currentUser);
+      try {
+        if (initialUrlSession) {
+          try {
+            await supabase.auth.setSession(initialUrlSession);
+          } catch {
+            // Keep the gate usable and avoid leaving tokens in browser history.
+          } finally {
+            clearAuthTokensFromUrl();
+          }
+        }
+
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        const currentUser = session?.user ?? null;
+        setUser(currentUser);
+        if (currentUser) {
+          await loadProfile(currentUser);
+        }
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     init();
 
@@ -88,7 +134,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [supabase, loadProfile]);
+  }, [supabase, loadProfile, initialUrlSession]);
 
   const signOut = async () => {
     // Server-side logout: revokes refresh token, clears cookies

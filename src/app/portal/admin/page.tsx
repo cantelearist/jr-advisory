@@ -164,7 +164,7 @@ export default function AdminPanel() {
         body: JSON.stringify({ clientId }),
       });
       const data = await res.json();
-      if (data.success) setInviteStatus(s => ({ ...s, [clientId]: `✓ ${data.password}` }));
+      if (data.success) setInviteStatus(s => ({ ...s, [clientId]: 'INVITE SENT' }));
       else if (data.message) setInviteStatus(s => ({ ...s, [clientId]: data.message }));
       else setInviteStatus(s => ({ ...s, [clientId]: `Error: ${data.error}` }));
     } catch {

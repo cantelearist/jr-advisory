@@ -270,7 +270,7 @@ begin
     new.id,
     coalesce(new.raw_user_meta_data->>'full_name', new.email),
     new.email,
-    coalesce((new.raw_user_meta_data->>'role')::user_role, 'client')
+    'client'
   );
   return new;
 end;
