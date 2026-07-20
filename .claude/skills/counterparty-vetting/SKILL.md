@@ -59,17 +59,39 @@ and transliteration forms.
    confidence only on independent corroboration.
 2. **Property & ownership.** Assessor/recorder + aggregators: owner of
    record, vesting (trust/LLC), acquisition history, liens/NODs/lis pendens,
-   actual use. Recognize self-to-self trust transfers as routine; treat
-   conflicting aggregator figures as data noise to resolve, not findings.
+   actual use. Recognize self-to-self trust transfers as routine. A
+   conflicting aggregator date is a lead to RESOLVE against the authoritative
+   roll, never "aggregator error" to wave off: a Prop-13 base year is an
+   assessor-declared change-of-ownership event — if it disagrees with the
+   claimed acquisition date, something happened on that date (re-acquisition,
+   interspousal/partial-interest transfer, correction) and it bears on the
+   community-property timeline. Homeowner's-exemption status is a free
+   residence-vs-rental cross-check: no exemption + listed-for-rent means
+   aggregator "co-resident" data is likely stale, and the subject's actual
+   residence is then unestablished (a Ring 1 gap, not a closed fact).
+   County assessor parcel APIs are usually reachable without a portal form —
+   run them.
 3. **Permits & code enforcement.** Test the client's red flag against the
    permit record. LADBS PCIS/CEIS and ZIMAS are session-bound — if
    unreachable, say so and route to the gap list (direct pull + licensed
    inspection). Cross-check any work found against CSLB/DRE licensing.
 4. **The individual.** Civil litigation both directions, judgments/abstracts,
    bankruptcy, business entities + good standing (bizfile), DBA filings,
-   professional licenses.
-5. **Sanctions & enforcement.** OFAC/SDN, SEC, FINRA. Report "no match
-   found," recommend the direct screen to make it authoritative.
+   professional licenses. Read case DISPOSITIONS, do not just log case
+   existence: a Disposed-Dismissed dissolution petition typically means the
+   marriage did NOT end — the opposite of "been through a dissolution," and
+   it enlarges rather than closes community-property exposure. An
+   address- or asset-named entity ("4120 Broadway Center LLC") names its own
+   asset: run the free assessor lookup on that address before flagging the
+   entity as opaque — it often converts a "no verifiable business location"
+   red flag into a located, tax-current holding.
+5. **Sanctions & enforcement.** OFAC/SDN, SEC, FINRA. The OFAC screen is
+   free and runnable NOW, not a gap-list item: download SDN + consolidated +
+   alias files from sanctionslistservice.ofac.treas.gov, integrity-check
+   against a known-listed name, then grep the subject AND every name variant
+   (§2 protocol) AND circle surnames. Log the list's publication date. That
+   converts "no match found" into a dated, protocol-backed NOT FOUND; the
+   consented live-scan still upgrades criminal, but OFAC needs no consent.
 6. **Criminal & arrest.** Court criminal indices + news. State that
    open-source criminal data is thin; nothing found = weak evidence. The
    definitive answer is the consented path (live-scan + county index by
@@ -119,6 +141,23 @@ gaps → conditional-vetting recommendation with ring-fencing terms.
 - A six-figure judgment against a namesake is the exact trap this skill
   exists to avoid: quarantine by name, check for shared entities/property
   before letting ANY record attach.
+- Namesake discipline is SYMMETRIC: the rigor spent keeping a scary record
+  OFF the file must equal the rigor spent attaching an ordinary one ON it.
+  A DCSS or dissolution case matched on name alone, in a county with
+  multiple same-surname individuals, needs its own per-attribution identity
+  confidence — attaching it loosely is the same error as clearing loosely.
+- An address-/asset-named LLC hands you its asset: run the free assessor
+  lookup on the embedded address before calling the entity opaque. (Khobian:
+  "4120 Broadway Center LLC" → a real, tax-current 4120 S Broadway parcel,
+  which largely answers the "UPS-mailbox, where does he operate?" flag.)
+- Never dismiss a date discrepancy as "aggregator error" without the roll:
+  a Prop-13 base year is an authoritative ownership-event date. (Khobian:
+  the "stray 1995 figure" the prior report waved off was corroborated by the
+  county's own 1995 base year — and it moves the community-property clock.)
+- Read the disposition, not just the caption: Disposed-Dismissed on a
+  dissolution petition usually means still-married — which ENLARGES
+  community-property exposure, the opposite of what "went through a
+  dissolution" implies.
 - Community property: a spouse may hold an interest in "his" contribution;
   require spousal consent/quitclaim where a community asset is pledged.
 - Sensitive personal matters (dissolution, child support) are reported at
