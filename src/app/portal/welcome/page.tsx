@@ -41,10 +41,12 @@ const TOUR_STEPS = [
 
 export default function WelcomePage() {
   const router = useRouter();
-  const { user, profile } = useAuth();
+  const { user, profile, supabase } = useAuth();
   const [step, setStep] = useState(0); // 0=welcome, 1-5=tour, 6=ready
   const [portalData, setPortalData] = useState<PortalData | null>(null);
   const [fadeIn, setFadeIn] = useState(false);
+  const [completing, setCompleting] = useState(false);
+  const [completionError, setCompletionError] = useState('');
 
   useEffect(() => {
     fetchPortalData().then(setPortalData);
@@ -61,12 +63,23 @@ export default function WelcomePage() {
     }
   };
 
-  const handleSkip = () => {
-    router.push('/portal/dashboard');
-  };
+  const completeOnboarding = async () => {
+    if (completing) return;
 
-  const handleFinish = () => {
-    router.push('/portal/dashboard');
+    setCompleting(true);
+    setCompletionError('');
+
+    const { error } = await supabase.auth.updateUser({
+      data: { onboarded: true },
+    });
+
+    if (error) {
+      setCompletionError('We could not save your progress. Please try again.');
+      setCompleting(false);
+      return;
+    }
+
+    router.replace('/portal/dashboard');
   };
 
   return (
@@ -91,8 +104,12 @@ export default function WelcomePage() {
               <button className="welcome__btn welcome__btn--primary" onClick={handleNext}>
                 Take a Quick Tour
               </button>
-              <button className="welcome__btn welcome__btn--ghost" onClick={handleSkip}>
-                Skip to Dashboard →
+              <button
+                className="welcome__btn welcome__btn--ghost"
+                onClick={completeOnboarding}
+                disabled={completing}
+              >
+                {completing ? 'Preparing your office…' : 'Skip to Dashboard →'}
               </button>
             </div>
           </div>
@@ -115,8 +132,12 @@ export default function WelcomePage() {
                 <button className="welcome__btn welcome__btn--primary" onClick={handleNext}>
                   {step < TOUR_STEPS.length ? 'Next' : 'Get Started'}
                 </button>
-                <button className="welcome__btn welcome__btn--ghost" onClick={handleSkip}>
-                  Skip →
+                <button
+                  className="welcome__btn welcome__btn--ghost"
+                  onClick={completeOnboarding}
+                  disabled={completing}
+                >
+                  {completing ? 'Preparing…' : 'Skip →'}
                 </button>
               </div>
               <span className="welcome__step-count">{step} of {TOUR_STEPS.length}</span>
@@ -133,10 +154,17 @@ export default function WelcomePage() {
               Your Client Office is ready. If you ever need anything,
               use the Messages tab to reach your advisory team directly.
             </p>
-            <button className="welcome__btn welcome__btn--primary" onClick={handleFinish}>
-              Enter Your Dashboard
+            <button
+              className="welcome__btn welcome__btn--primary"
+              onClick={completeOnboarding}
+              disabled={completing}
+            >
+              {completing ? 'Preparing Your Office…' : 'Enter Your Dashboard'}
             </button>
           </div>
+        )}
+        {completionError && (
+          <p className="welcome__error" role="alert">{completionError}</p>
         )}
       </main>
 
@@ -188,6 +216,7 @@ export default function WelcomePage() {
           text-transform: uppercase; cursor: pointer; transition: all 0.4s ease;
           border: none; background: none;
         }
+        .welcome__btn:disabled { cursor: wait; opacity: 0.55; }
         .welcome__btn--primary {
           padding: 16px 48px; background: rgba(201,169,110,0.1);
           border: 1px solid rgba(201,169,110,0.3); color: #c9a96e;
@@ -197,6 +226,10 @@ export default function WelcomePage() {
         }
         .welcome__btn--ghost { color: rgba(255,255,255,0.25); padding: 8px; font-size: 11px; }
         .welcome__btn--ghost:hover { color: rgba(255,255,255,0.5); }
+        .welcome__error {
+          margin: 24px auto 0; color: #d9a0a0; font-family: 'Inter', sans-serif;
+          font-size: 12px; letter-spacing: 0.04em;
+        }
         .welcome__tour-progress {
           display: flex; gap: 8px; justify-content: center; margin-bottom: 48px;
         }

@@ -5,14 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { useAuth } from '@/components/portal/AuthProvider';
-
-/** Sanitize redirect to prevent open-redirect attacks */
-function sanitizeRedirect(url: string | null, fallback: string): string {
-  if (!url) return fallback;
-  const cleaned = url.trim();
-  if (!cleaned.startsWith('/') || cleaned.startsWith('//')) return fallback;
-  return cleaned;
-}
+import { resolvePortalDestination } from '@/lib/portal-routing';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
@@ -28,6 +21,7 @@ function PortalLogin() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { user, clientRecord, isAdmin, loading: authLoading, supabase } = useAuth();
+  const oauthLoginEnabled = process.env.NEXT_PUBLIC_OAUTH_LOGIN_ENABLED === 'true';
   const [phase, setPhase] = useState<'intro' | 'form' | 'entering'>('intro');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -61,9 +55,12 @@ function PortalLogin() {
   useEffect(() => {
     if (authLoading || !user) return;
 
-    const redirect = sanitizeRedirect(searchParams.get('redirect'), '');
-    const fallback = isAdmin ? '/portal/admin' : (clientRecord ? '/portal/dashboard' : '/portal/welcome');
-    const destination = redirect && redirect !== '/portal' ? redirect : fallback;
+    const destination = resolvePortalDestination({
+      redirect: searchParams.get('redirect'),
+      isAdmin,
+      hasClientRecord: Boolean(clientRecord),
+      onboarded: user.user_metadata?.onboarded !== false,
+    });
 
     setPhase('entering');
     const timer = setTimeout(() => router.replace(destination), 700);
@@ -94,17 +91,23 @@ function PortalLogin() {
 
       setPhase('entering');
       const { role, onboarded } = result.user;
-      const redirect = sanitizeRedirect(searchParams.get('redirect'), '');
       const isPrivileged = role === 'admin' || role === 'manager';
+      const destination = resolvePortalDestination({
+        redirect: searchParams.get('redirect'),
+        isAdmin: isPrivileged,
+        hasClientRecord: true,
+        onboarded,
+      });
 
       if (result.mfaRequired) {
-        const finalDest = redirect || '/portal/admin';
-        setTimeout(() => router.push(`/portal/mfa?redirect=${encodeURIComponent(finalDest)}`), 1600);
+        setTimeout(
+          () => router.push(`/portal/mfa?redirect=${encodeURIComponent(destination)}`),
+          1600,
+        );
         return;
       }
 
-      const dest = redirect || (isPrivileged ? '/portal/admin' : (!onboarded ? '/portal/welcome' : '/portal/dashboard'));
-      setTimeout(() => router.push(dest), 1600);
+      setTimeout(() => router.push(destination), 1600);
     } catch {
       setError('Something went wrong. Please try again.');
       setLoading(false);
@@ -308,7 +311,7 @@ function PortalLogin() {
               </div>
             </form>
           )}
-          {!linkExpired && !magicLinkSent && (
+          {oauthLoginEnabled && !linkExpired && !magicLinkSent && (
             <div className="portal-login__oauth">
               <div className="portal-login__divider" aria-hidden="true">
                 <span />

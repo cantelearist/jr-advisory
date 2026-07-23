@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import PortalLoginPage from '@/app/portal/page';
+import { resolvePortalDestination } from '@/lib/portal-routing';
 
 const signInWithOAuthMock = vi.hoisted(() => vi.fn());
 
@@ -24,8 +25,18 @@ vi.mock('@/components/portal/Scene3D', () => ({
 
 describe('Private Office OAuth login', () => {
   beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_OAUTH_LOGIN_ENABLED', 'true');
     signInWithOAuthMock.mockReset();
     signInWithOAuthMock.mockResolvedValue({ data: {}, error: null });
+  });
+
+  it('hides disabled providers when OAuth login is not enabled', () => {
+    vi.stubEnv('NEXT_PUBLIC_OAUTH_LOGIN_ENABLED', 'false');
+
+    render(<PortalLoginPage />);
+
+    expect(screen.queryByRole('button', { name: 'Continue with Google' })).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Continue with Apple' })).not.toBeInTheDocument();
   });
 
   it('offers Google and Apple sign-in', () => {
@@ -64,5 +75,43 @@ describe('Private Office OAuth login', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Continue with Apple' }));
 
     expect(await screen.findByText('We could not connect to Apple. Please try again.')).toBeInTheDocument();
+  });
+});
+
+describe('Private Office post-auth routing', () => {
+  it('requires invited clients to complete onboarding before a requested portal route', () => {
+    expect(resolvePortalDestination({
+      redirect: '/portal/documents',
+      isAdmin: false,
+      hasClientRecord: true,
+      onboarded: false,
+    })).toBe('/portal/welcome');
+  });
+
+  it('sends onboarded clients with a linked record to the dashboard', () => {
+    expect(resolvePortalDestination({
+      redirect: null,
+      isAdmin: false,
+      hasClientRecord: true,
+      onboarded: true,
+    })).toBe('/portal/dashboard');
+  });
+
+  it('preserves safe portal redirects after onboarding', () => {
+    expect(resolvePortalDestination({
+      redirect: '/portal/documents',
+      isAdmin: false,
+      hasClientRecord: true,
+      onboarded: true,
+    })).toBe('/portal/documents');
+  });
+
+  it('rejects external redirects', () => {
+    expect(resolvePortalDestination({
+      redirect: '//attacker.example',
+      isAdmin: true,
+      hasClientRecord: false,
+      onboarded: true,
+    })).toBe('/portal/admin');
   });
 });
