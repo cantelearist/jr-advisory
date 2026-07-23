@@ -78,6 +78,30 @@ describe('Private Office OAuth login', () => {
   });
 });
 
+describe('Private Office password login', () => {
+  beforeEach(() => {
+    vi.stubEnv('NEXT_PUBLIC_OAUTH_LOGIN_ENABLED', 'false');
+  });
+
+  it('shows email and password login by default', () => {
+    render(<PortalLoginPage />);
+
+    expect(screen.getByLabelText('Email or username')).toBeInTheDocument();
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Enter Your Office' })).toBeInTheDocument();
+  });
+
+  it('lets users switch between password and magic-link login', () => {
+    render(<PortalLoginPage />);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use magic link instead' }));
+    expect(screen.getByLabelText('Engagement email')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Use email and password' }));
+    expect(screen.getByLabelText('Password')).toBeInTheDocument();
+  });
+});
+
 describe('Private Office post-auth routing', () => {
   it('requires invited clients to complete onboarding before a requested portal route', () => {
     expect(resolvePortalDestination({

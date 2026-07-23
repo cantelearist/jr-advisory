@@ -30,7 +30,7 @@ function PortalLogin() {
   const [linkExpired, setLinkExpired] = useState(false);
   const [loading, setLoading] = useState(false);
   const [oauthLoading, setOauthLoading] = useState<'google' | 'apple' | null>(null);
-  const [showMagicLink, setShowMagicLink] = useState(true);
+  const [showMagicLink, setShowMagicLink] = useState(false);
   const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -38,6 +38,7 @@ function PortalLogin() {
     const err = searchParams.get('error');
     const mode = searchParams.get('mode');
 
+    if (mode === 'magic') setShowMagicLink(true);
     if (mode === 'password') setShowMagicLink(false);
     if (err === 'link_expired') {
       setShowMagicLink(true);
@@ -209,7 +210,7 @@ function PortalLogin() {
                 onClick={() => { setLinkExpired(false); setMagicLinkSent(false); setShowMagicLink(true); setError(''); }}
               >
                 <span className="portal-login__button-text">Send a new link</span>
-                <span className="portal-login__button-arrow">→</span>
+                <span className="portal-login__button-arrow" aria-hidden="true">→</span>
               </button>
             </div>
           ) : magicLinkSent ? (
@@ -228,8 +229,11 @@ function PortalLogin() {
           ) : showMagicLink ? (
             <div className="portal-login__form">
               <div className="portal-login__field">
-                <label className="portal-login__label">Engagement email</label>
+                <label className="portal-login__label" htmlFor="portal-magic-email">
+                  Engagement email
+                </label>
                 <input
+                  id="portal-magic-email"
                   type="email"
                   className="portal-login__input"
                   value={email}
@@ -251,18 +255,28 @@ function PortalLogin() {
                 <span className="portal-login__button-text">
                   {loading ? 'Sending…' : 'Send secure link'}
                 </span>
-                <span className="portal-login__button-arrow">→</span>
+                <span className="portal-login__button-arrow" aria-hidden="true">→</span>
               </button>
               <p className="portal-login__secondary">
                 Access is issued when an engagement begins.{' '}
                 <Link href="/#consultation">Request a consultation</Link>
               </p>
+              <button
+                type="button"
+                className="portal-login__toggle"
+                onClick={() => { setShowMagicLink(false); setError(''); }}
+              >
+                Use email and password
+              </button>
             </div>
           ) : (
             <form onSubmit={handleLogin} className="portal-login__form">
               <div className="portal-login__field">
-                <label className="portal-login__label">Email or username</label>
+                <label className="portal-login__label" htmlFor="portal-login-email">
+                  Email or username
+                </label>
                 <input
+                  id="portal-login-email"
                   type="text"
                   className="portal-login__input"
                   value={email}
@@ -272,8 +286,11 @@ function PortalLogin() {
                 />
               </div>
               <div className="portal-login__field">
-                <label className="portal-login__label">Password</label>
+                <label className="portal-login__label" htmlFor="portal-login-password">
+                  Password
+                </label>
                 <input
+                  id="portal-login-password"
                   type="password"
                   className="portal-login__input"
                   value={password}
@@ -291,7 +308,7 @@ function PortalLogin() {
                 <span className="portal-login__button-text">
                   {loading ? 'Authenticating...' : 'Enter Your Office'}
                 </span>
-                <span className="portal-login__button-arrow">→</span>
+                <span className="portal-login__button-arrow" aria-hidden="true">→</span>
               </button>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '-8px' }}>
                 <button
