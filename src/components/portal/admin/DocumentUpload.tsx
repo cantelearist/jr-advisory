@@ -211,85 +211,85 @@ export default function DocumentUpload({ clients, engagements, onUploadComplete,
       <style jsx>{`
         .doc-upload-overlay {
           position: fixed; inset: 0; z-index: 1000;
-          background: rgba(0,0,0,0.7); backdrop-filter: blur(4px);
+          background: rgba(50,51,56,0.42); backdrop-filter: blur(3px);
           display: flex; align-items: center; justify-content: center;
           padding: 20px;
         }
         .doc-upload {
-          background: #111; border: 1px solid rgba(255,255,255,0.08);
+          background: #fff; border: 1px solid #d0d4e4;
           width: 100%; max-width: 520px; max-height: 90vh; overflow-y: auto;
+          border-radius: 8px; box-shadow: 0 12px 40px rgba(50,51,56,0.22);
         }
         .doc-upload__header {
           display: flex; justify-content: space-between; align-items: center;
           padding: 24px 28px 0;
         }
         .doc-upload__title {
-          font-family: 'Cormorant Garamond', Georgia, serif;
-          font-size: 22px; font-weight: 300; color: #fff; margin: 0;
+          font-family: 'Manrope', 'Inter', sans-serif;
+          font-size: 20px; font-weight: 650; color: #323338; margin: 0;
         }
         .doc-upload__close {
-          background: none; border: none; color: rgba(255,255,255,0.3);
+          background: none; border: none; color: #676879;
           font-size: 18px; cursor: pointer; padding: 4px;
         }
-        .doc-upload__close:hover { color: #fff; }
+        .doc-upload__close:hover { color: #323338; }
         .doc-upload__form {
           padding: 24px 28px 28px;
           display: flex; flex-direction: column; gap: 20px;
         }
         .doc-upload__field { display: flex; flex-direction: column; gap: 6px; }
         .doc-upload__label {
-          font-family: 'Inter', sans-serif; font-size: 10px; font-weight: 400;
-          letter-spacing: 0.25em; color: rgba(255,255,255,0.3); text-transform: uppercase;
+          font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 600;
+          letter-spacing: 0; color: #676879;
         }
         .doc-upload__select, .doc-upload__input {
-          background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08);
-          padding: 12px 16px; color: #fff; font-family: 'Inter', sans-serif;
+          background: #fff; border: 1px solid #c3c6d4;
+          padding: 11px 13px; color: #323338; font-family: 'Inter', sans-serif;
           font-size: 14px; outline: none; transition: border-color 0.3s;
-          -webkit-appearance: none; border-radius: 0;
+          -webkit-appearance: none; border-radius: 4px;
         }
         .doc-upload__select:focus, .doc-upload__input:focus {
-          border-color: rgba(201,169,110,0.4);
+          border-color: #0073ea; box-shadow: 0 0 0 1px #0073ea;
         }
-        .doc-upload__select option { background: #111; color: #fff; }
+        .doc-upload__select option { background: #fff; color: #323338; }
         .doc-upload__dropzone {
-          border: 1px dashed rgba(255,255,255,0.12); padding: 28px;
-          text-align: center; cursor: pointer; transition: all 0.3s;
+          border: 1px dashed #a9adc0; padding: 28px; background: #f6f7fb;
+          text-align: center; cursor: pointer; transition: all 0.3s; border-radius: 4px;
         }
-        .doc-upload__dropzone:hover { border-color: rgba(201,169,110,0.3); background: rgba(201,169,110,0.02); }
-        .doc-upload__dropzone--has-file { border-style: solid; border-color: rgba(201,169,110,0.2); }
+        .doc-upload__dropzone:hover { border-color: #0073ea; background: #f0f7ff; }
+        .doc-upload__dropzone--has-file { border-style: solid; border-color: #00c875; }
         .doc-upload__drop-text {
           display: flex; flex-direction: column; gap: 8px; align-items: center;
-          font-family: 'Inter', sans-serif; font-size: 13px; color: rgba(255,255,255,0.3);
+          font-family: 'Inter', sans-serif; font-size: 13px; color: #676879;
         }
-        .doc-upload__drop-icon { font-size: 24px; color: rgba(201,169,110,0.5); }
-        .doc-upload__drop-hint { font-size: 10px; color: rgba(255,255,255,0.15); letter-spacing: 0.05em; }
+        .doc-upload__drop-icon { font-size: 24px; color: #0073ea; }
+        .doc-upload__drop-hint { font-size: 10px; color: #9699a6; letter-spacing: 0.03em; }
         .doc-upload__file-info {
           display: flex; align-items: center; gap: 12px; text-align: left;
         }
         .doc-upload__file-icon { font-size: 28px; }
         .doc-upload__file-name {
-          font-family: 'Inter', sans-serif; font-size: 13px; color: rgba(255,255,255,0.7);
+          font-family: 'Inter', sans-serif; font-size: 13px; color: #323338;
         }
         .doc-upload__file-size {
-          font-family: 'Inter', sans-serif; font-size: 11px; color: rgba(255,255,255,0.25); margin-top: 2px;
+          font-family: 'Inter', sans-serif; font-size: 11px; color: #676879; margin-top: 2px;
         }
         .doc-upload__error {
           font-family: 'Inter', sans-serif; font-size: 12px; color: #ef4444;
           margin: 0; letter-spacing: 0.03em;
         }
         .doc-upload__success {
-          font-family: 'Inter', sans-serif; font-size: 12px; color: #4ade80;
+          font-family: 'Inter', sans-serif; font-size: 12px; color: #00a86b;
           margin: 0; letter-spacing: 0.03em;
         }
         .doc-upload__submit {
-          width: 100%; padding: 16px; background: transparent;
-          border: 1px solid rgba(201,169,110,0.3); color: #c9a96e;
-          font-family: 'Inter', sans-serif; font-size: 11px; font-weight: 400;
-          letter-spacing: 0.3em; text-transform: uppercase; cursor: pointer;
-          transition: all 0.4s;
+          width: 100%; padding: 12px; background: #0073ea;
+          border: 1px solid #0073ea; color: #fff; border-radius: 4px;
+          font-family: 'Inter', sans-serif; font-size: 12px; font-weight: 650;
+          letter-spacing: 0; cursor: pointer; transition: all 0.2s;
         }
         .doc-upload__submit:hover:not(:disabled) {
-          border-color: rgba(201,169,110,0.6); background: rgba(201,169,110,0.05);
+          border-color: #0060b9; background: #0060b9;
         }
         .doc-upload__submit:disabled { opacity: 0.4; cursor: not-allowed; }
       `}</style>

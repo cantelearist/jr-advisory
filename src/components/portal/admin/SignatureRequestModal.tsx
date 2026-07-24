@@ -71,10 +71,10 @@ export default function SignatureRequestModal({ open, document, client, onClose,
               REQUEST E-SIGNATURE
             </div>
             <h2 style={{
-              fontFamily: "'Cormorant Garamond', Georgia, serif",
+              fontFamily: "'Manrope', 'Inter', sans-serif",
               fontSize: 24,
               fontWeight: 300,
-              color: '#fff',
+              color: '#323338',
               margin: 0,
             }}>
               Sign Request
@@ -86,14 +86,14 @@ export default function SignatureRequestModal({ open, document, client, onClose,
         {/* Document info */}
         <div style={{
           padding: '20px 28px',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
-          background: 'rgba(201,169,110,0.02)',
+          borderBottom: '1px solid #d0d4e4',
+          background: '#f7f8fa',
         }}>
           <div style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 9,
             letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.2)',
+            color: '#9699a6',
             marginBottom: 8,
           }}>
             DOCUMENT
@@ -101,7 +101,7 @@ export default function SignatureRequestModal({ open, document, client, onClose,
           <div style={{
             fontFamily: "'Inter', sans-serif",
             fontSize: 15,
-            color: 'rgba(255,255,255,0.8)',
+            color: '#323338',
             marginBottom: 4,
           }}>
             {document.name}
@@ -119,13 +119,13 @@ export default function SignatureRequestModal({ open, document, client, onClose,
         {/* Signer info */}
         <div style={{
           padding: '20px 28px',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          borderBottom: '1px solid #d0d4e4',
         }}>
           <div style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 9,
             letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.2)',
+            color: '#9699a6',
             marginBottom: 8,
           }}>
             SIGNER
@@ -136,10 +136,10 @@ export default function SignatureRequestModal({ open, document, client, onClose,
                 fontFamily: "'Inter', sans-serif",
                 fontSize: 10,
                 letterSpacing: '0.15em',
-                color: 'rgba(255,255,255,0.2)',
+                color: '#9699a6',
                 minWidth: 50,
               }}>NAME</span>
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#323338' }}>
                 {client.name}
               </span>
             </div>
@@ -148,10 +148,10 @@ export default function SignatureRequestModal({ open, document, client, onClose,
                 fontFamily: "'Inter', sans-serif",
                 fontSize: 10,
                 letterSpacing: '0.15em',
-                color: 'rgba(255,255,255,0.2)',
+                color: '#9699a6',
                 minWidth: 50,
               }}>EMAIL</span>
-              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: 'rgba(255,255,255,0.7)' }}>
+              <span style={{ fontFamily: "'Inter', sans-serif", fontSize: 14, color: '#323338' }}>
                 {client.email}
               </span>
             </div>
@@ -164,7 +164,7 @@ export default function SignatureRequestModal({ open, document, client, onClose,
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 9,
             letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.2)',
+            color: '#9699a6',
             marginBottom: 8,
           }}>
             MESSAGE (OPTIONAL)
@@ -176,9 +176,9 @@ export default function SignatureRequestModal({ open, document, client, onClose,
             rows={3}
             style={{
               width: '100%',
-              background: 'rgba(255,255,255,0.02)',
-              border: '1px solid rgba(255,255,255,0.06)',
-              color: 'rgba(255,255,255,0.7)',
+              background: '#fff',
+              border: '1px solid #c3c6d4',
+              color: '#323338',
               fontFamily: "'Inter', sans-serif",
               fontSize: 13,
               padding: '12px 14px',
@@ -187,8 +187,8 @@ export default function SignatureRequestModal({ open, document, client, onClose,
               lineHeight: 1.5,
               transition: 'border-color 0.2s',
             }}
-            onFocus={(e) => { e.target.style.borderColor = 'rgba(201,169,110,0.3)'; }}
-            onBlur={(e) => { e.target.style.borderColor = 'rgba(255,255,255,0.06)'; }}
+            onFocus={(e) => { e.target.style.borderColor = '#0073ea'; }}
+            onBlur={(e) => { e.target.style.borderColor = '#c3c6d4'; }}
           />
         </div>
 
@@ -209,7 +209,7 @@ export default function SignatureRequestModal({ open, document, client, onClose,
           justifyContent: 'flex-end',
           gap: 12,
           padding: '16px 28px 24px',
-          borderTop: '1px solid rgba(255,255,255,0.04)',
+          borderTop: '1px solid #d0d4e4',
         }}>
           <button
             onClick={onClose}

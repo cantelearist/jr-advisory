@@ -176,7 +176,7 @@ export default function AdminPages({ onEditPage }: AdminPagesProps) {
                 fontSize: 9,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.3)',
+                color: 'var(--admin-text-dim)',
                 marginBottom: 6,
               }}>Page Title</label>
               <input
@@ -206,11 +206,11 @@ export default function AdminPages({ onEditPage }: AdminPagesProps) {
                 fontSize: 9,
                 letterSpacing: '0.15em',
                 textTransform: 'uppercase',
-                color: 'rgba(255,255,255,0.3)',
+                color: 'var(--admin-text-dim)',
                 marginBottom: 6,
               }}>URL Slug</label>
               <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
-                <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}>/p/</span>
+                <span style={{ color: 'var(--admin-text-dim)', fontSize: 12, fontFamily: "'JetBrains Mono', monospace" }}>/p/</span>
                 <input
                   type="text"
                   value={newSlug}
@@ -245,14 +245,14 @@ export default function AdminPages({ onEditPage }: AdminPagesProps) {
 
       {/* Pages list */}
       {loading ? (
-        <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.3)' }}>
+        <div style={{ textAlign: 'center', padding: 60, color: 'var(--admin-text-dim)' }}>
           Loading pages...
         </div>
       ) : pages.length === 0 ? (
         <div className="admin-card" style={{ textAlign: 'center', padding: 60 }}>
           <div style={{ fontSize: 48, marginBottom: 16, opacity: 0.2 }}>✎</div>
-          <p style={{ color: 'rgba(255,255,255,0.4)', marginBottom: 8 }}>No pages yet</p>
-          <p style={{ color: 'rgba(255,255,255,0.2)', fontSize: 13 }}>
+          <p style={{ color: 'var(--admin-text-muted)', marginBottom: 8 }}>No pages yet</p>
+          <p style={{ color: 'var(--admin-text-dim)', fontSize: 13 }}>
             Click &quot;+ New Page&quot; to create your first visual page.
           </p>
         </div>
@@ -293,7 +293,7 @@ export default function AdminPages({ onEditPage }: AdminPagesProps) {
                     <span style={{
                       fontFamily: "'JetBrains Mono', monospace",
                       fontSize: 11,
-                      color: 'rgba(255,255,255,0.3)',
+                      color: 'var(--admin-text-dim)',
                     }}>
                       /p/{page.slug}
                     </span>
@@ -308,7 +308,7 @@ export default function AdminPages({ onEditPage }: AdminPagesProps) {
                     </button>
                   </td>
                   <td>
-                    <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)' }}>
+                    <span style={{ fontSize: 12, color: 'var(--admin-text-dim)' }}>
                       {new Date(page.updated_at).toLocaleDateString('en-US', {
                         month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit',
                       })}

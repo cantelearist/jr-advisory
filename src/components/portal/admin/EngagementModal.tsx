@@ -98,9 +98,9 @@ export default function EngagementModal({ open, onClose, onSave, engagement, cli
           <div>
             <label style={labelStyle}>Client *</label>
             <select style={{ ...fieldStyle, cursor: 'pointer' }} value={form.client_id} onChange={e => handleClientChange(e.target.value)}>
-              <option value="" style={{ background: '#1a1b1e' }}>Select client...</option>
+              <option value="" style={{ background: '#fff', color: '#323338' }}>Select client...</option>
               {clients.map(c => (
-                <option key={c.id} value={c.id} style={{ background: '#1a1b1e' }}>{c.name} — {c.area}</option>
+                <option key={c.id} value={c.id} style={{ background: '#fff', color: '#323338' }}>{c.name} — {c.area}</option>
               ))}
             </select>
           </div>
@@ -110,7 +110,7 @@ export default function EngagementModal({ open, onClose, onSave, engagement, cli
         <div>
           <label style={labelStyle}>Engagement Type *</label>
           <select style={{ ...fieldStyle, cursor: 'pointer' }} value={form.type} onChange={e => setForm(f => ({ ...f, type: e.target.value }))}>
-            {ENGAGEMENT_TYPES.map(t => <option key={t} value={t} style={{ background: '#1a1b1e' }}>{t}</option>)}
+            {ENGAGEMENT_TYPES.map(t => <option key={t} value={t} style={{ background: '#fff', color: '#323338' }}>{t}</option>)}
           </select>
         </div>
 
@@ -124,10 +124,10 @@ export default function EngagementModal({ open, onClose, onSave, engagement, cli
                 onClick={() => handlePhaseChange(p)}
                 style={{
                   padding: '12px 8px',
-                  background: form.phase === p ? 'rgba(201,169,110,0.12)' : 'rgba(255,255,255,0.02)',
-                  border: `1px solid ${form.phase === p ? 'rgba(201,169,110,0.3)' : 'rgba(255,255,255,0.06)'}`,
-                  borderRadius: 6,
-                  color: form.phase === p ? '#c9a96e' : 'rgba(255,255,255,0.4)',
+                  background: form.phase === p ? '#cce5ff' : '#fff',
+                  border: `1px solid ${form.phase === p ? '#0073ea' : '#c3c6d4'}`,
+                  borderRadius: 4,
+                  color: form.phase === p ? '#0060b9' : '#676879',
                   cursor: 'pointer',
                   fontSize: 11,
                   fontFamily: "'JetBrains Mono', monospace",

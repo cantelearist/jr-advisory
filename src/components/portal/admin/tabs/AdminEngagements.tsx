@@ -12,10 +12,10 @@ const PHASE_LABELS: Record<string, string> = {
 };
 
 const PHASE_COLORS: Record<string, string> = {
-  '1': 'rgba(201,169,110,0.5)',
-  '2': 'rgba(74,222,128,0.5)',
-  '3': 'rgba(96,165,250,0.5)',
-  '4': 'rgba(167,139,250,0.5)',
+  '1': '#579bfc',
+  '2': '#00c875',
+  '3': '#fdab3d',
+  '4': '#a25ddc',
 };
 
 interface Props {
@@ -99,7 +99,7 @@ export default function AdminEngagements({ clients, engagements, invoices, onNew
                         onDragEnd={e => { (e.currentTarget as HTMLElement).style.opacity = '1'; }}
                         onClick={() => client ? router.push(`/portal/admin/clients/${client.id}`) : onOpenEngagement(eng)}
                       >
-                        <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.9)', margin: 0, fontWeight: 500 }}>
+                        <p style={{ fontSize: 14, color: 'var(--admin-text)', margin: 0, fontWeight: 600 }}>
                           {client?.name || 'Unknown'}
                         </p>
                         <p style={{ fontSize: 12, color: 'var(--admin-text-muted)', margin: '4px 0 0' }}>{eng.type}</p>
@@ -110,7 +110,7 @@ export default function AdminEngagements({ clients, engagements, invoices, onNew
                           </p>
                         )}
                         {totalBilled > 0 && (
-                          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.3)', margin: '6px 0 0', letterSpacing: '0.04em' }}>
+                          <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'var(--admin-text-muted)', margin: '6px 0 0', letterSpacing: '0.04em' }}>
                             {fmt(totalBilled)}
                           </p>
                         )}

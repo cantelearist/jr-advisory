@@ -216,7 +216,7 @@ export default function AdminSignatures({ signatures, clients, onReload }: Props
                 <tr key={sig.id} className={isExpanded ? 'admin-table__row--expanded' : ''}>
                   <td>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ color: 'rgba(255,255,255,0.8)' }}>{docName}</span>
+                      <span style={{ color: 'var(--admin-text)', fontWeight: 600 }}>{docName}</span>
                       {docCat && (
                         <span style={{
                           fontFamily: "'JetBrains Mono', monospace",
@@ -227,16 +227,16 @@ export default function AdminSignatures({ signatures, clients, onReload }: Props
                       )}
                     </div>
                   </td>
-                  <td style={{ color: 'rgba(255,255,255,0.5)' }}>{clientName}</td>
+                  <td style={{ color: 'var(--admin-text-muted)' }}>{clientName}</td>
                   <td>
                     <span className={`admin-badge ${statusBadgeClass(sig.status)}`}>
                       {sig.status.toUpperCase()}
                     </span>
                   </td>
-                  <td style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>
+                  <td style={{ fontSize: 12, color: 'var(--admin-text-dim)' }}>
                     {formatDate(sig.created_at)}
                   </td>
-                  <td style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>
+                  <td style={{ fontSize: 12, color: 'var(--admin-text-dim)' }}>
                     {sig.signed_at ? formatDate(sig.signed_at) : '—'}
                   </td>
                   <td>
@@ -314,7 +314,7 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
       {/* Certificate header */}
       <div style={{
         padding: '24px 28px',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
+        borderBottom: '1px solid #d0d4e4',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
@@ -333,7 +333,7 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
             fontFamily: "'Cormorant Garamond', Georgia, serif",
             fontSize: 22,
             fontWeight: 300,
-            color: '#fff',
+            color: '#323338',
             margin: '8px 0 0',
           }}>
             {doc?.name || 'Unknown Document'}
@@ -354,14 +354,14 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
         {/* Signer details */}
         <div style={{
           padding: '20px 28px',
-          borderRight: '1px solid rgba(255,255,255,0.04)',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          borderRight: '1px solid #d0d4e4',
+          borderBottom: '1px solid #d0d4e4',
         }}>
           <div style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 9,
             letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.2)',
+            color: '#9699a6',
             marginBottom: 12,
           }}>
             SIGNER
@@ -376,13 +376,13 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
         {/* Timing details */}
         <div style={{
           padding: '20px 28px',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          borderBottom: '1px solid #d0d4e4',
         }}>
           <div style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 9,
             letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.2)',
+            color: '#9699a6',
             marginBottom: 12,
           }}>
             TIMESTAMPS
@@ -402,21 +402,21 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
       {(status === 'signed' && signatureData && !signatureData.startsWith('DECLINED')) ? (
         <div style={{
           padding: '20px 28px',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
-          background: 'rgba(255,255,255,0.01)',
+          borderBottom: '1px solid #d0d4e4',
+          background: '#f7f8fa',
         }}>
           <div style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 9,
             letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.2)',
+            color: '#9699a6',
             marginBottom: 12,
           }}>
             CAPTURED SIGNATURE
           </div>
           <div style={{
-            background: 'rgba(255,255,255,0.02)',
-            border: '1px solid rgba(255,255,255,0.06)',
+            background: '#fff',
+            border: '1px solid #d0d4e4',
             padding: 16,
             display: 'flex',
             justifyContent: 'center',
@@ -438,7 +438,7 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
       {status === 'declined' && signatureData ? (
         <div style={{
           padding: '20px 28px',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          borderBottom: '1px solid #d0d4e4',
           background: 'rgba(239,68,68,0.02)',
         }}>
           <div style={{
@@ -453,7 +453,7 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
           <div style={{
             fontFamily: "'Inter', sans-serif",
             fontSize: 13,
-            color: 'rgba(255,255,255,0.5)',
+            color: '#676879',
             fontStyle: 'italic',
           }}>
             {signatureData.replace('DECLINED: ', '').replace('DECLINED', 'No reason provided')}
@@ -465,13 +465,13 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
       {data.message ? (
         <div style={{
           padding: '20px 28px',
-          borderBottom: '1px solid rgba(255,255,255,0.04)',
+          borderBottom: '1px solid #d0d4e4',
         }}>
           <div style={{
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 9,
             letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.2)',
+            color: '#9699a6',
             marginBottom: 8,
           }}>
             MESSAGE TO SIGNER
@@ -479,7 +479,7 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
           <div style={{
             fontFamily: "'Cormorant Garamond', Georgia, serif",
             fontSize: 15,
-            color: 'rgba(255,255,255,0.4)',
+            color: '#676879',
             fontStyle: 'italic',
             lineHeight: 1.6,
           }}>
@@ -495,7 +495,7 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
             fontFamily: "'JetBrains Mono', monospace",
             fontSize: 9,
             letterSpacing: '0.2em',
-            color: 'rgba(255,255,255,0.2)',
+            color: '#9699a6',
             marginBottom: 12,
           }}>
             AUDIT TRAIL
@@ -507,8 +507,8 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
                 alignItems: 'baseline',
                 gap: 12,
                 padding: '8px 12px',
-                background: 'rgba(255,255,255,0.015)',
-                border: '1px solid rgba(255,255,255,0.03)',
+                background: '#f7f8fa',
+                border: '1px solid #e6e9ef',
               }}>
                 <span style={{
                   fontFamily: "'JetBrains Mono', monospace",
@@ -524,7 +524,7 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
                 <span style={{
                   fontFamily: "'Inter', sans-serif",
                   fontSize: 12,
-                  color: 'rgba(255,255,255,0.5)',
+                  color: '#676879',
                   flex: 1,
                 }}>
                   {(entry.action as string).replace(/_/g, ' ')}
@@ -532,7 +532,7 @@ function CertificateView({ data }: { data: Record<string, unknown> }) {
                 <span style={{
                   fontFamily: "'JetBrains Mono', monospace",
                   fontSize: 10,
-                  color: 'rgba(255,255,255,0.15)',
+                  color: '#9699a6',
                   flexShrink: 0,
                 }}>
                   {entry.timestamp ? formatDateTime(entry.timestamp as string) : ''}
@@ -554,14 +554,14 @@ function InfoRow({ label, value }: { label: string; value: string }) {
         fontFamily: "'Inter', sans-serif",
         fontSize: 10,
         letterSpacing: '0.12em',
-        color: 'rgba(255,255,255,0.15)',
+        color: '#9699a6',
         minWidth: 60,
         textTransform: 'uppercase',
       }}>{label}</span>
       <span style={{
         fontFamily: "'Inter', sans-serif",
         fontSize: 13,
-        color: 'rgba(255,255,255,0.6)',
+        color: '#323338',
       }}>{value}</span>
     </div>
   );

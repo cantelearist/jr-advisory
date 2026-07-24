@@ -46,8 +46,8 @@ export default function AdminSettings({ clients, onReset }: Props) {
         <h3>Payments</h3>
         <dl className="admin-settings-grid">
           <dt>Processor:</dt><dd style={{ color: 'var(--admin-accent)' }}>Stripe</dd>
-          <dt>Status:</dt><dd style={{ color: 'rgba(255,255,255,0.5)' }}>Pending API keys</dd>
-          <dt>Checkout:</dt><dd style={{ color: 'rgba(255,255,255,0.5)' }}>Ready (needs STRIPE_SECRET_KEY env var)</dd>
+          <dt>Status:</dt><dd style={{ color: 'var(--admin-text-muted)' }}>Pending API keys</dd>
+          <dt>Checkout:</dt><dd style={{ color: 'var(--admin-text-muted)' }}>Ready (needs STRIPE_SECRET_KEY env var)</dd>
         </dl>
       </div>
 
@@ -56,9 +56,9 @@ export default function AdminSettings({ clients, onReset }: Props) {
         <h3>Email Notifications</h3>
         <dl className="admin-settings-grid">
           <dt>Provider:</dt><dd style={{ color: 'var(--admin-accent)' }}>Resend</dd>
-          <dt>Status:</dt><dd style={{ color: 'rgba(255,255,255,0.5)' }}>Ready (needs RESEND_API_KEY env var)</dd>
-          <dt>Triggers:</dt><dd style={{ color: 'rgba(255,255,255,0.5)' }}>New message · Invoice sent · Document upload · Phase change</dd>
-          <dt>From:</dt><dd style={{ color: 'rgba(255,255,255,0.5)' }}>notifications@jamesroman.la</dd>
+          <dt>Status:</dt><dd style={{ color: 'var(--admin-text-muted)' }}>Ready (needs RESEND_API_KEY env var)</dd>
+          <dt>Triggers:</dt><dd style={{ color: 'var(--admin-text-muted)' }}>New message · Invoice sent · Document upload · Phase change</dd>
+          <dt>From:</dt><dd style={{ color: 'var(--admin-text-muted)' }}>notifications@jamesroman.la</dd>
         </dl>
       </div>
 

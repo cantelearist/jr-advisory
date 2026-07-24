@@ -176,9 +176,9 @@ export default function ChangeOrderModal({
               value={form.client_id}
               onChange={(event) => selectClient(event.target.value)}
             >
-              <option value="" style={{ background: '#1a1b1e' }}>Select...</option>
+              <option value="" style={{ background: '#fff', color: '#323338' }}>Select...</option>
               {clients.map((client) => (
-                <option key={client.id} value={client.id} style={{ background: '#1a1b1e' }}>
+                <option key={client.id} value={client.id} style={{ background: '#fff', color: '#323338' }}>
                   {client.name}
                 </option>
               ))}
@@ -191,9 +191,9 @@ export default function ChangeOrderModal({
               value={form.engagement_id}
               onChange={(event) => selectEngagement(event.target.value)}
             >
-              <option value="" style={{ background: '#1a1b1e' }}>Select...</option>
+              <option value="" style={{ background: '#fff', color: '#323338' }}>Select...</option>
               {clientEngagements.map((engagement) => (
-                <option key={engagement.id} value={engagement.id} style={{ background: '#1a1b1e' }}>
+                <option key={engagement.id} value={engagement.id} style={{ background: '#fff', color: '#323338' }}>
                   {engagement.type}
                 </option>
               ))}
@@ -225,8 +225,8 @@ export default function ChangeOrderModal({
                 source_document_id: null,
               }))}
             >
-              <option value="invoice" style={{ background: '#1a1b1e' }}>Invoice</option>
-              <option value="contract" style={{ background: '#1a1b1e' }}>Contract Document</option>
+              <option value="invoice" style={{ background: '#fff', color: '#323338' }}>Invoice</option>
+              <option value="contract" style={{ background: '#fff', color: '#323338' }}>Contract Document</option>
             </select>
           </div>
         </div>
@@ -244,9 +244,9 @@ export default function ChangeOrderModal({
                 source_invoice_id: event.target.value || null,
               }))}
             >
-              <option value="" style={{ background: '#1a1b1e' }}>Select...</option>
+              <option value="" style={{ background: '#fff', color: '#323338' }}>Select...</option>
               {sourceInvoices.map((invoice) => (
-                <option key={invoice.id} value={invoice.id} style={{ background: '#1a1b1e' }}>
+                <option key={invoice.id} value={invoice.id} style={{ background: '#fff', color: '#323338' }}>
                   {invoice.invoice_number} — {invoice.description}
                 </option>
               ))}
@@ -260,9 +260,9 @@ export default function ChangeOrderModal({
                 source_document_id: event.target.value || null,
               }))}
             >
-              <option value="" style={{ background: '#1a1b1e' }}>Select...</option>
+              <option value="" style={{ background: '#fff', color: '#323338' }}>Select...</option>
               {sourceDocuments.map((document) => (
-                <option key={document.id} value={document.id} style={{ background: '#1a1b1e' }}>
+                <option key={document.id} value={document.id} style={{ background: '#fff', color: '#323338' }}>
                   {document.name}
                 </option>
               ))}
@@ -321,8 +321,8 @@ export default function ChangeOrderModal({
                 status: event.target.value as 'draft' | 'sent',
               }))}
             >
-              <option value="draft" style={{ background: '#1a1b1e' }}>Draft</option>
-              <option value="sent" style={{ background: '#1a1b1e' }}>Issue to Client</option>
+              <option value="draft" style={{ background: '#fff', color: '#323338' }}>Draft</option>
+              <option value="sent" style={{ background: '#fff', color: '#323338' }}>Issue to Client</option>
             </select>
           </div>
         </div>

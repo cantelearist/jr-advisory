@@ -1,14 +1,14 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, type CSSProperties } from 'react';
 import { useRouter } from 'next/navigation';
 import type { Client, Engagement } from '@/lib/database.types';
 
 const STATUS_COLORS: Record<string, string> = {
-  active: '#4ade80',
-  pending: '#c9a96e',
-  completed: 'rgba(255,255,255,0.4)',
-  archived: 'rgba(255,255,255,0.2)',
+  active: '#00c875',
+  pending: '#fdab3d',
+  completed: '#579bfc',
+  archived: '#9296a1',
 };
 
 const STATUS_FILTERS = ['all', 'active', 'pending', 'completed', 'archived'] as const;
@@ -48,6 +48,27 @@ export default function AdminClients({ clients, engagements, inviteStatus, onInv
 
     return result;
   }, [clients, search, statusFilter]);
+
+  const groups = [
+    {
+      id: 'active',
+      label: 'Active clients',
+      color: '#579bfc',
+      clients: filtered.filter(client => client.status === 'active'),
+    },
+    {
+      id: 'onboarding',
+      label: 'Onboarding',
+      color: '#fdab3d',
+      clients: filtered.filter(client => client.status === 'pending'),
+    },
+    {
+      id: 'closed',
+      label: 'Completed & archived',
+      color: '#a25ddc',
+      clients: filtered.filter(client => client.status === 'completed' || client.status === 'archived'),
+    },
+  ].filter(group => group.clients.length > 0);
 
   return (
     <>
@@ -113,16 +134,26 @@ export default function AdminClients({ clients, engagements, inviteStatus, onInv
               <th style={{ width: 40 }}></th>
             </tr>
           </thead>
-          <tbody>
-            {filtered.length === 0 ? (
+          {filtered.length === 0 ? (
+            <tbody>
               <tr>
                 <td colSpan={6} className="admin-empty">
                   {search ? `No clients matching "${search}"` : 'No clients in this category'}
                 </td>
               </tr>
-            ) : filtered.map(client => {
+            </tbody>
+          ) : groups.map(group => (
+            <tbody key={group.id} className="admin-board-group" style={{ '--group-color': group.color } as CSSProperties}>
+              <tr className="admin-board-group__header">
+                <td colSpan={6}>
+                  <span className="admin-board-group__chevron">⌄</span>
+                  <strong>{group.label}</strong>
+                  <span>{group.clients.length} item{group.clients.length === 1 ? '' : 's'}</span>
+                </td>
+              </tr>
+              {group.clients.map(client => {
               const eng = engagements.find(e => e.client_id === client.id);
-              const sc = STATUS_COLORS[client.status] || 'rgba(255,255,255,0.4)';
+              const sc = STATUS_COLORS[client.status] || '#9296a1';
               return (
                 <tr
                   key={client.id}
@@ -130,19 +161,19 @@ export default function AdminClients({ clients, engagements, inviteStatus, onInv
                   style={{ cursor: 'pointer' }}
                 >
                   <td>
-                    <div style={{ fontWeight: 500, color: 'rgba(255,255,255,0.9)', fontSize: 14 }}>{client.name}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{client.property}</div>
+                    <div style={{ fontWeight: 600, color: 'var(--admin-text)', fontSize: 14 }}>{client.name}</div>
+                    <div style={{ fontSize: 12, color: 'var(--admin-text-muted)', marginTop: 2 }}>{client.property}</div>
                   </td>
                   <td>
-                    <div style={{ fontSize: 13, color: 'rgba(255,255,255,0.5)' }}>{eng ? eng.type : '—'}</div>
-                    <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 2 }}>{eng ? `Phase ${eng.phase}` : '—'}</div>
+                    <div style={{ fontSize: 13, color: 'var(--admin-text)' }}>{eng ? eng.type : '—'}</div>
+                    <div style={{ fontSize: 12, color: 'var(--admin-text-muted)', marginTop: 2 }}>{eng ? `Phase ${eng.phase}` : '—'}</div>
                   </td>
-                  <td style={{ color: 'rgba(255,255,255,0.4)' }}>{client.area}</td>
+                  <td style={{ color: 'var(--admin-text-muted)' }}>{client.area}</td>
                   <td>
                     <span className="admin-badge" style={{
-                      background: `${sc}15`,
-                      color: sc,
-                      border: `1px solid ${sc}30`,
+                      background: sc,
+                      color: '#fff',
+                      border: `1px solid ${sc}`,
                     }}>
                       {client.status.toUpperCase()}
                     </span>
@@ -176,8 +207,9 @@ export default function AdminClients({ clients, engagements, inviteStatus, onInv
                   </td>
                 </tr>
               );
-            })}
-          </tbody>
+              })}
+            </tbody>
+          ))}
         </table>
       </div>
     </>

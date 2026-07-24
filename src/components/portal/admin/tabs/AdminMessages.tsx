@@ -344,7 +344,7 @@ export default function AdminMessages({ clients, engagements }: Props) {
                     </span>
                   </div>
                   <div className="admin-messages-thread__meta">
-                    <span style={{ color: latest.sender_type === 'firm' ? 'var(--admin-accent)' : 'rgba(255,255,255,0.4)' }}>
+                    <span style={{ color: latest.sender_type === 'firm' ? 'var(--admin-accent)' : 'var(--admin-text-muted)' }}>
                       {latest.sender_type === 'firm' ? 'The Firm' : (client?.name || 'Client')}
                     </span>
                     {threadMsgs.length > 1 ? (
@@ -442,7 +442,7 @@ export default function AdminMessages({ clients, engagements }: Props) {
           ) : (
             <div className="admin-messages-empty" style={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
               <span style={{ fontSize: 32, opacity: 0.15, marginBottom: 12 }}>✉</span>
-              <p style={{ color: 'rgba(255,255,255,0.25)', fontSize: 13 }}>Select a conversation</p>
+              <p style={{ color: 'var(--admin-text-dim)', fontSize: 13 }}>Select a conversation</p>
             </div>
           )}
         </div>

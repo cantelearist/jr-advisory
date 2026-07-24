@@ -61,31 +61,31 @@ export default function ComposeMessage({ clients, engagements, preselectedClient
   };
 
   const overlay: React.CSSProperties = {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)',
+    position: 'fixed', inset: 0, background: 'rgba(50,51,56,0.42)',
     display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000,
   };
 
   const modal: React.CSSProperties = {
-    background: '#1a1a1a', borderRadius: 12, padding: 32, width: '100%', maxWidth: 560,
-    border: '1px solid rgba(201,169,110,0.2)', maxHeight: '90vh', overflow: 'auto',
+    background: '#fff', borderRadius: 8, padding: 32, width: '100%', maxWidth: 560,
+    border: '1px solid #d0d4e4', boxShadow: '0 12px 40px rgba(50,51,56,0.22)', maxHeight: '90vh', overflow: 'auto',
   };
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', padding: '10px 14px', background: '#0a0a0a', border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 8, color: '#fff', fontSize: 14, outline: 'none', fontFamily: 'inherit',
+    width: '100%', padding: '10px 14px', background: '#fff', border: '1px solid #c3c6d4',
+    borderRadius: 4, color: '#323338', fontSize: 14, outline: 'none', fontFamily: 'inherit',
   };
 
   return (
     <div style={overlay} onClick={onClose}>
       <div style={modal} onClick={e => e.stopPropagation()}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
-          <h2 style={{ fontSize: 18, fontWeight: 600, color: '#c9a96e', margin: 0 }}>New Message</h2>
-          <button onClick={onClose} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.4)', fontSize: 20, cursor: 'pointer' }}>✕</button>
+          <h2 style={{ fontSize: 18, fontWeight: 650, color: '#323338', margin: 0 }}>New Message</h2>
+          <button onClick={onClose} style={{ background: 'none', border: 'none', color: '#676879', fontSize: 20, cursor: 'pointer' }}>✕</button>
         </div>
 
         {/* Client selector */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>To</label>
+          <label style={{ display: 'block', fontSize: 12, color: '#676879', marginBottom: 6, fontWeight: 600 }}>To</label>
           <select
             value={clientId}
             onChange={e => setClientId(e.target.value)}
@@ -100,7 +100,7 @@ export default function ComposeMessage({ clients, engagements, preselectedClient
 
         {/* Subject */}
         <div style={{ marginBottom: 16 }}>
-          <label style={{ display: 'block', fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Subject</label>
+          <label style={{ display: 'block', fontSize: 12, color: '#676879', marginBottom: 6, fontWeight: 600 }}>Subject</label>
           <input
             type="text"
             value={subject}
@@ -112,7 +112,7 @@ export default function ComposeMessage({ clients, engagements, preselectedClient
 
         {/* Body */}
         <div style={{ marginBottom: 24 }}>
-          <label style={{ display: 'block', fontSize: 12, color: 'rgba(255,255,255,0.5)', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 1 }}>Message</label>
+          <label style={{ display: 'block', fontSize: 12, color: '#676879', marginBottom: 6, fontWeight: 600 }}>Message</label>
           <textarea
             value={body}
             onChange={e => setBody(e.target.value)}
@@ -129,14 +129,14 @@ export default function ComposeMessage({ clients, engagements, preselectedClient
         <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end' }}>
           <button
             onClick={onClose}
-            style={{ padding: '10px 20px', background: 'transparent', border: '1px solid rgba(255,255,255,0.15)', borderRadius: 8, color: 'rgba(255,255,255,0.6)', cursor: 'pointer', fontSize: 14 }}
+            style={{ padding: '10px 20px', background: '#fff', border: '1px solid #c3c6d4', borderRadius: 4, color: '#323338', cursor: 'pointer', fontSize: 14 }}
           >
             Cancel
           </button>
           <button
             onClick={handleSend}
             disabled={sending}
-            style={{ padding: '10px 24px', background: '#c9a96e', border: 'none', borderRadius: 8, color: '#0a0a0a', cursor: sending ? 'wait' : 'pointer', fontSize: 14, fontWeight: 600, opacity: sending ? 0.6 : 1 }}
+            style={{ padding: '10px 24px', background: '#0073ea', border: 'none', borderRadius: 4, color: '#fff', cursor: sending ? 'wait' : 'pointer', fontSize: 14, fontWeight: 650, opacity: sending ? 0.6 : 1 }}
           >
             {sending ? 'Sending…' : 'Send Message'}
           </button>

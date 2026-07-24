@@ -1,27 +1,43 @@
 'use client';
 
+import {
+  Activity,
+  BriefcaseBusiness,
+  Building2,
+  CreditCard,
+  FileSignature,
+  Files,
+  LayoutDashboard,
+  Mail,
+  PanelsTopLeft,
+  Settings,
+  SlidersHorizontal,
+  Users,
+  type LucideIcon,
+} from 'lucide-react';
+
 export type Tab = 'overview' | 'clients' | 'engagements' | 'documents' | 'signatures' | 'messages' | 'invoices' | 'activity' | 'team' | 'content' | 'pages' | 'settings';
 
 interface SidebarItem {
   id: Tab;
   label: string;
-  icon: string;
+  icon: LucideIcon;
   section?: string;
 }
 
 const ITEMS: SidebarItem[] = [
-  { id: 'overview',     label: 'Overview',     icon: '◎', section: 'COMMAND' },
-  { id: 'clients',      label: 'Clients',      icon: '◉' },
-  { id: 'engagements',  label: 'Engagements',  icon: '◈' },
-  { id: 'invoices',     label: 'Invoices',     icon: '▦' },
-  { id: 'documents',    label: 'Documents',    icon: '▤', section: 'WORKSPACE' },
-  { id: 'signatures',   label: 'Signatures',   icon: '✍' },
-  { id: 'messages',     label: 'Messages',     icon: '✉' },
-  { id: 'activity',     label: 'Activity',     icon: '▸' },
-  { id: 'team',         label: 'Team',         icon: '⊡', section: 'SYSTEM' },
-  { id: 'pages',        label: 'Page Builder', icon: '◧' },
-  { id: 'content',      label: 'Content',      icon: '✎' },
-  { id: 'settings',     label: 'Settings',     icon: '⚙' },
+  { id: 'overview',     label: 'Dashboard',     icon: LayoutDashboard, section: 'CRM' },
+  { id: 'clients',      label: 'Clients',       icon: Building2 },
+  { id: 'engagements',  label: 'Engagements',   icon: BriefcaseBusiness },
+  { id: 'invoices',     label: 'Billing',       icon: CreditCard },
+  { id: 'documents',    label: 'Documents',     icon: Files, section: 'OPERATIONS' },
+  { id: 'signatures',   label: 'Signatures',    icon: FileSignature },
+  { id: 'messages',     label: 'Messages',      icon: Mail },
+  { id: 'activity',     label: 'Activity',      icon: Activity },
+  { id: 'team',         label: 'Team',          icon: Users, section: 'WORKSPACE' },
+  { id: 'pages',        label: 'Page Builder',  icon: PanelsTopLeft },
+  { id: 'content',      label: 'Content',       icon: SlidersHorizontal },
+  { id: 'settings',     label: 'Settings',      icon: Settings },
 ];
 
 interface BadgeCounts {
@@ -65,41 +81,56 @@ export default function AdminSidebar({ activeTab, onTabChange, alertCount = 0, u
     <>
       {/* Desktop sidebar */}
       <aside className="admin-sidebar">
-        {ITEMS.map((item) => (
-          <div key={item.id}>
-            {item.section && (
-              <div className="admin-sidebar__section-label">{item.section}</div>
-            )}
-            <button
-              className={`admin-sidebar__item ${activeTab === item.id ? 'admin-sidebar__item--active' : ''}`}
-              onClick={() => onTabChange(item.id)}
-            >
-              <span className="admin-sidebar__icon">{item.icon}</span>
-              <span>{item.label}</span>
-              {getBadge(item.id)}
-            </button>
+        <div className="admin-sidebar__workspace">
+          <div className="admin-sidebar__workspace-mark">JR</div>
+          <div>
+            <div className="admin-sidebar__workspace-name">Private Office</div>
+            <div className="admin-sidebar__workspace-type">CRM workspace</div>
           </div>
-        ))}
+        </div>
+        <div className="admin-sidebar__nav">
+          {ITEMS.map((item) => {
+            const Icon = item.icon;
+            return (
+              <div key={item.id}>
+                {item.section && (
+                  <div className="admin-sidebar__section-label">{item.section}</div>
+                )}
+                <button
+                  className={`admin-sidebar__item ${activeTab === item.id ? 'admin-sidebar__item--active' : ''}`}
+                  onClick={() => onTabChange(item.id)}
+                >
+                  <span className="admin-sidebar__icon"><Icon size={16} strokeWidth={1.9} /></span>
+                  <span>{item.label}</span>
+                  {getBadge(item.id)}
+                </button>
+              </div>
+            );
+          })}
+        </div>
       </aside>
 
       {/* Mobile tab bar */}
       <div className="admin-mobile-tabs">
-        {ITEMS.map((item) => (
-          <button
-            key={item.id}
-            className={activeTab === item.id ? 'active' : ''}
-            onClick={() => onTabChange(item.id)}
-            style={{ position: 'relative' }}
-          >
-            <span style={{ display: 'block', fontSize: 16, marginBottom: 2 }}>{item.icon}</span>
-            {item.label}
-            {(mergedBadges[item.id as keyof BadgeCounts] || 0) > 0 && (
-              <span className="admin-mobile-badge">
-                {mergedBadges[item.id as keyof BadgeCounts]}
-              </span>
-            )}
-          </button>
-        ))}
+        {ITEMS.map((item) => {
+          const Icon = item.icon;
+          return (
+            <button
+              key={item.id}
+              className={activeTab === item.id ? 'active' : ''}
+              onClick={() => onTabChange(item.id)}
+              style={{ position: 'relative' }}
+            >
+              <span style={{ display: 'flex', justifyContent: 'center', marginBottom: 3 }}><Icon size={16} /></span>
+              {item.label}
+              {(mergedBadges[item.id as keyof BadgeCounts] || 0) > 0 && (
+                <span className="admin-mobile-badge">
+                  {mergedBadges[item.id as keyof BadgeCounts]}
+                </span>
+              )}
+            </button>
+          );
+        })}
       </div>
     </>
   );

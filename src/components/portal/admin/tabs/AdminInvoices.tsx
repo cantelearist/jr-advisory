@@ -5,8 +5,8 @@ import type { ChangeOrder, Client, Document as DBDocument, Invoice } from '@/lib
 import { revisedInvoiceTotal } from '@/lib/change-orders';
 
 const STATUS_COLORS: Record<string, string> = {
-  paid: '#4ade80', sent: '#c9a96e', draft: 'rgba(255,255,255,0.4)',
-  overdue: '#ef4444', cancelled: 'rgba(255,255,255,0.2)',
+  paid: '#00c875', sent: '#fdab3d', draft: '#c4c4c4',
+  overdue: '#e2445c', cancelled: '#9296a1',
 };
 
 const STATUS_FILTERS = ['all', 'overdue', 'sent', 'paid', 'draft', 'cancelled'] as const;
@@ -85,7 +85,7 @@ export default function AdminInvoices({
       {/* Summary KPIs */}
       <div className="admin-kpi-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)', marginBottom: 28 }}>
         {[
-          { label: 'TOTAL', value: fmt(totalRevenue), color: 'rgba(255,255,255,0.85)' },
+          { label: 'TOTAL', value: fmt(totalRevenue), color: 'var(--admin-text)' },
           { label: 'COLLECTED', value: fmt(paidRevenue), color: 'var(--admin-green)' },
           { label: 'OUTSTANDING', value: fmt(outstanding), color: 'var(--admin-accent)' },
         ].map((s, i) => (
@@ -137,7 +137,7 @@ export default function AdminInvoices({
           </div>
         ) : filtered.map(inv => {
           const client = clients.find(c => c.id === inv.client_id);
-          const sc = STATUS_COLORS[inv.status] || 'rgba(255,255,255,0.4)';
+          const sc = STATUS_COLORS[inv.status] || '#9296a1';
           const revisedTotal = revisedInvoiceTotal(inv, approvedChangeOrders);
           const hasApprovedChange = revisedTotal !== Number(inv.amount);
           return (
@@ -152,7 +152,7 @@ export default function AdminInvoices({
                   {inv.invoice_number}
                 </span>
                 <div>
-                  <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', margin: 0 }}>{client?.name || '—'}</p>
+                  <p style={{ fontSize: 14, color: 'var(--admin-text)', margin: 0, fontWeight: 600 }}>{client?.name || '—'}</p>
                   <p style={{ fontSize: 12, color: 'var(--admin-text-muted)', margin: '2px 0 0' }}>{inv.description}</p>
                 </div>
                 <p style={{ fontSize: 13, color: 'var(--admin-text-muted)', margin: 0 }}>Due {inv.due_date}</p>
@@ -167,8 +167,9 @@ export default function AdminInvoices({
                   )}
                 </div>
                 <span className="admin-badge" style={{
-                  background: `${sc}15`, color: sc,
-                  border: `1px solid ${sc}30`,
+                  background: sc,
+                  color: inv.status === 'draft' ? '#323338' : '#fff',
+                  border: `1px solid ${sc}`,
                 }}>{inv.status.toUpperCase()}</span>
               </div>
             </div>

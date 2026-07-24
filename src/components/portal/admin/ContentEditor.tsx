@@ -63,7 +63,7 @@ export default function ContentEditor() {
 
   if (loading) {
     return (
-      <div style={{ textAlign: 'center', padding: 60, color: 'rgba(255,255,255,0.3)' }}>
+      <div style={{ textAlign: 'center', padding: 60, color: 'var(--admin-text-dim)' }}>
         Loading content...
       </div>
     );
@@ -76,7 +76,7 @@ export default function ContentEditor() {
         display: 'flex',
         gap: 4,
         marginBottom: 32,
-        borderBottom: '1px solid rgba(255,255,255,0.06)',
+        borderBottom: '1px solid var(--admin-divider)',
         paddingBottom: 0,
       }}>
         {sections.map(section => (
@@ -88,7 +88,7 @@ export default function ContentEditor() {
               background: activeSection === section ? 'rgba(201,169,110,0.08)' : 'transparent',
               border: 'none',
               borderBottom: activeSection === section ? '2px solid #c9a96e' : '2px solid transparent',
-              color: activeSection === section ? '#c9a96e' : 'rgba(255,255,255,0.35)',
+              color: activeSection === section ? 'var(--admin-blue)' : 'var(--admin-text-muted)',
               cursor: 'pointer',
               fontSize: 11,
               fontFamily: "'JetBrains Mono', monospace",
@@ -137,7 +137,7 @@ export default function ContentEditor() {
             {block.updated_at && (
               <div style={{
                 fontSize: 10,
-                color: 'rgba(255,255,255,0.2)',
+                color: 'var(--admin-text-dim)',
                 fontFamily: "'JetBrains Mono', monospace",
                 marginTop: 6,
               }}>
@@ -152,7 +152,7 @@ export default function ContentEditor() {
       </div>
 
       {/* Reset button */}
-      <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+      <div style={{ marginTop: 40, paddingTop: 24, borderTop: '1px solid var(--admin-divider)' }}>
         <button onClick={handleReset} style={{ ...btnSecondary, fontSize: 10, padding: '8px 16px' }}>
           RESET ALL CONTENT TO DEFAULTS
         </button>

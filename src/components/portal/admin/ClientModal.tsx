@@ -100,16 +100,16 @@ export default function ClientModal({ open, onClose, onSave, onDelete, client }:
           <div>
             <label style={labelStyle}>Area</label>
             <select style={{ ...fieldStyle, cursor: 'pointer' }} value={form.area} onChange={e => setForm(f => ({ ...f, area: e.target.value }))}>
-              {AREAS.map(a => <option key={a} value={a} style={{ background: '#1a1b1e' }}>{a}</option>)}
+              {AREAS.map(a => <option key={a} value={a} style={{ background: '#fff', color: '#323338' }}>{a}</option>)}
             </select>
           </div>
           <div>
             <label style={labelStyle}>Status</label>
             <select style={{ ...fieldStyle, cursor: 'pointer' }} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as Client['status'] }))}>
-              <option value="pending" style={{ background: '#1a1b1e' }}>Pending</option>
-              <option value="active" style={{ background: '#1a1b1e' }}>Active</option>
-              <option value="completed" style={{ background: '#1a1b1e' }}>Completed</option>
-              <option value="archived" style={{ background: '#1a1b1e' }}>Archived</option>
+              <option value="pending" style={{ background: '#fff', color: '#323338' }}>Pending</option>
+              <option value="active" style={{ background: '#fff', color: '#323338' }}>Active</option>
+              <option value="completed" style={{ background: '#fff', color: '#323338' }}>Completed</option>
+              <option value="archived" style={{ background: '#fff', color: '#323338' }}>Archived</option>
             </select>
           </div>
         </div>

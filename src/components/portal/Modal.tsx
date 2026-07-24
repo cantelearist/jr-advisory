@@ -38,8 +38,8 @@ export default function Modal({ open, onClose, title, children, width = 560 }: M
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        background: 'rgba(0,0,0,0.7)',
-        backdropFilter: 'blur(8px)',
+        background: 'rgba(50,51,56,0.42)',
+        backdropFilter: 'blur(3px)',
         animation: 'fadeIn 0.2s ease',
       }}
     >
@@ -50,10 +50,11 @@ export default function Modal({ open, onClose, title, children, width = 560 }: M
           maxWidth: width,
           maxHeight: '85vh',
           overflowY: 'auto',
-          background: 'rgba(16,18,24,0.98)',
-          border: '1px solid rgba(201,169,110,0.12)',
-          borderRadius: 12,
+          background: '#fff',
+          border: '1px solid #d0d4e4',
+          borderRadius: 8,
           padding: 0,
+          boxShadow: '0 12px 40px rgba(50,51,56,0.22)',
           animation: 'slideUp 0.25s ease',
         }}
       >
@@ -63,23 +64,23 @@ export default function Modal({ open, onClose, title, children, width = 560 }: M
           alignItems: 'center',
           justifyContent: 'space-between',
           padding: '20px 28px',
-          borderBottom: '1px solid rgba(255,255,255,0.06)',
+          borderBottom: '1px solid #d0d4e4',
         }}>
-          <h2 className="display" style={{ fontSize: 22, margin: 0 }}>{title}</h2>
+          <h2 style={{ fontFamily: "'Manrope', 'Inter', sans-serif", fontSize: 20, fontWeight: 650, color: '#323338', margin: 0 }}>{title}</h2>
           <button
             onClick={onClose}
             style={{
               background: 'transparent',
               border: 'none',
-              color: 'rgba(255,255,255,0.3)',
+              color: '#676879',
               fontSize: 24,
               cursor: 'pointer',
               padding: '0 4px',
               lineHeight: 1,
               transition: 'color 0.2s ease',
             }}
-            onMouseEnter={e => (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.7)'}
-            onMouseLeave={e => (e.target as HTMLElement).style.color = 'rgba(255,255,255,0.3)'}
+            onMouseEnter={e => (e.target as HTMLElement).style.color = '#323338'}
+            onMouseLeave={e => (e.target as HTMLElement).style.color = '#676879'}
           >
             ×
           </button>
@@ -109,10 +110,10 @@ export default function Modal({ open, onClose, title, children, width = 560 }: M
 export const fieldStyle: React.CSSProperties = {
   width: '100%',
   padding: '12px 14px',
-  background: 'rgba(255,255,255,0.04)',
-  border: '1px solid rgba(255,255,255,0.1)',
-  borderRadius: 6,
-  color: 'rgba(255,255,255,0.85)',
+  background: '#fff',
+  border: '1px solid #c3c6d4',
+  borderRadius: 4,
+  color: '#323338',
   fontFamily: "'Inter', sans-serif",
   fontSize: 14,
   outline: 'none',
@@ -122,51 +123,52 @@ export const fieldStyle: React.CSSProperties = {
 export const labelStyle: React.CSSProperties = {
   display: 'block',
   fontSize: 11,
-  fontFamily: "'JetBrains Mono', monospace",
-  letterSpacing: 2,
-  color: 'rgba(255,255,255,0.35)',
+  fontFamily: "'Inter', sans-serif",
+  fontWeight: 600,
+  letterSpacing: 0,
+  color: '#676879',
   marginBottom: 8,
   textTransform: 'uppercase' as const,
 };
 
 export const btnPrimary: React.CSSProperties = {
-  background: 'rgba(201,169,110,0.12)',
-  border: '1px solid rgba(201,169,110,0.3)',
-  color: '#c9a96e',
-  padding: '12px 28px',
-  borderRadius: 6,
+  background: '#0073ea',
+  border: '1px solid #0073ea',
+  color: '#fff',
+  padding: '10px 20px',
+  borderRadius: 4,
   cursor: 'pointer',
   fontSize: 12,
-  letterSpacing: 1.5,
-  fontFamily: "'JetBrains Mono', monospace",
-  textTransform: 'uppercase' as const,
+  letterSpacing: 0,
+  fontFamily: "'Inter', sans-serif",
+  fontWeight: 600,
   transition: 'all 0.2s ease',
 };
 
 export const btnDanger: React.CSSProperties = {
-  background: 'rgba(239,68,68,0.08)',
-  border: '1px solid rgba(239,68,68,0.2)',
-  color: '#ef4444',
-  padding: '12px 28px',
-  borderRadius: 6,
+  background: '#fff',
+  border: '1px solid #e2445c',
+  color: '#c8324b',
+  padding: '10px 20px',
+  borderRadius: 4,
   cursor: 'pointer',
   fontSize: 12,
-  letterSpacing: 1.5,
-  fontFamily: "'JetBrains Mono', monospace",
-  textTransform: 'uppercase' as const,
+  letterSpacing: 0,
+  fontFamily: "'Inter', sans-serif",
+  fontWeight: 600,
   transition: 'all 0.2s ease',
 };
 
 export const btnSecondary: React.CSSProperties = {
-  background: 'transparent',
-  border: '1px solid rgba(255,255,255,0.1)',
-  color: 'rgba(255,255,255,0.5)',
-  padding: '12px 28px',
-  borderRadius: 6,
+  background: '#fff',
+  border: '1px solid #c3c6d4',
+  color: '#323338',
+  padding: '10px 20px',
+  borderRadius: 4,
   cursor: 'pointer',
   fontSize: 12,
-  letterSpacing: 1.5,
-  fontFamily: "'JetBrains Mono', monospace",
-  textTransform: 'uppercase' as const,
+  letterSpacing: 0,
+  fontFamily: "'Inter', sans-serif",
+  fontWeight: 550,
   transition: 'all 0.2s ease',
 };

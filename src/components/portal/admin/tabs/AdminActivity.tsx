@@ -182,8 +182,9 @@ export default function AdminActivity({ auditLog }: Props) {
                 gap: 12,
                 alignItems: 'start',
                 padding: '12px 16px',
-                background: (page * PAGE_SIZE + i) % 2 === 0 ? 'rgba(255,255,255,0.015)' : 'transparent',
-                borderRadius: 6,
+                background: (page * PAGE_SIZE + i) % 2 === 0 ? '#f7f8fa' : '#fff',
+                border: '1px solid var(--admin-divider)',
+                borderRadius: 4,
               }}
             >
               <span style={{ color: info.color, fontSize: 14, textAlign: 'center', lineHeight: '20px' }}>
@@ -194,17 +195,17 @@ export default function AdminActivity({ auditLog }: Props) {
                   {info.label}
                 </span>
                 {meta && (
-                  <span style={{ fontSize: 12, color: 'rgba(255,255,255,0.35)', marginLeft: 10 }}>
+                  <span style={{ fontSize: 12, color: 'var(--admin-text-muted)', marginLeft: 10 }}>
                     {meta.client_name || meta.name || meta.subject || (meta.client_id ? `Client ${String(meta.client_id).slice(0, 8)}…` : '')}
                   </span>
                 )}
                 {entry.entity_id && (
-                  <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.15)', margin: '2px 0 0' }}>
+                  <p style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'var(--admin-text-dim)', margin: '2px 0 0' }}>
                     {entry.entity_type}:{entry.entity_id.slice(0, 8)}
                   </p>
                 )}
               </div>
-              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'rgba(255,255,255,0.2)', whiteSpace: 'nowrap' }}>
+              <span style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 10, color: 'var(--admin-text-dim)', whiteSpace: 'nowrap' }}>
                 {timeStr}
               </span>
             </div>

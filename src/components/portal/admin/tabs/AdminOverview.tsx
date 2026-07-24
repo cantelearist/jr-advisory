@@ -118,7 +118,7 @@ function RevenueChart({ invoices }: { invoices: Invoice[] }) {
               y1={padY + chartH - frac * chartH}
               x2={padX + chartW}
               y2={padY + chartH - frac * chartH}
-              stroke="rgba(255,255,255,0.04)"
+              stroke="#e6e9ef"
               strokeDasharray="2 4"
             />
           ))}
@@ -148,7 +148,7 @@ function RevenueChart({ invoices }: { invoices: Invoice[] }) {
                 x={x}
                 y={h - 2}
                 textAnchor="middle"
-                fill="rgba(255,255,255,0.25)"
+                fill="#9699a6"
                 fontSize="9"
                 fontFamily="'JetBrains Mono', monospace"
               >
@@ -373,9 +373,9 @@ export default function AdminOverview({
                 return (
                   <div key={t.id} className="romer-queue-item">
                     <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                      <span style={{ fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>{t.title}</span>
+                      <span style={{ fontSize: 13, color: 'var(--admin-text)' }}>{t.title}</span>
                       {client && (
-                        <span style={{ fontSize: 10, color: 'rgba(255,255,255,0.3)', fontFamily: "'JetBrains Mono', monospace" }}>
+                        <span style={{ fontSize: 10, color: 'var(--admin-text-muted)', fontFamily: "'JetBrains Mono', monospace" }}>
                           {client.name}
                         </span>
                       )}
@@ -390,7 +390,7 @@ export default function AdminOverview({
           </div>
 
           {/* Quick add */}
-          <div style={{ borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: 14, marginTop: 10, display: 'flex', gap: 8 }}>
+          <div style={{ borderTop: '1px solid var(--admin-divider)', paddingTop: 14, marginTop: 10, display: 'flex', gap: 8 }}>
             <input
               className="admin-input"
               style={{ flex: 1, padding: '8px 12px', fontSize: 12 }}
@@ -493,7 +493,7 @@ export default function AdminOverview({
                           onClick={() => client ? router.push(`/portal/admin/clients/${client.id}`) : onOpenEngagement(eng)}
                           style={{ borderLeft: `3px solid ${PHASE_COLORS[phase]}60` }}
                         >
-                          <p style={{ fontSize: 14, color: 'rgba(255,255,255,0.85)', margin: 0, fontWeight: 500 }}>
+                          <p style={{ fontSize: 14, color: 'var(--admin-text)', margin: 0, fontWeight: 600 }}>
                             {client?.name || 'Unknown'}
                           </p>
                           <p style={{ fontSize: 12, color: 'var(--admin-text-muted)', margin: '4px 0 0' }}>{eng.type}</p>

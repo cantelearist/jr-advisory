@@ -109,15 +109,15 @@ export default function InvoiceModal({ open, onClose, onSave, invoice, clients, 
                 setError('');
               }}
             >
-              <option value="" style={{ background: '#1a1b1e' }}>Select...</option>
-              {clients.map(c => <option key={c.id} value={c.id} style={{ background: '#1a1b1e' }}>{c.name}</option>)}
+              <option value="" style={{ background: '#fff', color: '#323338' }}>Select...</option>
+              {clients.map(c => <option key={c.id} value={c.id} style={{ background: '#fff', color: '#323338' }}>{c.name}</option>)}
             </select>
           </div>
           <div>
             <label style={labelStyle}>Engagement</label>
             <select style={{ ...fieldStyle, cursor: 'pointer' }} value={form.engagement_id} onChange={e => setForm(f => ({ ...f, engagement_id: e.target.value }))}>
-              <option value="" style={{ background: '#1a1b1e' }}>Select...</option>
-              {clientEngagements.map(e => <option key={e.id} value={e.id} style={{ background: '#1a1b1e' }}>{e.type}</option>)}
+              <option value="" style={{ background: '#fff', color: '#323338' }}>Select...</option>
+              {clientEngagements.map(e => <option key={e.id} value={e.id} style={{ background: '#fff', color: '#323338' }}>{e.type}</option>)}
             </select>
           </div>
         </div>
@@ -149,11 +149,11 @@ export default function InvoiceModal({ open, onClose, onSave, invoice, clients, 
           <div>
             <label style={labelStyle}>Status</label>
             <select style={{ ...fieldStyle, cursor: 'pointer' }} value={form.status} onChange={e => setForm(f => ({ ...f, status: e.target.value as Invoice['status'] }))}>
-              <option value="draft" style={{ background: '#1a1b1e' }}>Draft</option>
-              <option value="sent" style={{ background: '#1a1b1e' }}>Sent</option>
-              <option value="paid" style={{ background: '#1a1b1e' }}>Paid</option>
-              <option value="overdue" style={{ background: '#1a1b1e' }}>Overdue</option>
-              <option value="cancelled" style={{ background: '#1a1b1e' }}>Cancelled</option>
+              <option value="draft" style={{ background: '#fff', color: '#323338' }}>Draft</option>
+              <option value="sent" style={{ background: '#fff', color: '#323338' }}>Sent</option>
+              <option value="paid" style={{ background: '#fff', color: '#323338' }}>Paid</option>
+              <option value="overdue" style={{ background: '#fff', color: '#323338' }}>Overdue</option>
+              <option value="cancelled" style={{ background: '#fff', color: '#323338' }}>Cancelled</option>
             </select>
           </div>
         </div>

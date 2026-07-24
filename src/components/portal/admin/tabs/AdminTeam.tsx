@@ -81,7 +81,7 @@ export default function AdminTeam({ users }: Props) {
           <tbody>
             {filtered.map(u => (
               <tr key={u.id}>
-                <td style={{ fontWeight: 500, color: 'rgba(255,255,255,0.85)' }}>{u.full_name}</td>
+                <td style={{ fontWeight: 600, color: 'var(--admin-text)' }}>{u.full_name}</td>
                 <td style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 12 }}>{u.email}</td>
                 <td>
                   <span style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}>
@@ -91,13 +91,13 @@ export default function AdminTeam({ users }: Props) {
                     </span>
                   </span>
                 </td>
-                <td style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'rgba(255,255,255,0.3)' }}>
+                <td style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, color: 'var(--admin-text-dim)' }}>
                   {new Date(u.created_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
                 </td>
               </tr>
             ))}
             {filtered.length === 0 && (
-              <tr><td colSpan={4} style={{ textAlign: 'center', color: 'rgba(255,255,255,0.2)', padding: 40 }}>No users found.</td></tr>
+              <tr><td colSpan={4} style={{ textAlign: 'center', color: 'var(--admin-text-dim)', padding: 40 }}>No users found.</td></tr>
             )}
           </tbody>
         </table>

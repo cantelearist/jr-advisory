@@ -135,9 +135,9 @@ export default function AdminDocuments({ clients, engagements, documents, onRelo
                   </td>
                   <td>
                     <span className="admin-badge" style={{
-                      background: 'transparent',
-                      border: '1px solid var(--admin-divider)',
-                      color: doc.status === 'final' ? 'var(--admin-text-muted)' : 'var(--admin-accent)',
+                      background: doc.status === 'final' ? 'var(--admin-green)' : 'var(--admin-blue)',
+                      border: 'none',
+                      color: '#fff',
                     }}>{doc.status.toUpperCase()}</span>
                   </td>
                   <td style={{ fontSize: 12, color: 'var(--admin-text-dim)' }}>{new Date(doc.created_at).toLocaleDateString()}</td>
@@ -151,7 +151,7 @@ export default function AdminDocuments({ clients, engagements, documents, onRelo
                           style={{
                             fontSize: 9, padding: '4px 12px',
                             color: 'var(--admin-accent)',
-                            borderColor: 'rgba(201,169,110,0.15)',
+                            borderColor: 'var(--admin-blue)',
                           }}
                         >
                           ✍ SIGN
