@@ -36,8 +36,9 @@ export async function POST(req: NextRequest) {
   const { sb, isAdmin } = auth;
 
   try {
-    const { invoice_id } = await req.json();
-    if (!invoice_id) {
+    const body = await req.json();
+    const invoiceId = typeof body?.invoice_id === 'string' ? body.invoice_id.trim() : '';
+    if (!invoiceId) {
       return NextResponse.json({ error: 'invoice_id required' }, { status: 400 });
     }
 
@@ -45,7 +46,7 @@ export async function POST(req: NextRequest) {
     const { data: invoice, error: invErr } = await sb
       .from('invoices')
       .select('*')
-      .eq('id', invoice_id)
+      .eq('id', invoiceId)
       .single();
 
     if (invErr || !invoice) {
@@ -72,6 +73,14 @@ export async function POST(req: NextRequest) {
     if (invoice.status === 'draft') {
       return NextResponse.json({ error: 'Draft invoices cannot be paid' }, { status: 400 });
     }
+    if (invoice.status !== 'sent' && invoice.status !== 'overdue') {
+      return NextResponse.json({ error: 'Invoice is not payable' }, { status: 400 });
+    }
+
+    const amountInCents = Math.round(Number(invoice.amount) * 100);
+    if (!Number.isSafeInteger(amountInCents) || amountInCents < 50) {
+      return NextResponse.json({ error: 'Invoice amount is not payable online' }, { status: 400 });
+    }
 
     const { data: client } = await sb
       .from('clients')
@@ -79,40 +88,72 @@ export async function POST(req: NextRequest) {
       .eq('id', invoice.client_id)
       .single();
 
+    // Reuse the current open Checkout session. This avoids multiple valid
+    // payment links for one invoice and reduces the risk of duplicate payment.
+    if (invoice.stripe_session_id) {
+      try {
+        const existingSession = await stripe.checkout.sessions.retrieve(invoice.stripe_session_id);
+        if (existingSession.status === 'open' && existingSession.url) {
+          return NextResponse.json({ url: existingSession.url, reused: true });
+        }
+        if (existingSession.status === 'complete' && existingSession.payment_status === 'paid') {
+          return NextResponse.json(
+            { error: 'Payment is being confirmed. Refresh the invoice shortly.' },
+            { status: 409 },
+          );
+        }
+      } catch {
+        // Missing or expired Stripe sessions are replaced below.
+      }
+    }
+
     // Create Stripe Checkout Session
-    const session = await stripe.checkout.sessions.create({
-      payment_method_types: ['card'],
-      mode: 'payment',
-      client_reference_id: invoice.id,
-      customer_email: client?.email || undefined,
-      metadata: {
-        invoice_id: invoice.id,
-        invoice_number: invoice.invoice_number,
-        client_id: invoice.client_id,
-        engagement_id: invoice.engagement_id,
-      },
-      line_items: [
-        {
-          price_data: {
-            currency: 'usd',
-            unit_amount: Math.round(Number(invoice.amount) * 100),
-            product_data: {
-              name: `Invoice ${invoice.invoice_number}`,
-              description: invoice.description,
-            },
-          },
-          quantity: 1,
+    const session = await stripe.checkout.sessions.create(
+      {
+        payment_method_types: ['card'],
+        mode: 'payment',
+        client_reference_id: invoice.id,
+        customer_email: client?.email || undefined,
+        metadata: {
+          invoice_id: invoice.id,
+          invoice_number: invoice.invoice_number,
+          client_id: invoice.client_id,
+          engagement_id: invoice.engagement_id,
         },
-      ],
-      success_url: `${baseUrl}/portal/payments/success?session_id={CHECKOUT_SESSION_ID}&invoice=${invoice.invoice_number}`,
-      cancel_url: `${baseUrl}/portal/invoices`,
-    });
+        line_items: [
+          {
+            price_data: {
+              currency: 'usd',
+              unit_amount: amountInCents,
+              product_data: {
+                name: `Invoice ${invoice.invoice_number}`,
+                description: invoice.description,
+              },
+            },
+            quantity: 1,
+          },
+        ],
+        success_url: `${baseUrl}/portal/payments/success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${baseUrl}/portal/invoices`,
+      },
+      {
+        idempotencyKey: `invoice:${invoice.id}:${invoice.updated_at || invoice.created_at}`,
+      },
+    );
 
     // Store session ID on invoice
-    await sb
+    const { error: sessionStoreError } = await sb
       .from('invoices')
       .update({ stripe_session_id: session.id })
       .eq('id', invoice.id);
+    if (sessionStoreError) {
+      try {
+        await stripe.checkout.sessions.expire(session.id);
+      } catch {
+        // The database failure is the actionable error.
+      }
+      return internalError(sessionStoreError, 'payments.checkout.store_session');
+    }
 
     // Audit log
     await sb.from('audit_log').insert({

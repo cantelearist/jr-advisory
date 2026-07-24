@@ -143,6 +143,30 @@ describe('secondary API authorization boundaries', () => {
       sender_name: 'Real Client',
       client_id: 'own-client',
       engagement_id: 'engagement-1',
+      read: false,
     }));
+  });
+
+  it('rejects oversized message content before writing to the database', async () => {
+    const sb = { from: vi.fn() };
+    requireAuthMock.mockResolvedValueOnce({
+      user: { id: 'admin-1', email: 'admin@example.com' },
+      profile: { id: 'admin-1', role: 'admin', full_name: 'Administrator' },
+      isAdmin: true,
+      sb,
+    });
+
+    const response = await sendMessage(post('/api/messages/send', {
+      client_id: 'client-1',
+      engagement_id: 'engagement-1',
+      subject: 'A'.repeat(201),
+      body: 'Please review.',
+    }));
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      error: 'Subject must be 200 characters or fewer',
+    });
+    expect(sb.from).not.toHaveBeenCalled();
   });
 });

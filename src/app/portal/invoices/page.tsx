@@ -3,7 +3,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import PortalNav from '@/components/portal/PortalNav';
 import dynamic from 'next/dynamic';
-import { useAuth } from '@/components/portal/AuthProvider';
 import { fetchPortalData } from '@/lib/portal-data';
 import LoadingSkeleton from '@/components/portal/client/LoadingSkeleton';
 import type { Invoice } from '@/lib/database.types';
@@ -28,7 +27,6 @@ const STATUS_LABELS: Record<string, string> = {
 };
 
 export default function PortalInvoices() {
-  const { supabase } = useAuth();
   const [invoices, setInvoices] = useState<Invoice[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [filter, setFilter] = useState<string>('all');

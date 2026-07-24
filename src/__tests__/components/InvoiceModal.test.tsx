@@ -184,6 +184,19 @@ describe("InvoiceModal", () => {
     expect(invoiceInput).toBeInTheDocument();
   });
 
+  it("selects the client's engagement in create mode", () => {
+    render(
+      <InvoiceModal
+        open={true}
+        onClose={onClose}
+        onSave={onSave}
+        clients={mockClients}
+        engagements={mockEngagements}
+      />
+    );
+    expect(screen.getByDisplayValue("Mold & Water Intrusion")).toBeInTheDocument();
+  });
+
   it("calls onSave on submit with valid data", async () => {
     render(
       <InvoiceModal
@@ -205,5 +218,24 @@ describe("InvoiceModal", () => {
         })
       );
     });
+  });
+
+  it("keeps the modal open and displays an API error when save fails", async () => {
+    const failingSave = vi.fn().mockRejectedValue(new Error("Invoice number already exists"));
+    render(
+      <InvoiceModal
+        open={true}
+        onClose={onClose}
+        onSave={failingSave}
+        clients={mockClients}
+        engagements={mockEngagements}
+        invoice={mockInvoice}
+      />
+    );
+
+    fireEvent.click(screen.getByText("UPDATE"));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent("Invoice number already exists");
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

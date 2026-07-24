@@ -30,10 +30,12 @@ export default function InvoiceModal({ open, onClose, onSave, invoice, clients, 
     amount: 0, due_date: '', status: 'draft', notes: '',
   });
   const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
 
   const clientEngagements = engagements.filter(e => e.client_id === form.client_id);
 
   useEffect(() => {
+    setError('');
     if (invoice) {
       setForm({
         client_id: invoice.client_id,
@@ -49,9 +51,10 @@ export default function InvoiceModal({ open, onClose, onSave, invoice, clients, 
       // Generate next invoice number
       const year = new Date().getFullYear();
       const num = String(Math.floor(Math.random() * 900) + 100);
+      const defaultClientId = clients[0]?.id || '';
       setForm({
-        client_id: clients[0]?.id || '',
-        engagement_id: '',
+        client_id: defaultClientId,
+        engagement_id: engagements.find(engagement => engagement.client_id === defaultClientId)?.id || '',
         invoice_number: `JRA-${year}-${num}`,
         description: '',
         amount: 0,
@@ -60,14 +63,27 @@ export default function InvoiceModal({ open, onClose, onSave, invoice, clients, 
         notes: '',
       });
     }
-  }, [invoice, open, clients]);
+  }, [invoice, open, clients, engagements]);
 
   const handleSubmit = async () => {
-    if (!form.client_id || !form.description || !form.amount) return;
+    if (
+      !form.client_id ||
+      !form.engagement_id ||
+      !form.invoice_number.trim() ||
+      !form.description.trim() ||
+      !form.amount ||
+      !form.due_date
+    ) {
+      setError('Client, engagement, invoice number, description, amount, and due date are required.');
+      return;
+    }
     setSaving(true);
+    setError('');
     try {
       await onSave(form);
       onClose();
+    } catch (saveError) {
+      setError(saveError instanceof Error ? saveError.message : 'Unable to save invoice');
     } finally {
       setSaving(false);
     }
@@ -80,7 +96,19 @@ export default function InvoiceModal({ open, onClose, onSave, invoice, clients, 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
           <div>
             <label style={labelStyle}>Client *</label>
-            <select style={{ ...fieldStyle, cursor: 'pointer' }} value={form.client_id} onChange={e => setForm(f => ({ ...f, client_id: e.target.value, engagement_id: '' }))}>
+            <select
+              style={{ ...fieldStyle, cursor: 'pointer' }}
+              value={form.client_id}
+              onChange={e => {
+                const clientId = e.target.value;
+                setForm(f => ({
+                  ...f,
+                  client_id: clientId,
+                  engagement_id: engagements.find(engagement => engagement.client_id === clientId)?.id || '',
+                }));
+                setError('');
+              }}
+            >
               <option value="" style={{ background: '#1a1b1e' }}>Select...</option>
               {clients.map(c => <option key={c.id} value={c.id} style={{ background: '#1a1b1e' }}>{c.name}</option>)}
             </select>
@@ -136,10 +164,28 @@ export default function InvoiceModal({ open, onClose, onSave, invoice, clients, 
           <input style={fieldStyle} value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} placeholder="Net 30, etc." />
         </div>
 
+        {error && (
+          <div role="alert" style={{ color: '#fca5a5', fontSize: 13 }}>
+            {error}
+          </div>
+        )}
+
         {/* Actions */}
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, marginTop: 8 }}>
           <button onClick={onClose} style={btnSecondary}>CANCEL</button>
-          <button onClick={handleSubmit} style={btnPrimary} disabled={saving || !form.client_id || !form.description || !form.amount}>
+          <button
+            onClick={handleSubmit}
+            style={btnPrimary}
+            disabled={
+              saving ||
+              !form.client_id ||
+              !form.engagement_id ||
+              !form.invoice_number.trim() ||
+              !form.description.trim() ||
+              !form.amount ||
+              !form.due_date
+            }
+          >
             {saving ? 'SAVING...' : invoice ? 'UPDATE' : 'CREATE'}
           </button>
         </div>

@@ -22,10 +22,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { client_id, engagement_id, subject, body: msgBody } = body;
+    const clientId = typeof body?.client_id === 'string' ? body.client_id.trim() : '';
+    const engagementId = typeof body?.engagement_id === 'string' ? body.engagement_id.trim() : '';
+    const subject = typeof body?.subject === 'string' ? body.subject.trim() : '';
+    const msgBody = typeof body?.body === 'string' ? body.body.trim() : '';
 
-    if (!client_id || !engagement_id || !subject || !msgBody) {
+    if (!clientId || !engagementId || !subject || !msgBody) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+    if (subject.length > 200) {
+      return NextResponse.json({ error: 'Subject must be 200 characters or fewer' }, { status: 400 });
+    }
+    if (msgBody.length > 10_000) {
+      return NextResponse.json({ error: 'Message must be 10,000 characters or fewer' }, { status: 400 });
     }
 
     let senderType: 'firm' | 'client' = 'firm';
@@ -40,7 +49,7 @@ export async function POST(req: NextRequest) {
         .eq('profile_id', auth.user.id)
         .single();
 
-      if (!clientRec || clientRec.id !== client_id) {
+      if (!clientRec || clientRec.id !== clientId) {
         return NextResponse.json({ error: 'Access denied' }, { status: 403 });
       }
 
@@ -52,8 +61,8 @@ export async function POST(req: NextRequest) {
     const { data: engagement } = await sb
       .from('engagements')
       .select('id')
-      .eq('id', engagement_id)
-      .eq('client_id', client_id)
+      .eq('id', engagementId)
+      .eq('client_id', clientId)
       .maybeSingle();
 
     if (!engagement) {
@@ -63,13 +72,15 @@ export async function POST(req: NextRequest) {
     const { data: msg, error } = await sb
       .from('messages')
       .insert({
-        client_id,
-        engagement_id,
+        client_id: clientId,
+        engagement_id: engagementId,
         sender_type: senderType,
         sender_name: senderName,
         subject,
         body: msgBody,
-        read: senderType === 'firm',
+        // `read` represents whether the recipient has viewed the message.
+        // New messages are unread regardless of which side sent them.
+        read: false,
         encrypted: true,
       })
       .select()
@@ -84,7 +95,7 @@ export async function POST(req: NextRequest) {
       action: 'message_sent',
       entity_type: 'message',
       entity_id: msg.id,
-      metadata: { client_id, sender_type: senderType, subject },
+      metadata: { client_id: clientId, sender_type: senderType, subject },
     });
 
     // Email + in-app notifications — notify the other party
@@ -94,7 +105,7 @@ export async function POST(req: NextRequest) {
         const { data: client } = await sb
           .from('clients')
           .select('name, email')
-          .eq('id', client_id)
+          .eq('id', clientId)
           .single();
         if (client?.email) {
           await sendNotification({
@@ -110,7 +121,7 @@ export async function POST(req: NextRequest) {
         }
         // In-app notification for client
         await createInAppNotification({
-          target: client_id,
+          target: clientId,
           type: 'message',
           title: `New message: ${subject}`,
           body: msgBody.slice(0, 120),
@@ -122,7 +133,7 @@ export async function POST(req: NextRequest) {
         const { data: admins } = await sb
           .from('profiles')
           .select('email, full_name')
-          .eq('role', 'admin');
+          .in('role', ['admin', 'manager']);
         if (admins) {
           for (const admin of admins) {
             await sendNotification({
@@ -144,7 +155,7 @@ export async function POST(req: NextRequest) {
           title: `New message from ${senderName}`,
           body: subject,
           link: '/portal/admin?tab=messages',
-          metadata: { client_id, sender_name: senderName, message_id: msg.id },
+          metadata: { client_id: clientId, sender_name: senderName, message_id: msg.id },
         });
       }
     } catch (notifErr) {

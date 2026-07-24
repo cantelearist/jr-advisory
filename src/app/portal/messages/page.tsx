@@ -35,8 +35,13 @@ export default function MessagesPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClientId, setSelectedClientId] = useState<string>('');
+  const [engagementId, setEngagementId] = useState('');
   const [selectedMsg, setSelectedMsg] = useState<Message | null>(null);
   const [replyBody, setReplyBody] = useState('');
+  const [showCompose, setShowCompose] = useState(false);
+  const [composeSubject, setComposeSubject] = useState('');
+  const [composeBody, setComposeBody] = useState('');
+  const [error, setError] = useState('');
   const [sending, setSending] = useState(false);
   const [loading, setLoading] = useState(true);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -79,6 +84,9 @@ export default function MessagesPage() {
           if (portalData.client?.id) {
             setSelectedClientId(portalData.client.id);
           }
+          if (portalData.engagement?.id) {
+            setEngagementId(portalData.engagement.id);
+          }
         }
       } catch { /* ignore */ }
       setLoading(false);
@@ -109,7 +117,11 @@ export default function MessagesPage() {
         },
         (payload) => {
           const newMsg = payload.new as Message;
-          setMessages(prev => [newMsg, ...prev]);
+          setMessages(prev => (
+            prev.some(message => message.id === newMsg.id)
+              ? prev
+              : [newMsg, ...prev]
+          ));
           // Flash live indicator
           setLiveIndicator(true);
           setTimeout(() => setLiveIndicator(false), 2000);
@@ -124,38 +136,101 @@ export default function MessagesPage() {
 
   // Mark messages as read when viewing
   useEffect(() => {
-    if (!selectedMsg || selectedMsg.read) return;
-    fetch('/api/messages/read', {
-      method: 'PATCH',
+    const ownSenderType = isAdmin ? 'firm' : 'client';
+    if (!selectedMsg || selectedMsg.read || selectedMsg.sender_type === ownSenderType) return;
+
+    const markRead = async () => {
+      const res = await fetch('/api/messages/read', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message_id: selectedMsg.id }),
+      });
+      if (!res.ok) return;
+      setMessages(prev =>
+        prev.map(m => m.id === selectedMsg.id ? { ...m, read: true } : m)
+      );
+    };
+    markRead().catch(() => {});
+  }, [selectedMsg, isAdmin]);
+
+  const sendMessage = async ({
+    subject,
+    body,
+    targetEngagementId,
+  }: {
+    subject: string;
+    body: string;
+    targetEngagementId: string;
+  }) => {
+    const res = await fetch('/api/messages/send', {
+      method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ message_id: selectedMsg.id }),
+      body: JSON.stringify({
+        client_id: selectedClientId,
+        engagement_id: targetEngagementId,
+        subject,
+        body,
+      }),
     });
-    setMessages(prev =>
-      prev.map(m => m.id === selectedMsg.id ? { ...m, read: true } : m)
-    );
-  }, [selectedMsg]);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Unable to send message');
+    if (data.message) {
+      setMessages(prev => (
+        prev.some(message => message.id === data.message.id)
+          ? prev
+          : [data.message, ...prev]
+      ));
+    }
+    return data.message as Message | undefined;
+  };
 
   // Send reply
   const handleReply = async () => {
     if (!replyBody.trim() || !selectedMsg) return;
     setSending(true);
+    setError('');
     try {
-      await fetch('/api/messages/send', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          client_id: selectedClientId,
-          engagement_id: selectedMsg.engagement_id,
-          sender_type: isAdmin ? 'firm' : 'client',
-          sender_name: isAdmin ? 'James Roman Advisory' : (clientRecord?.name || 'Client'),
-          subject: `RE: ${selectedMsg.subject.replace(/^RE: /i, '')}`,
-          body: replyBody.trim(),
-        }),
+      const message = await sendMessage({
+        targetEngagementId: selectedMsg.engagement_id,
+        subject: `RE: ${selectedMsg.subject.replace(/^RE:\s*/i, '')}`,
+        body: replyBody.trim(),
       });
       setReplyBody('');
-      // Realtime will pick up the new message
-    } catch { /* ignore */ }
-    setSending(false);
+      if (message) setSelectedMsg(message);
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : 'Unable to send message');
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const handleCompose = async () => {
+    if (!composeSubject.trim() || !composeBody.trim()) {
+      setError('Add a subject and message.');
+      return;
+    }
+    if (!selectedClientId || !engagementId) {
+      setError('No active engagement is available for messaging.');
+      return;
+    }
+
+    setSending(true);
+    setError('');
+    try {
+      const message = await sendMessage({
+        targetEngagementId: engagementId,
+        subject: composeSubject.trim(),
+        body: composeBody.trim(),
+      });
+      setComposeSubject('');
+      setComposeBody('');
+      setShowCompose(false);
+      if (message) setSelectedMsg(message);
+    } catch (sendError) {
+      setError(sendError instanceof Error ? sendError.message : 'Unable to send message');
+    } finally {
+      setSending(false);
+    }
   };
 
   const unreadCount = messages.filter(m => !m.read && m.sender_type !== (isAdmin ? 'firm' : 'client')).length;
@@ -210,12 +285,104 @@ export default function MessagesPage() {
                 {liveIndicator && <span style={{ color: '#4ade80', marginLeft: 8 }}>● Live</span>}
               </p>
             </div>
-            {unreadCount > 0 && (
-              <div style={{ background: 'rgba(201,169,110,0.15)', border: '1px solid rgba(201,169,110,0.3)', borderRadius: 20, padding: '6px 16px', color: '#c9a96e', fontSize: 13 }}>
-                {unreadCount} unread
-              </div>
-            )}
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+              {unreadCount > 0 && (
+                <div style={{ background: 'rgba(201,169,110,0.15)', border: '1px solid rgba(201,169,110,0.3)', borderRadius: 20, padding: '6px 16px', color: '#c9a96e', fontSize: 13 }}>
+                  {unreadCount} unread
+                </div>
+              )}
+              {!isAdmin && (
+                <button
+                  type="button"
+                  onClick={() => { setShowCompose(current => !current); setError(''); }}
+                  style={{
+                    padding: '9px 16px',
+                    borderRadius: 8,
+                    border: '1px solid rgba(201,169,110,0.35)',
+                    background: 'rgba(201,169,110,0.12)',
+                    color: '#c9a96e',
+                    cursor: 'pointer',
+                    fontSize: 12,
+                    letterSpacing: 1,
+                  }}
+                >
+                  {showCompose ? 'CANCEL' : '+ NEW MESSAGE'}
+                </button>
+              )}
+            </div>
           </div>
+
+          {showCompose && !isAdmin && (
+            <div style={{
+              marginBottom: 24,
+              padding: 20,
+              borderRadius: 12,
+              border: '1px solid rgba(201,169,110,0.2)',
+              background: 'rgba(255,255,255,0.025)',
+              display: 'grid',
+              gap: 12,
+            }}>
+              <input
+                type="text"
+                value={composeSubject}
+                onChange={event => setComposeSubject(event.target.value)}
+                placeholder="Subject"
+                maxLength={200}
+                style={{
+                  padding: '11px 14px',
+                  background: '#0a0a0a',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8,
+                  color: '#fff',
+                  fontFamily: 'inherit',
+                }}
+              />
+              <textarea
+                value={composeBody}
+                onChange={event => setComposeBody(event.target.value)}
+                placeholder="Write your message…"
+                maxLength={10_000}
+                rows={4}
+                style={{
+                  padding: '11px 14px',
+                  background: '#0a0a0a',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 8,
+                  color: '#fff',
+                  fontFamily: 'inherit',
+                  resize: 'vertical',
+                }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: 11 }}>
+                  Visible only inside the Private Office
+                </span>
+                <button
+                  type="button"
+                  onClick={handleCompose}
+                  disabled={sending || !composeSubject.trim() || !composeBody.trim()}
+                  style={{
+                    padding: '10px 20px',
+                    border: 0,
+                    borderRadius: 8,
+                    background: '#c9a96e',
+                    color: '#0a0a0a',
+                    fontWeight: 700,
+                    cursor: sending ? 'wait' : 'pointer',
+                    opacity: sending || !composeSubject.trim() || !composeBody.trim() ? 0.45 : 1,
+                  }}
+                >
+                  {sending ? 'SENDING…' : 'SEND MESSAGE'}
+                </button>
+              </div>
+            </div>
+          )}
+
+          {error && (
+            <div role="alert" style={{ color: '#fca5a5', fontSize: 13, marginBottom: 16 }}>
+              {error}
+            </div>
+          )}
 
           {/* Admin: client selector */}
           {isAdmin && clients.length > 0 && (
@@ -323,7 +490,7 @@ export default function MessagesPage() {
                     <button onClick={() => setSelectedMsg(null)} style={{ background: 'none', border: 'none', color: 'rgba(255,255,255,0.3)', cursor: 'pointer', fontSize: 16 }}>✕</button>
                   </div>
                   <div style={{ fontSize: 12, color: 'rgba(255,255,255,0.3)', marginTop: 4 }}>
-                    🔒 End-to-end encrypted
+                    🔒 Protected inside the Private Office
                   </div>
                 </div>
 

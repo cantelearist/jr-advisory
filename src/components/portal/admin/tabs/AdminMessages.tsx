@@ -46,6 +46,7 @@ export default function AdminMessages({ clients, engagements }: Props) {
   const [searchQuery, setSearchQuery] = useState('');
   const [replyBody, setReplyBody] = useState('');
   const [sending, setSending] = useState(false);
+  const [replyError, setReplyError] = useState('');
   const [deleting, setDeleting] = useState<string | null>(null);
   const bottomRef = useRef<HTMLDivElement>(null);
 
@@ -167,8 +168,9 @@ export default function AdminMessages({ clients, engagements }: Props) {
     if (!latest) return;
 
     setSending(true);
+    setReplyError('');
     try {
-      await fetch('/api/messages/send', {
+      const response = await fetch('/api/messages/send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -180,10 +182,15 @@ export default function AdminMessages({ clients, engagements }: Props) {
           body: replyBody.trim(),
         }),
       });
+      const data = await response.json();
+      if (!response.ok) throw new Error(data.error || 'Unable to send reply');
       setReplyBody('');
       await loadMessages(clientFilter !== 'all' ? clientFilter : undefined);
-    } catch { /* ignore */ }
-    setSending(false);
+    } catch (error) {
+      setReplyError(error instanceof Error ? error.message : 'Unable to send reply');
+    } finally {
+      setSending(false);
+    }
   };
 
   /* ── delete ── */
@@ -406,7 +413,7 @@ export default function AdminMessages({ clients, engagements }: Props) {
               <div className="admin-messages-detail__reply">
                 <textarea
                   value={replyBody}
-                  onChange={e => setReplyBody(e.target.value)}
+                  onChange={e => { setReplyBody(e.target.value); setReplyError(''); }}
                   placeholder="Type a reply…"
                   rows={3}
                   className="admin-messages-detail__textarea"
@@ -414,6 +421,11 @@ export default function AdminMessages({ clients, engagements }: Props) {
                     if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) handleReply();
                   }}
                 />
+                {replyError && (
+                  <div role="alert" style={{ color: '#fca5a5', fontSize: 12, marginTop: 8 }}>
+                    {replyError}
+                  </div>
+                )}
                 <div className="admin-messages-detail__reply-footer">
                   <span className="admin-messages-detail__hint">⌘+Enter to send</span>
                   <button

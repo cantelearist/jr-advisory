@@ -172,18 +172,31 @@ export async function createInvoice(input: {
   status?: Invoice['status'];
   notes?: string;
 }): Promise<Invoice> {
-  const sb = requireSupabase();
-  const { data } = await sb.from('invoices').insert(input as Record<string, unknown>).select().single();
-  if (!data) throw new Error('Failed to create invoice');
-  return data as Invoice;
+  const response = await fetch('/api/invoices', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  const data = await response.json();
+  if (!response.ok || !data.invoice) {
+    throw new Error(data.error || 'Failed to create invoice');
+  }
+  return data.invoice as Invoice;
 }
 
 export async function updateInvoice(
   invoiceId: string,
   updates: Partial<Pick<Invoice, 'status' | 'amount' | 'description' | 'due_date' | 'paid_date' | 'notes'>>,
 ): Promise<void> {
-  const sb = requireSupabase();
-  await sb.from('invoices').update({ ...updates, updated_at: new Date().toISOString() } as Record<string, unknown>).eq('id', invoiceId);
+  const response = await fetch('/api/invoices', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ invoice_id: invoiceId, ...updates }),
+  });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.error || 'Failed to update invoice');
+  }
 }
 
 /* ── Admin Data (server-side, bypasses RLS) ── */
