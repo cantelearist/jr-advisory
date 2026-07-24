@@ -25,7 +25,7 @@ EXCEPTION WHEN others THEN NULL;
 END $$;
 
 CREATE TABLE IF NOT EXISTS change_orders (
-  id                   uuid PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id                   uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   client_id            uuid NOT NULL REFERENCES clients(id) ON DELETE CASCADE,
   engagement_id        uuid NOT NULL REFERENCES engagements(id) ON DELETE CASCADE,
   change_order_number  text NOT NULL UNIQUE,
