@@ -2,7 +2,7 @@
 
 export type ClientStatus = 'active' | 'pending' | 'completed' | 'archived';
 export type EngagementPhase = '1' | '2' | '3' | '4';
-export type DocCategory = 'nda' | 'lab-results' | 'proposals' | 'clearance' | 'invoices' | 'reports';
+export type DocCategory = 'nda' | 'lab-results' | 'proposals' | 'clearance' | 'invoices' | 'reports' | 'contracts' | 'change-orders';
 export type DocStatus = 'final' | 'draft' | 'pending-review';
 export type MsgSender = 'firm' | 'client';
 export type TimelineType = 'milestone' | 'document' | 'meeting' | 'update' | 'payment';
@@ -11,7 +11,9 @@ export type UserRole = 'admin' | 'manager' | 'contractor' | 'client';
 export type TodoPriority = 'urgent' | 'high' | 'normal' | 'low';
 export type TodoStatus = 'pending' | 'in_progress' | 'done';
 export type SignatureStatus = 'pending' | 'signed' | 'declined' | 'expired';
-export type NotificationType = 'message' | 'document' | 'invoice' | 'signature' | 'phase' | 'system';
+export type NotificationType = 'message' | 'document' | 'invoice' | 'signature' | 'phase' | 'system' | 'change_order';
+export type ChangeOrderStatus = 'draft' | 'sent' | 'approved' | 'declined' | 'cancelled';
+export type ChangeOrderSourceType = 'invoice' | 'contract';
 
 export interface Profile {
   id: string; role: UserRole; full_name: string; email: string;
@@ -56,6 +58,26 @@ export interface Invoice {
   paid_date: string | null; pdf_path: string | null; notes: string | null;
   stripe_session_id: string | null; stripe_payment_id: string | null;
   created_at: string; updated_at: string;
+}
+
+export interface ChangeOrder {
+  id: string;
+  client_id: string;
+  engagement_id: string;
+  change_order_number: string;
+  source_type: ChangeOrderSourceType;
+  source_invoice_id: string | null;
+  source_document_id: string | null;
+  title: string;
+  description: string;
+  amount_delta: number;
+  status: ChangeOrderStatus;
+  issued_at: string | null;
+  approved_at: string | null;
+  declined_at: string | null;
+  created_by: string | null;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface AuditLogEntry {
@@ -107,6 +129,7 @@ export interface Database {
       messages: { Row: Message; Insert: Partial<Message> & { client_id: string; engagement_id: string; sender_type: MsgSender; sender_name: string; subject: string; body: string }; Update: Partial<Message> };
       timeline_events: { Row: TimelineEvent; Insert: Partial<TimelineEvent> & { engagement_id: string; phase: EngagementPhase; title: string }; Update: Partial<TimelineEvent> };
       invoices: { Row: Invoice; Insert: Partial<Invoice> & { client_id: string; engagement_id: string; invoice_number: string; description: string; amount: number; due_date: string }; Update: Partial<Invoice> };
+      change_orders: { Row: ChangeOrder; Insert: Partial<ChangeOrder> & { client_id: string; engagement_id: string; change_order_number: string; source_type: ChangeOrderSourceType; title: string; description: string }; Update: Partial<ChangeOrder> };
       audit_log: { Row: AuditLogEntry; Insert: Partial<AuditLogEntry> & { action: string; entity_type: string }; Update: Partial<AuditLogEntry> };
       todo: { Row: Todo; Insert: Partial<Todo> & { title: string }; Update: Partial<Todo> };
       nda_records: { Row: NdaRecord; Insert: Partial<NdaRecord> & { client_id: string; signed_date: string }; Update: Partial<NdaRecord> };

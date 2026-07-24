@@ -10,10 +10,11 @@ export async function GET(req: NextRequest) {
 
   const { sb } = auth;
 
-  const [clients, engagements, invoices, messages, documents, timeline, ndas, auditLog, todos] = await Promise.all([
+  const [clients, engagements, invoices, changeOrders, messages, documents, timeline, ndas, auditLog, todos] = await Promise.all([
     sb.from('clients').select('*').order('created_at', { ascending: false }),
     sb.from('engagements').select('*').order('created_at', { ascending: false }),
     sb.from('invoices').select('*').order('created_at', { ascending: false }),
+    sb.from('change_orders').select('*').order('created_at', { ascending: false }),
     sb.from('messages').select('*').order('created_at', { ascending: false }),
     sb.from('documents').select('*').order('created_at', { ascending: false }),
     sb.from('timeline_events').select('*').order('event_date', { ascending: true }),
@@ -26,6 +27,7 @@ export async function GET(req: NextRequest) {
     clients: clients.data || [],
     engagements: engagements.data || [],
     invoices: invoices.data || [],
+    changeOrders: changeOrders.data || [],
     messages: messages.data || [],
     documents: documents.data || [],
     timeline: timeline.data || [],

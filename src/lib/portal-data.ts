@@ -1,7 +1,7 @@
 /* ── Portal Data Layer — API-first with Supabase fallback ── */
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type {
-  Client, Engagement, Document, Message, TimelineEvent, Invoice, Todo,
+  Client, Engagement, Document, Message, TimelineEvent, Invoice, Todo, ChangeOrder,
 } from './database.types';
 
 export interface PortalData {
@@ -11,6 +11,7 @@ export interface PortalData {
   messages: Message[];
   timeline: TimelineEvent[];
   invoices: Invoice[];
+  changeOrders: ChangeOrder[];
   todos: Todo[];
 }
 
@@ -28,10 +29,11 @@ export async function fetchPortalData(clientId?: string): Promise<PortalData> {
       messages: (data.messages as Message[]) || [],
       timeline: (data.timeline as TimelineEvent[]) || [],
       invoices: (data.invoices as Invoice[]) || [],
+      changeOrders: (data.changeOrders as ChangeOrder[]) || [],
       todos: (data.todos as Todo[]) || [],
     };
   } catch {
-    return { client: null, engagement: null, documents: [], messages: [], timeline: [], invoices: [], todos: [] };
+    return { client: null, engagement: null, documents: [], messages: [], timeline: [], invoices: [], changeOrders: [], todos: [] };
   }
 }
 
@@ -68,6 +70,11 @@ export async function getMyInvoices(sb: SupabaseClient): Promise<Invoice[]> {
   return (data as Invoice[]) || [];
 }
 
+export async function getMyChangeOrders(sb: SupabaseClient): Promise<ChangeOrder[]> {
+  const { data } = await sb.from('change_orders').select('*').order('created_at', { ascending: false });
+  return (data as ChangeOrder[]) || [];
+}
+
 export async function getMyTodos(sb: SupabaseClient): Promise<Todo[]> {
   const { data } = await sb.from('todo').select('*').eq('visible_to_client', true).neq('status', 'done').order('priority', { ascending: true }).order('created_at', { ascending: false });
   return (data as Todo[]) || [];
@@ -75,11 +82,11 @@ export async function getMyTodos(sb: SupabaseClient): Promise<Todo[]> {
 
 /** Legacy: full fetch via direct Supabase queries */
 export async function getMyPortalData(sb: SupabaseClient): Promise<PortalData> {
-  const [client, engagement, documents, messages, invoices, todos] = await Promise.all([
+  const [client, engagement, documents, messages, invoices, changeOrders, todos] = await Promise.all([
     getMyClient(sb), getMyEngagement(sb), getMyDocuments(sb),
-    getMyMessages(sb), getMyInvoices(sb), getMyTodos(sb),
+    getMyMessages(sb), getMyInvoices(sb), getMyChangeOrders(sb), getMyTodos(sb),
   ]);
   let timeline: TimelineEvent[] = [];
   if (engagement) timeline = await getMyTimeline(sb, engagement.id);
-  return { client, engagement, documents, messages, timeline, invoices, todos };
+  return { client, engagement, documents, messages, timeline, invoices, changeOrders, todos };
 }

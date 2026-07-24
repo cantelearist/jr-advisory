@@ -7,6 +7,7 @@ import { requireAuth, isAuthError } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
 import Stripe from 'stripe';
 import { internalError } from '@/lib/api-error';
+import { fetchApprovedChangeOrderDelta } from '@/lib/change-orders';
 
 const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://www.jamesroman.la';
 
@@ -77,7 +78,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Invoice is not payable' }, { status: 400 });
     }
 
-    const amountInCents = Math.round(Number(invoice.amount) * 100);
+    const approvedDelta = await fetchApprovedChangeOrderDelta(sb, invoice.id);
+    const revisedAmount = Number(invoice.amount) + approvedDelta;
+    const amountInCents = Math.round(revisedAmount * 100);
     if (!Number.isSafeInteger(amountInCents) || amountInCents < 50) {
       return NextResponse.json({ error: 'Invoice amount is not payable online' }, { status: 400 });
     }
@@ -119,6 +122,8 @@ export async function POST(req: NextRequest) {
           invoice_number: invoice.invoice_number,
           client_id: invoice.client_id,
           engagement_id: invoice.engagement_id,
+          original_amount: String(invoice.amount),
+          approved_change_orders: String(approvedDelta),
         },
         line_items: [
           {
@@ -127,7 +132,9 @@ export async function POST(req: NextRequest) {
               unit_amount: amountInCents,
               product_data: {
                 name: `Invoice ${invoice.invoice_number}`,
-                description: invoice.description,
+                description: approvedDelta === 0
+                  ? invoice.description
+                  : `${invoice.description} · includes approved change orders`,
               },
             },
             quantity: 1,
@@ -160,7 +167,13 @@ export async function POST(req: NextRequest) {
       action: 'checkout_created',
       entity_type: 'invoice',
       entity_id: invoice.id,
-      metadata: { invoice_number: invoice.invoice_number, amount: invoice.amount, session_id: session.id },
+      metadata: {
+        invoice_number: invoice.invoice_number,
+        original_amount: invoice.amount,
+        approved_change_orders: approvedDelta,
+        revised_amount: revisedAmount,
+        session_id: session.id,
+      },
     }).then(() => {});
 
     return NextResponse.json({ url: session.url });

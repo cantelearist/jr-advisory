@@ -77,6 +77,16 @@ function configure() {
           })),
         };
       }
+      if (table === 'change_orders') {
+        const chain: Record<string, unknown> = {};
+        chain.select = vi.fn(() => chain);
+        chain.eq = vi.fn(() => chain);
+        chain.then = (
+          resolve: (value: { data: unknown[]; error: null }) => unknown,
+          reject: (reason: unknown) => unknown,
+        ) => Promise.resolve({ data: [], error: null }).then(resolve, reject);
+        return chain;
+      }
       return { insert: vi.fn(async () => ({ data: null, error: null })) };
     }),
   };

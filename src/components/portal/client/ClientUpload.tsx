@@ -18,6 +18,7 @@ const CATEGORIES: { value: DocCategory; label: string }[] = [
   { value: 'lab-results', label: 'Lab Results' },
   { value: 'proposals', label: 'Proposals' },
   { value: 'invoices', label: 'Invoices' },
+  { value: 'contracts', label: 'Contracts' },
 ];
 
 const ACCEPTED_TYPES = '.pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,.jpg,.jpeg,.png,.webp';
@@ -93,7 +94,11 @@ export default function ClientUpload({ engagementId, clientId, onUploadComplete,
 
       if (!res.ok) throw new Error(data.error || 'Upload failed');
 
-      setSuccess(`✓ "${docName}" uploaded to vault`);
+      setSuccess(
+        data.notification?.emailSent
+          ? `✓ "${docName}" uploaded · the advisory team was notified`
+          : `✓ "${docName}" uploaded · email notification was not delivered`,
+      );
       setFile(null);
       setDocName('');
       if (fileRef.current) fileRef.current.value = '';

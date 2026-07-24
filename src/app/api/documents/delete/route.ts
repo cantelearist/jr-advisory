@@ -27,6 +27,22 @@ export async function DELETE(req: NextRequest) {
   }
 
   try {
+    const { data: sourceChangeOrder, error: sourceLookupError } = await admin
+      .from('change_orders')
+      .select('id')
+      .eq('source_document_id', documentId)
+      .limit(1)
+      .maybeSingle();
+    if (sourceLookupError) {
+      return internalError(sourceLookupError, 'documents.change_order_lookup');
+    }
+    if (sourceChangeOrder) {
+      return NextResponse.json(
+        { error: 'This contract is an original record for a change order and cannot be deleted' },
+        { status: 409 },
+      );
+    }
+
     // Delete from storage if file exists
     if (doc.file_path) {
       const { error: storageError } = await admin.storage

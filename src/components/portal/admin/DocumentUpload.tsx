@@ -19,6 +19,8 @@ const CATEGORIES: { value: DocCategory; label: string }[] = [
   { value: 'clearance', label: 'Clearance Letters' },
   { value: 'invoices', label: 'Invoices' },
   { value: 'reports', label: 'Reports' },
+  { value: 'contracts', label: 'Contracts' },
+  { value: 'change-orders', label: 'Change Orders' },
 ];
 
 export default function DocumentUpload({ clients, engagements, onUploadComplete, onClose }: DocumentUploadProps) {
@@ -73,7 +75,11 @@ export default function DocumentUpload({ clients, engagements, onUploadComplete,
         throw new Error(data.error || 'Upload failed');
       }
 
-      setSuccess(`✓ Uploaded "${docName}"`);
+      setSuccess(
+        data.notification?.emailSent
+          ? `✓ Uploaded "${docName}" and emailed the client`
+          : `✓ Uploaded "${docName}" · email notification was not delivered`,
+      );
       setFile(null);
       setDocName('');
       if (fileRef.current) fileRef.current.value = '';

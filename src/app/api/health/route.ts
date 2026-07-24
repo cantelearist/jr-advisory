@@ -39,7 +39,7 @@ async function checkSupabaseTables(): Promise<Record<string, 'ok' | 'missing' | 
   const tables = [
     'profiles', 'clients', 'engagements', 'documents', 'messages',
     'timeline_events', 'invoices', 'audit_log', 'nda_records',
-    'todo', 'signature_requests', 'notifications', 'site_content',
+    'todo', 'signature_requests', 'notifications', 'change_orders', 'site_content',
   ];
 
   const results: Record<string, 'ok' | 'missing' | string> = {};

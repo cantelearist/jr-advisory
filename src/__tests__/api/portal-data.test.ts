@@ -13,6 +13,7 @@ interface QueryBuilder {
   select: ReturnType<typeof vi.fn>;
   eq: ReturnType<typeof vi.fn>;
   neq: ReturnType<typeof vi.fn>;
+  in: ReturnType<typeof vi.fn>;
   order: ReturnType<typeof vi.fn>;
   limit: ReturnType<typeof vi.fn>;
   maybeSingle: ReturnType<typeof vi.fn>;
@@ -24,6 +25,7 @@ function query(data: unknown): QueryBuilder {
   builder.select = vi.fn(() => builder);
   builder.eq = vi.fn(() => builder);
   builder.neq = vi.fn(() => builder);
+  builder.in = vi.fn(() => builder);
   builder.order = vi.fn(() => builder);
   builder.limit = vi.fn(() => builder);
   builder.maybeSingle = vi.fn(async () => ({ data, error: null }));
@@ -43,6 +45,7 @@ describe('GET /api/portal/data', () => {
       documents: query([{ id: 'document-1', name: 'Report.pdf' }]),
       messages: query([]),
       invoices: query([]),
+      change_orders: query([]),
       todo: query([]),
       timeline_events: query([]),
     };

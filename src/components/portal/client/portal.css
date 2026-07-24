@@ -7,18 +7,18 @@
 /* ── Design Tokens (shared with admin) ── */
 :root {
   --portal-bg: #000;
-  --portal-panel: rgba(255,255,255,0.02);
-  --portal-panel-hover: rgba(255,255,255,0.03);
-  --portal-border: rgba(255,255,255,0.04);
-  --portal-border-hover: rgba(255,255,255,0.08);
+  --portal-panel: rgba(255,255,255,0.045);
+  --portal-panel-hover: rgba(255,255,255,0.07);
+  --portal-border: rgba(255,255,255,0.13);
+  --portal-border-hover: rgba(201,169,110,0.34);
   --portal-accent: #c9a96e;
-  --portal-accent-dim: rgba(201,169,110,0.5);
-  --portal-accent-bg: rgba(201,169,110,0.05);
-  --portal-accent-border: rgba(201,169,110,0.15);
+  --portal-accent-dim: rgba(201,169,110,0.75);
+  --portal-accent-bg: rgba(201,169,110,0.1);
+  --portal-accent-border: rgba(201,169,110,0.34);
   --portal-text: #fff;
-  --portal-text-muted: rgba(255,255,255,0.4);
-  --portal-text-dim: rgba(255,255,255,0.2);
-  --portal-text-faint: rgba(255,255,255,0.15);
+  --portal-text-muted: rgba(255,255,255,0.68);
+  --portal-text-dim: rgba(255,255,255,0.45);
+  --portal-text-faint: rgba(255,255,255,0.32);
   --portal-green: #4ade80;
   --portal-red: #ef4444;
   --portal-blue: #6ea9c9;
@@ -167,7 +167,7 @@
   padding: 10px 20px;
   background: var(--portal-panel);
   border: 1px solid var(--portal-border);
-  color: rgba(255,255,255,0.35);
+  color: var(--portal-text-muted);
   font-family: var(--portal-font-sans);
   font-size: 11px;
   letter-spacing: 0.1em;
@@ -177,7 +177,7 @@
 
 .portal-filter:hover {
   border-color: var(--portal-border-hover);
-  color: rgba(255,255,255,0.6);
+  color: var(--portal-text);
 }
 
 .portal-filter--active {
@@ -235,7 +235,7 @@
   font-family: var(--portal-font-serif);
   font-size: 22px;
   font-weight: 300;
-  color: rgba(255,255,255,0.5);
+  color: rgba(255,255,255,0.76);
   margin: 0 0 8px;
 }
 

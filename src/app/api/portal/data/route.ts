@@ -33,7 +33,7 @@ export async function GET(req: NextRequest) {
   if (!clientId) {
     return NextResponse.json({
       profile, isAdmin, client: null, engagement: null,
-      documents: [], messages: [], timeline: [], invoices: [], todos: [],
+      documents: [], messages: [], timeline: [], invoices: [], changeOrders: [], todos: [],
     });
   }
 
@@ -42,6 +42,7 @@ export async function GET(req: NextRequest) {
     { data: documents },
     { data: messages },
     { data: invoices },
+    { data: changeOrders },
     { data: todos },
   ] = await Promise.all([
     sb.from('engagements')
@@ -56,6 +57,11 @@ export async function GET(req: NextRequest) {
     sb.from('invoices')
       .select('id, client_id, engagement_id, invoice_number, description, amount, status, due_date, paid_date, notes, stripe_session_id, created_at, updated_at')
       .eq('client_id', clientId).order('created_at', { ascending: false }),
+    sb.from('change_orders')
+      .select('id, client_id, engagement_id, change_order_number, source_type, source_invoice_id, source_document_id, title, description, amount_delta, status, issued_at, approved_at, declined_at, created_at, updated_at')
+      .eq('client_id', clientId)
+      .in('status', ['sent', 'approved', 'declined'])
+      .order('created_at', { ascending: false }),
     sb.from('todo')
       .select('id, client_id, engagement_id, title, description, priority, status, due_date, completed_at, visible_to_client, created_at, updated_at')
       .eq('client_id', clientId).eq('visible_to_client', true).neq('status', 'done').order('priority', { ascending: true }),
@@ -77,6 +83,7 @@ export async function GET(req: NextRequest) {
     messages: messages || [],
     timeline,
     invoices: invoices || [],
+    changeOrders: changeOrders || [],
     todos: todos || [],
   });
 }

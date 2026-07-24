@@ -57,7 +57,7 @@ function baseTemplate(content: string): string {
 /* ── Notification Types ── */
 
 export interface NotificationPayload {
-  type: 'new_message' | 'invoice_sent' | 'document_uploaded' | 'phase_change' | 'welcome';
+  type: 'new_message' | 'invoice_sent' | 'document_uploaded' | 'change_order_sent' | 'phase_change' | 'welcome';
   recipientEmail: string;
   recipientName: string;
   data: Record<string, string>;
@@ -106,6 +106,22 @@ const templates: Record<string, (data: Record<string, string>) => { subject: str
         <p>${escapeHtml(data.documentName)}</p>
       </div>
       <a href="${SITE_URL}/portal/documents" class="btn">View Documents</a>
+    `),
+  }),
+
+  change_order_sent: (data) => ({
+    subject: `Change order ${escapeHtml(data.changeOrderNumber)} — review requested`,
+    html: baseTemplate(`
+      <h2>Change Order Ready</h2>
+      <p>Hello ${escapeHtml(data.recipientName)},</p>
+      <p>A change order has been issued for your review.</p>
+      <div class="highlight">
+        <div class="label">${escapeHtml(data.changeOrderNumber)}</div>
+        <p>${escapeHtml(data.title)}</p>
+        ${data.amountDelta ? `<p style="font-size: 20px; color: #ffffff; margin-top: 8px;">Change: ${escapeHtml(data.amountDelta)}</p>` : ''}
+        <p style="color: #888; margin-top: 8px;">${escapeHtml(data.description)}</p>
+      </div>
+      <a href="${SITE_URL}/portal/invoices" class="btn">Review Change Order</a>
     `),
   }),
 
@@ -190,7 +206,7 @@ export async function sendNotification(payload: NotificationPayload): Promise<{
 
 export async function createInAppNotification(opts: {
   target: string; /* 'firm' or client_id */
-  type: 'message' | 'document' | 'invoice' | 'signature' | 'phase' | 'system';
+  type: 'message' | 'document' | 'invoice' | 'signature' | 'phase' | 'system' | 'change_order';
   title: string;
   body?: string;
   link?: string;

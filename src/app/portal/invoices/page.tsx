@@ -5,7 +5,8 @@ import PortalNav from '@/components/portal/PortalNav';
 import dynamic from 'next/dynamic';
 import { fetchPortalData } from '@/lib/portal-data';
 import LoadingSkeleton from '@/components/portal/client/LoadingSkeleton';
-import type { Invoice } from '@/lib/database.types';
+import { revisedInvoiceTotal } from '@/lib/change-orders';
+import type { ChangeOrder, Document as DBDocument, Invoice } from '@/lib/database.types';
 import '@/components/portal/client/portal.css';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
@@ -28,6 +29,8 @@ const STATUS_LABELS: Record<string, string> = {
 
 export default function PortalInvoices() {
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
+  const [documents, setDocuments] = useState<DBDocument[]>([]);
   const [loaded, setLoaded] = useState(false);
   const [filter, setFilter] = useState<string>('all');
   const [payingId, setPayingId] = useState<string | null>(null);
@@ -37,6 +40,8 @@ export default function PortalInvoices() {
   useEffect(() => {
     fetchPortalData().then(data => {
       setInvoices(data.invoices);
+      setChangeOrders(data.changeOrders);
+      setDocuments(data.documents);
       setLoaded(true);
     });
   }, []);
@@ -55,9 +60,14 @@ export default function PortalInvoices() {
     );
   }, [preFiltered, searchQuery]);
 
-  const totalBilled = invoices.reduce((sum, i) => sum + Number(i.amount), 0);
-  const totalPaid = invoices.filter(i => i.status === 'paid').reduce((sum, i) => sum + Number(i.amount), 0);
-  const outstanding = invoices.filter(i => i.status === 'sent' || i.status === 'overdue').reduce((sum, i) => sum + Number(i.amount), 0);
+  const approvedChangeOrders = changeOrders.filter(changeOrder => changeOrder.status === 'approved');
+  const totalBilled = invoices.reduce((sum, i) => sum + revisedInvoiceTotal(i, approvedChangeOrders), 0);
+  const totalPaid = invoices
+    .filter(i => i.status === 'paid')
+    .reduce((sum, i) => sum + revisedInvoiceTotal(i, approvedChangeOrders), 0);
+  const outstanding = invoices
+    .filter(i => i.status === 'sent' || i.status === 'overdue')
+    .reduce((sum, i) => sum + revisedInvoiceTotal(i, approvedChangeOrders), 0);
 
   const formatCurrency = (n: number) =>
     new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0 }).format(n);
@@ -190,10 +200,19 @@ export default function PortalInvoices() {
                 <p className="portal-empty__sub">{searchQuery ? 'Try a different search term' : 'Invoices will appear here when created'}</p>
               </div>
             )}
-            {filtered.map(inv => (
+            {filtered.map(inv => {
+              const invoiceChangeOrders = changeOrders.filter(
+                changeOrder =>
+                  changeOrder.source_type === 'invoice' &&
+                  changeOrder.source_invoice_id === inv.id,
+              );
+              const revisedTotal = revisedInvoiceTotal(inv, approvedChangeOrders);
+              const hasApprovedChange = revisedTotal !== Number(inv.amount);
+
+              return (
               <div key={inv.id} className="inv-card"
                 onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(201,169,110,0.2)')}
-                onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.06)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'var(--portal-border)')}
               >
                 {/* Left: Invoice details */}
                 <div>
@@ -204,9 +223,26 @@ export default function PortalInvoices() {
                     {inv.description}
                   </p>
                   {inv.notes && (
-                    <p style={{ fontSize: 13, color: 'rgba(255,255,255,0.3)', margin: '6px 0 0' }}>
+                    <p style={{ fontSize: 13, color: 'var(--portal-text-muted)', margin: '6px 0 0' }}>
                       {inv.notes}
                     </p>
+                  )}
+                  {invoiceChangeOrders.length > 0 && (
+                    <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 5 }}>
+                      {invoiceChangeOrders.map(changeOrder => (
+                        <div key={changeOrder.id} style={{ fontSize: 12, color: 'var(--portal-text-muted)' }}>
+                          <span className="mono" style={{ color: 'var(--portal-accent)', fontSize: 10 }}>
+                            {changeOrder.change_order_number}
+                          </span>
+                          {' · '}
+                          {changeOrder.title}
+                          {' · '}
+                          <span style={{ color: changeOrder.status === 'approved' ? 'var(--portal-text)' : 'var(--portal-accent)' }}>
+                            {changeOrder.status.toUpperCase()}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
 
@@ -229,8 +265,13 @@ export default function PortalInvoices() {
                     color: inv.status === 'paid' ? 'rgba(255,255,255,0.5)' : 'rgba(255,255,255,0.85)',
                     margin: 0,
                   }}>
-                    {formatCurrency(Number(inv.amount))}
+                    {formatCurrency(revisedTotal)}
                   </p>
+                  {hasApprovedChange && (
+                    <p className="mono" style={{ fontSize: 9, color: 'var(--portal-text-muted)', margin: '5px 0 0' }}>
+                      ORIGINAL {formatCurrency(Number(inv.amount))}
+                    </p>
+                  )}
                 </div>
 
                 {/* Status badge */}
@@ -306,8 +347,45 @@ export default function PortalInvoices() {
                   ) : null}
                 </div>
               </div>
-            ))}
+              );
+            })}
           </div>
+
+          {changeOrders.some(changeOrder => changeOrder.source_type === 'contract') && (
+            <section style={{ marginTop: 48 }}>
+              <p className="eyebrow" style={{ color: '#c9a96e', marginBottom: 16, letterSpacing: 3 }}>
+                CONTRACT AMENDMENTS
+              </p>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                {changeOrders
+                  .filter(changeOrder => changeOrder.source_type === 'contract')
+                  .map(changeOrder => {
+                    const sourceDocument = documents.find(
+                      document => document.id === changeOrder.source_document_id,
+                    );
+                    return (
+                    <div key={changeOrder.id} className="portal-amendment">
+                      <div>
+                        <p className="mono" style={{ fontSize: 10, color: 'var(--portal-accent)', margin: '0 0 6px' }}>
+                          {changeOrder.change_order_number}
+                        </p>
+                        <p style={{ color: 'var(--portal-text)', margin: 0 }}>{changeOrder.title}</p>
+                        <p className="mono" style={{ color: 'var(--portal-text-dim)', fontSize: 9, margin: '6px 0 0' }}>
+                          ORIGINAL: {sourceDocument?.name || 'CONTRACT DOCUMENT'}
+                        </p>
+                        <p style={{ color: 'var(--portal-text-muted)', fontSize: 13, lineHeight: 1.55, margin: '6px 0 0' }}>
+                          {changeOrder.description}
+                        </p>
+                      </div>
+                      <span className="mono" style={{ color: 'var(--portal-accent)', fontSize: 10 }}>
+                        {changeOrder.status.toUpperCase()}
+                      </span>
+                    </div>
+                    );
+                  })}
+              </div>
+            </section>
+          )}
 
           {/* Footer note */}
           <div style={{
@@ -333,8 +411,8 @@ export default function PortalInvoices() {
           margin-bottom: 48px;
         }
         .inv-card {
-          background: rgba(255,255,255,0.02);
-          border: 1px solid rgba(255,255,255,0.06);
+          background: var(--portal-panel);
+          border: 1px solid var(--portal-border);
           border-radius: 10px;
           padding: 24px 28px;
           display: grid;
@@ -344,6 +422,16 @@ export default function PortalInvoices() {
           backdrop-filter: blur(8px);
           transition: border-color 0.2s ease;
           cursor: default;
+        }
+        .portal-amendment {
+          display: flex;
+          align-items: flex-start;
+          justify-content: space-between;
+          gap: 24px;
+          padding: 20px 22px;
+          background: var(--portal-panel);
+          border: 1px solid var(--portal-border);
+          border-radius: 10px;
         }
         @media (max-width: 768px) {
           .inv-summary-grid {

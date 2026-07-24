@@ -9,6 +9,7 @@ import type {
   Message,
   TimelineEvent,
   Invoice,
+  ChangeOrder,
 } from './database.types';
 
 /* ── Guard: fail loudly if Supabase is missing ── */
@@ -76,6 +77,46 @@ export async function fetchAllInvoices(): Promise<Invoice[]> {
   const sb = requireSupabase();
   const { data } = await sb.from('invoices').select('*').order('created_at', { ascending: false });
   return (data as Invoice[]) || [];
+}
+
+export async function createChangeOrder(input: {
+  client_id: string;
+  engagement_id: string;
+  change_order_number: string;
+  source_type: ChangeOrder['source_type'];
+  source_invoice_id?: string | null;
+  source_document_id?: string | null;
+  title: string;
+  description: string;
+  amount_delta: number;
+  status?: ChangeOrder['status'];
+}): Promise<ChangeOrder> {
+  const response = await fetch('/api/change-orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(input),
+  });
+  const data = await response.json();
+  if (!response.ok || !data.changeOrder) {
+    throw new Error(data.error || 'Failed to create change order');
+  }
+  return data.changeOrder as ChangeOrder;
+}
+
+export async function updateChangeOrder(
+  changeOrderId: string,
+  updates: Partial<Pick<ChangeOrder, 'status' | 'title' | 'description' | 'amount_delta'>>,
+): Promise<ChangeOrder> {
+  const response = await fetch('/api/change-orders', {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ change_order_id: changeOrderId, ...updates }),
+  });
+  const data = await response.json();
+  if (!response.ok || !data.changeOrder) {
+    throw new Error(data.error || 'Failed to update change order');
+  }
+  return data.changeOrder as ChangeOrder;
 }
 
 /* ── Mutations ── */
@@ -205,6 +246,7 @@ export interface AdminData {
   clients: Client[];
   engagements: Engagement[];
   invoices: Invoice[];
+  changeOrders: ChangeOrder[];
   messages: Message[];
   documents: Document[];
   timeline: TimelineEvent[];
@@ -221,6 +263,7 @@ export async function fetchAdminData(): Promise<AdminData> {
     clients: data.clients || [],
     engagements: data.engagements || [],
     invoices: data.invoices || [],
+    changeOrders: data.changeOrders || [],
     messages: data.messages || [],
     documents: data.documents || [],
     timeline: data.timeline || [],

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { POST } from '@/app/api/invoices/route';
+import { PATCH, POST } from '@/app/api/invoices/route';
 import { GET as getPaymentStatus } from '@/app/api/payments/status/route';
 
 const requireAdminMock = vi.hoisted(() => vi.fn());
@@ -134,6 +134,45 @@ describe('invoice lifecycle', () => {
 
     expect(response.status).toBe(400);
     expect(sb.from).not.toHaveBeenCalled();
+  });
+
+  it('preserves an issued invoice and requires a change order for price changes', async () => {
+    const invoiceQuery = {
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          single: vi.fn(async () => ({
+            data: {
+              id: 'invoice-1',
+              amount: 1500,
+              description: 'Original advisory scope',
+              due_date: '2026-08-01',
+              status: 'sent',
+            },
+            error: null,
+          })),
+        })),
+      })),
+    };
+    const sb = { from: vi.fn(() => invoiceQuery) };
+    requireAdminMock.mockResolvedValueOnce({
+      user: { id: 'admin-1' },
+      profile: { role: 'admin' },
+      isAdmin: true,
+      sb,
+    });
+    const response = await PATCH(new NextRequest(
+      'https://www.jamesroman.la/api/invoices',
+      {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ invoice_id: 'invoice-1', amount: 1800 }),
+      },
+    ));
+
+    expect(response.status).toBe(409);
+    await expect(response.json()).resolves.toEqual({
+      error: 'Issued invoices cannot be rewritten; create a change order instead',
+    });
   });
 
   it('returns confirmed payment status only for the invoice owner', async () => {

@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server';
 import { requireAdmin, isAuthError } from '@/lib/api-auth';
 import { internalError } from '@/lib/api-error';
 import { createInAppNotification, sendNotification } from '@/lib/notifications';
+import { invalidateOpenCheckoutSession } from '@/lib/stripe-invoice';
 
 const INVOICE_STATUSES = new Set(['draft', 'sent', 'paid', 'overdue', 'cancelled']);
 
@@ -50,20 +51,6 @@ async function notifyInvoiceReady(sb: any, invoice: any) {
     link: '/portal/invoices',
     metadata: { invoice_id: invoice.id },
   });
-}
-
-async function invalidateOpenCheckoutSession(sessionId: string) {
-  const stripeKey = process.env.STRIPE_SECRET_KEY;
-  if (!stripeKey) {
-    throw new Error('Stripe must be configured before changing an invoice with an active payment link');
-  }
-
-  const Stripe = (await import('stripe')).default;
-  const stripe = new Stripe(stripeKey);
-  const session = await stripe.checkout.sessions.retrieve(sessionId);
-  if (session.status === 'open') {
-    await stripe.checkout.sessions.expire(sessionId);
-  }
 }
 
 export async function POST(req: NextRequest) {
@@ -161,6 +148,19 @@ export async function PATCH(req: NextRequest) {
       .single();
     if (!existing) {
       return NextResponse.json({ error: 'Invoice not found' }, { status: 404 });
+    }
+
+    if (existing.status !== 'draft') {
+      const rewritesOriginal =
+        (body.amount !== undefined && Number(body.amount) !== Number(existing.amount)) ||
+        (body.description !== undefined && requiredText(body.description) !== existing.description) ||
+        (body.due_date !== undefined && requiredText(body.due_date) !== existing.due_date);
+      if (rewritesOriginal) {
+        return NextResponse.json(
+          { error: 'Issued invoices cannot be rewritten; create a change order instead' },
+          { status: 409 },
+        );
+      }
     }
 
     const updates: Record<string, unknown> = {};

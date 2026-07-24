@@ -11,11 +11,13 @@ import {
   createClient, updateClient, deleteClient,
   createEngagement, updateEngagement,
   createInvoice, updateInvoice,
+  createChangeOrder, updateChangeOrder,
 } from '@/lib/data';
-import type { Client, Engagement, Invoice, Document as DBDocument, AuditLogEntry, Todo, Message, SignatureRequest } from '@/lib/database.types';
+import type { Client, Engagement, Invoice, Document as DBDocument, AuditLogEntry, Todo, Message, SignatureRequest, ChangeOrder } from '@/lib/database.types';
 import ClientModal, { type ClientFormData } from '@/components/portal/admin/ClientModal';
 import EngagementModal, { type EngagementFormData } from '@/components/portal/admin/EngagementModal';
 import InvoiceModal, { type InvoiceFormData } from '@/components/portal/admin/InvoiceModal';
+import ChangeOrderModal, { type ChangeOrderFormData } from '@/components/portal/admin/ChangeOrderModal';
 
 import AdminSidebar, { type Tab } from '@/components/portal/admin/AdminSidebar';
 import AdminOverview from '@/components/portal/admin/tabs/AdminOverview';
@@ -54,6 +56,7 @@ export default function AdminPanel() {
   const [clients, setClients] = useState<Client[]>([]);
   const [engagements, setEngagements] = useState<Engagement[]>([]);
   const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [changeOrders, setChangeOrders] = useState<ChangeOrder[]>([]);
   const [documents, setDocuments] = useState<DBDocument[]>([]);
   const [messages, setMessages] = useState<Message[]>([]);
   const [auditLog, setAuditLog] = useState<AuditLogEntry[]>([]);
@@ -67,6 +70,7 @@ export default function AdminPanel() {
   const [clientModal, setClientModal] = useState<{ open: boolean; client: Client | null }>({ open: false, client: null });
   const [engModal, setEngModal] = useState<{ open: boolean; engagement: Engagement | null }>({ open: false, engagement: null });
   const [invModal, setInvModal] = useState<{ open: boolean; invoice: Invoice | null }>({ open: false, invoice: null });
+  const [changeOrderModalOpen, setChangeOrderModalOpen] = useState(false);
   const [sigReqModal, setSigReqModal] = useState<{ open: boolean; document: DBDocument | null; client: Client | null }>({ open: false, document: null, client: null });
 
   /* ── Auth guard ── */
@@ -81,6 +85,7 @@ export default function AdminPanel() {
       setClients(data.clients);
       setEngagements(data.engagements);
       setInvoices(data.invoices);
+      setChangeOrders(data.changeOrders || []);
       setDocuments(data.documents || []);
       setMessages(data.messages || []);
       setAuditLog(data.auditLog || []);
@@ -229,6 +234,23 @@ export default function AdminPanel() {
     await loadData();
   };
 
+  const handleSaveChangeOrder = async (data: ChangeOrderFormData) => {
+    await createChangeOrder(data);
+    await loadData();
+  };
+
+  const handleUpdateChangeOrder = async (
+    changeOrder: ChangeOrder,
+    status: ChangeOrder['status'],
+  ) => {
+    try {
+      await updateChangeOrder(changeOrder.id, { status });
+      await loadData();
+    } catch (error) {
+      alert(error instanceof Error ? error.message : 'Unable to update change order');
+    }
+  };
+
   const handleReset = async () => {
     if (confirm('Reset all test data to seed state? This cannot be undone.')) {
       alert('Seed resets now require server-side operation secrets. Run the reset from trusted server tooling.');
@@ -301,8 +323,12 @@ export default function AdminPanel() {
           <AdminInvoices
             clients={clients}
             invoices={invoices}
+            changeOrders={changeOrders}
+            documents={documents}
             onNewInvoice={() => setInvModal({ open: true, invoice: null })}
+            onNewChangeOrder={() => setChangeOrderModalOpen(true)}
             onOpenInvoice={(inv) => setInvModal({ open: true, invoice: inv })}
+            onUpdateChangeOrder={handleUpdateChangeOrder}
           />
         );
       case 'activity':
@@ -372,6 +398,15 @@ export default function AdminPanel() {
         invoice={invModal.invoice}
         clients={clients}
         engagements={engagements}
+      />
+      <ChangeOrderModal
+        open={changeOrderModalOpen}
+        clients={clients}
+        engagements={engagements}
+        invoices={invoices}
+        documents={documents}
+        onClose={() => setChangeOrderModalOpen(false)}
+        onSave={handleSaveChangeOrder}
       />
       <SignatureRequestModal
         open={sigReqModal.open}

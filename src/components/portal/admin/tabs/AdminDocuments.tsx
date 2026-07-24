@@ -7,9 +7,10 @@ import DocumentUpload from '@/components/portal/admin/DocumentUpload';
 const CAT_LABELS: Record<string, string> = {
   nda: 'NDAs', 'lab-results': 'Lab Results', proposals: 'Proposals',
   clearance: 'Clearance', invoices: 'Invoices', reports: 'Reports',
+  contracts: 'Contracts', 'change-orders': 'Change Orders',
 };
 
-const CAT_FILTERS = ['all', 'nda', 'lab-results', 'proposals', 'clearance', 'invoices', 'reports'] as const;
+const CAT_FILTERS = ['all', 'nda', 'lab-results', 'proposals', 'clearance', 'invoices', 'reports', 'contracts', 'change-orders'] as const;
 
 interface Props {
   clients: Client[];
@@ -128,22 +129,22 @@ export default function AdminDocuments({ clients, engagements, documents, onRelo
                     {hasFile && <span style={{ color: 'var(--admin-green)', marginRight: 8, fontSize: 10 }}>●</span>}
                     {doc.name}
                   </td>
-                  <td style={{ color: 'rgba(255,255,255,0.4)' }}>{client?.name || '—'}</td>
+                  <td style={{ color: 'var(--admin-text-muted)' }}>{client?.name || '—'}</td>
                   <td style={{ fontFamily: "'JetBrains Mono', monospace", fontSize: 11, letterSpacing: '0.08em', color: 'var(--admin-text-dim)' }}>
                     {catLabel}
                   </td>
                   <td>
                     <span className="admin-badge" style={{
                       background: 'transparent',
-                      border: '1px solid rgba(255,255,255,0.08)',
-                      color: doc.status === 'final' ? 'rgba(255,255,255,0.4)' : 'var(--admin-accent)',
+                      border: '1px solid var(--admin-divider)',
+                      color: doc.status === 'final' ? 'var(--admin-text-muted)' : 'var(--admin-accent)',
                     }}>{doc.status.toUpperCase()}</span>
                   </td>
-                  <td style={{ fontSize: 12, color: 'rgba(255,255,255,0.25)' }}>{new Date(doc.created_at).toLocaleDateString()}</td>
+                  <td style={{ fontSize: 12, color: 'var(--admin-text-dim)' }}>{new Date(doc.created_at).toLocaleDateString()}</td>
                   <td>
                     <div style={{ display: 'flex', gap: 8 }}>
                       {/* Request Signature */}
-                      {(doc.category === 'nda' || doc.category === 'proposals' || doc.category === 'clearance') && doc.status !== 'final' && onRequestSignature && (
+                      {(doc.category === 'nda' || doc.category === 'proposals' || doc.category === 'clearance' || doc.category === 'contracts' || doc.category === 'change-orders') && doc.status !== 'final' && onRequestSignature && (
                         <button
                           onClick={() => onRequestSignature(doc)}
                           className="admin-btn admin-btn--ghost"

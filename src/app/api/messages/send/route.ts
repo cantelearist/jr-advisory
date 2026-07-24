@@ -5,7 +5,7 @@
 import { type NextRequest, NextResponse } from 'next/server';
 import { requireAuth, isAuthError } from '@/lib/api-auth';
 import { checkRateLimit, getClientIp } from '@/lib/rate-limit';
-import { sendNotification, createInAppNotification } from '@/lib/notifications';
+import { sendNotification, sendNotifications, createInAppNotification } from '@/lib/notifications';
 import { internalError } from '@/lib/api-error';
 
 export async function POST(req: NextRequest) {
@@ -99,6 +99,8 @@ export async function POST(req: NextRequest) {
     });
 
     // Email + in-app notifications — notify the other party
+    let emailSent = false;
+    let emailFailureCount = 0;
     try {
       if (senderType === 'firm') {
         // Admin sent → notify client
@@ -108,7 +110,7 @@ export async function POST(req: NextRequest) {
           .eq('id', clientId)
           .single();
         if (client?.email) {
-          await sendNotification({
+          const result = await sendNotification({
             type: 'new_message',
             recipientEmail: client.email,
             recipientName: client.name,
@@ -118,6 +120,10 @@ export async function POST(req: NextRequest) {
               preview: msgBody.slice(0, 120),
             },
           });
+          emailSent = result.success;
+          emailFailureCount = result.success ? 0 : 1;
+        } else {
+          emailFailureCount = 1;
         }
         // In-app notification for client
         await createInAppNotification({
@@ -134,19 +140,26 @@ export async function POST(req: NextRequest) {
           .from('profiles')
           .select('email, full_name')
           .in('role', ['admin', 'manager']);
-        if (admins) {
-          for (const admin of admins) {
-            await sendNotification({
+        const recipients = (admins || []).filter(
+          (admin: { email?: string }) => Boolean(admin.email),
+        );
+        if (recipients.length > 0) {
+          const result = await sendNotifications(recipients.map(
+            (admin: { email: string; full_name?: string }) => ({
               type: 'new_message',
               recipientEmail: admin.email,
-              recipientName: admin.full_name,
+              recipientName: admin.full_name || 'Advisory Team',
               data: {
                 subject,
                 senderName,
                 preview: msgBody.slice(0, 120),
               },
-            });
-          }
+            }),
+          ));
+          emailSent = result.sent > 0;
+          emailFailureCount = result.failed;
+        } else {
+          emailFailureCount = 1;
         }
         // In-app notification for admin
         await createInAppNotification({
@@ -159,10 +172,18 @@ export async function POST(req: NextRequest) {
         });
       }
     } catch (notifErr) {
+      emailFailureCount = Math.max(emailFailureCount, 1);
       console.error('[messages/send] Notification failed (non-blocking):', notifErr);
     }
 
-    return NextResponse.json({ success: true, message: msg });
+    return NextResponse.json({
+      success: true,
+      message: msg,
+      notification: {
+        emailSent,
+        failed: emailFailureCount,
+      },
+    });
   } catch (e: unknown) {
     return internalError(e, 'messages.send');
   }

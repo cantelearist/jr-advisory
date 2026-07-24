@@ -4,6 +4,7 @@
 import { NextResponse, type NextRequest } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import { fetchApprovedChangeOrderDelta } from '@/lib/change-orders';
 
 function getStripe() {
   const key = process.env.STRIPE_SECRET_KEY;
@@ -77,7 +78,9 @@ export async function POST(req: NextRequest) {
 
     const paymentIntentId =
       typeof session.payment_intent === 'string' ? session.payment_intent : session.payment_intent?.id;
-    const expectedAmount = Math.round(Number(invoice.amount) * 100);
+    const approvedDelta = await fetchApprovedChangeOrderDelta(sb, invoice.id);
+    const revisedAmount = Number(invoice.amount) + approvedDelta;
+    const expectedAmount = Math.round(revisedAmount * 100);
     const sessionMatchesInvoice =
       session.metadata?.invoice_id === invoice.id &&
       session.client_reference_id === invoice.id &&
@@ -141,6 +144,8 @@ export async function POST(req: NextRequest) {
       metadata: {
         stripe_event_id: event.id,
         invoice_number: invoice.invoice_number,
+        original_amount: invoice.amount,
+        approved_change_orders: approvedDelta,
         amount: (session.amount_total || 0) / 100,
         payment_intent: paymentIntentId,
         customer_email: session.customer_email,

@@ -9,14 +9,14 @@
   --admin-bg: #070708;
   --admin-sidebar: #0a0b0e;
   --admin-panel: #101218;
-  --admin-card: #0e0f14;
-  --admin-divider: rgba(201, 169, 110, 0.08);
-  --admin-divider-strong: rgba(201, 169, 110, 0.14);
+  --admin-card: #12141a;
+  --admin-divider: rgba(201, 169, 110, 0.16);
+  --admin-divider-strong: rgba(201, 169, 110, 0.3);
   --admin-accent: #c9a96e;
   --admin-accent-dim: rgba(201, 169, 110, 0.5);
   --admin-text: #ece6d6;
-  --admin-text-muted: rgba(255, 255, 255, 0.4);
-  --admin-text-dim: rgba(255, 255, 255, 0.2);
+  --admin-text-muted: rgba(255, 255, 255, 0.68);
+  --admin-text-dim: rgba(255, 255, 255, 0.44);
   --admin-green: #4ade80;
   --admin-red: #ef4444;
   --admin-blue: #60a5fa;
@@ -298,7 +298,7 @@
   padding: 14px 20px;
   font-size: 13px;
   color: rgba(255, 255, 255, 0.7);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.09);
 }
 
 .admin-table tr {
@@ -341,9 +341,9 @@
 }
 
 .admin-badge--completed {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.08);
   color: var(--admin-text-muted);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 /* ── Buttons ── */
@@ -482,7 +482,7 @@
 
 .admin-pipeline__column {
   border-radius: var(--admin-radius);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   padding: 12px;
   transition: background 0.2s ease;
   display: flex;
@@ -530,7 +530,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px dashed rgba(255, 255, 255, 0.06);
+  border: 1px dashed rgba(255, 255, 255, 0.16);
   border-radius: var(--admin-radius-sm);
   min-height: 100px;
   font-family: 'JetBrains Mono', monospace;
@@ -547,7 +547,7 @@
   align-items: center;
   padding: 12px 16px;
   border-radius: var(--admin-radius-sm);
-  border: 1px solid rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   transition: all 0.15s ease;
 }
 
@@ -593,7 +593,7 @@
 
 /* ── Form Controls (admin-specific) ── */
 .admin-input {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.07);
   border: 1px solid var(--admin-divider);
   border-radius: var(--admin-radius-sm);
   padding: 10px 14px;
@@ -609,11 +609,11 @@
 }
 
 .admin-select {
-  background: rgba(255, 255, 255, 0.04);
+  background: rgba(255, 255, 255, 0.07);
   border: 1px solid var(--admin-divider);
   border-radius: var(--admin-radius-sm);
   padding: 10px 12px;
-  color: rgba(255, 255, 255, 0.6);
+  color: rgba(255, 255, 255, 0.82);
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.08em;
@@ -634,8 +634,8 @@
   font-size: 12px;
   cursor: pointer;
   transition: all 0.15s ease;
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(255, 255, 255, 0.05);
   color: var(--admin-text-muted);
 }
 
@@ -669,8 +669,8 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   border-radius: 8px;
   padding: 0 14px;
   min-width: 220px;
@@ -685,7 +685,7 @@
 
 .admin-search__icon {
   font-size: 14px;
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--admin-text-dim);
   flex-shrink: 0;
 }
 
@@ -701,13 +701,13 @@
 }
 
 .admin-search__input::placeholder {
-  color: rgba(255, 255, 255, 0.2);
+  color: var(--admin-text-dim);
 }
 
 .admin-search__clear {
   background: none;
   border: none;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--admin-text-dim);
   cursor: pointer;
   font-size: 12px;
   padding: 4px;
@@ -723,8 +723,26 @@
   font-family: 'JetBrains Mono', monospace;
   font-size: 11px;
   letter-spacing: 0.06em;
-  color: rgba(255, 255, 255, 0.25);
+  color: var(--admin-text-dim);
   margin-bottom: 16px;
+}
+
+.change-order-row {
+  display: grid;
+  grid-template-columns: minmax(260px, 1fr) 120px 110px minmax(150px, auto);
+  align-items: center;
+  gap: 16px;
+}
+
+@media (max-width: 900px) {
+  .change-order-row {
+    grid-template-columns: 1fr auto;
+  }
+
+  .change-order-row > :last-child {
+    grid-column: 1 / -1;
+    justify-content: flex-start !important;
+  }
 }
 
 /* ── Date Range ── */
