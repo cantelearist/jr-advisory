@@ -122,11 +122,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth state changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    } = supabase.auth.onAuthStateChange((_event, session) => {
       const u = session?.user ?? null;
       setUser(u);
       if (u) {
-        await loadProfile(u);
+        // Supabase currently deadlocks when another async Supabase call is
+        // awaited inside this callback. Return synchronously and run the
+        // profile lookup after the auth callback releases its internal lock.
+        setTimeout(() => {
+          void loadProfile(u);
+        }, 0);
       } else {
         setProfile(null);
         setClientRecord(null);

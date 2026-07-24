@@ -9,6 +9,9 @@ import { resolvePortalDestination } from '@/lib/portal-routing';
 
 const Scene3D = dynamic(() => import('@/components/portal/Scene3D'), { ssr: false });
 
+const LOGIN_REVEAL_DELAY_MS = 150;
+const POST_AUTH_NAVIGATION_DELAY_MS = 150;
+
 export default function PortalLoginPage() {
   return (
     <Suspense fallback={<div style={{ minHeight: '100vh', background: '#000' }} />}>
@@ -34,7 +37,11 @@ function PortalLogin() {
   const formRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const timer = setTimeout(() => setPhase('form'), 2200);
+    const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const timer = setTimeout(
+      () => setPhase('form'),
+      prefersReducedMotion ? 0 : LOGIN_REVEAL_DELAY_MS,
+    );
     const err = searchParams.get('error');
     const mode = searchParams.get('mode');
 
@@ -64,7 +71,10 @@ function PortalLogin() {
     });
 
     setPhase('entering');
-    const timer = setTimeout(() => router.replace(destination), 700);
+    const timer = setTimeout(
+      () => router.replace(destination),
+      POST_AUTH_NAVIGATION_DELAY_MS,
+    );
 
     return () => clearTimeout(timer);
   }, [authLoading, user, clientRecord, isAdmin, router, searchParams]);
@@ -103,12 +113,12 @@ function PortalLogin() {
       if (result.mfaRequired) {
         setTimeout(
           () => router.push(`/portal/mfa?redirect=${encodeURIComponent(destination)}`),
-          1600,
+          POST_AUTH_NAVIGATION_DELAY_MS,
         );
         return;
       }
 
-      setTimeout(() => router.push(destination), 1600);
+      setTimeout(() => router.push(destination), POST_AUTH_NAVIGATION_DELAY_MS);
     } catch {
       setError('Something went wrong. Please try again.');
       setLoading(false);

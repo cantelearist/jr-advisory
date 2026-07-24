@@ -3,7 +3,25 @@ import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import PortalLoginPage from '@/app/portal/page';
 import { resolvePortalDestination } from '@/lib/portal-routing';
 
-const signInWithOAuthMock = vi.hoisted(() => vi.fn());
+const {
+  signInWithOAuthMock,
+  routerPushMock,
+  routerReplaceMock,
+  fetchMock,
+} = vi.hoisted(() => ({
+  signInWithOAuthMock: vi.fn(),
+  routerPushMock: vi.fn(),
+  routerReplaceMock: vi.fn(),
+  fetchMock: vi.fn(),
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({
+    push: routerPushMock,
+    replace: routerReplaceMock,
+  }),
+  useSearchParams: () => new URLSearchParams(),
+}));
 
 vi.mock('@/components/portal/AuthProvider', () => ({
   useAuth: () => ({
@@ -23,10 +41,15 @@ vi.mock('@/components/portal/Scene3D', () => ({
   default: () => <div data-testid="scene-3d" />,
 }));
 
+vi.stubGlobal('fetch', fetchMock);
+
 describe('Private Office OAuth login', () => {
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_OAUTH_LOGIN_ENABLED', 'true');
     signInWithOAuthMock.mockReset();
+    routerPushMock.mockReset();
+    routerReplaceMock.mockReset();
+    fetchMock.mockReset();
     signInWithOAuthMock.mockResolvedValue({ data: {}, error: null });
   });
 
@@ -81,6 +104,9 @@ describe('Private Office OAuth login', () => {
 describe('Private Office password login', () => {
   beforeEach(() => {
     vi.stubEnv('NEXT_PUBLIC_OAUTH_LOGIN_ENABLED', 'false');
+    routerPushMock.mockReset();
+    routerReplaceMock.mockReset();
+    fetchMock.mockReset();
   });
 
   it('shows email and password login by default', () => {
@@ -89,6 +115,45 @@ describe('Private Office password login', () => {
     expect(screen.getByLabelText('Email or username')).toBeInTheDocument();
     expect(screen.getByLabelText('Password')).toBeInTheDocument();
     expect(screen.getByRole('button', { name: 'Enter Your Office' })).toBeInTheDocument();
+  });
+
+  it('makes the login form visible without a long cinematic wait', async () => {
+    render(<PortalLoginPage />);
+
+    const wrapper = screen.getByLabelText('Password').closest('.portal-login__form-wrapper');
+    expect(wrapper).not.toHaveClass('portal-login__form-wrapper--visible');
+
+    await waitFor(
+      () => expect(wrapper).toHaveClass('portal-login__form-wrapper--visible'),
+      { timeout: 500 },
+    );
+  });
+
+  it('routes a privileged password login to MFA without a long exit delay', async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        success: true,
+        user: { role: 'admin', onboarded: true },
+        mfaRequired: true,
+      }),
+    });
+    render(<PortalLoginPage />);
+
+    fireEvent.change(screen.getByLabelText('Email or username'), {
+      target: { value: 'admin@example.com' },
+    });
+    fireEvent.change(screen.getByLabelText('Password'), {
+      target: { value: 'test-password' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Enter Your Office' }));
+
+    await waitFor(
+      () => expect(routerPushMock).toHaveBeenCalledWith(
+        '/portal/mfa?redirect=%2Fportal%2Fadmin',
+      ),
+      { timeout: 500 },
+    );
   });
 
   it('lets users switch between password and magic-link login', () => {

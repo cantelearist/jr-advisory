@@ -125,19 +125,22 @@ export async function POST(req: NextRequest) {
 
   // Resolve role from the trusted profile (or controlled app_metadata), never
   // from user_metadata, which authenticated users can edit themselves.
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', data.user.id)
-    .maybeSingle();
+  // These lookups are independent after sign-in. Running them together keeps
+  // profile authorization and MFA enforcement without adding serial latency.
+  const [{ data: profile }, { data: aal, error: aalError }] = await Promise.all([
+    supabase
+      .from('profiles')
+      .select('role')
+      .eq('id', data.user.id)
+      .maybeSingle(),
+    supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
+  ]);
   const role =
     profile?.role ||
     (typeof data.user.app_metadata?.role === 'string' ? data.user.app_metadata.role : 'client');
   const isPrivileged = role === 'admin' || role === 'manager';
 
   // Mandatory privileged MFA includes enrollment: aal1/aal1 is not sufficient.
-  const { data: aal, error: aalError } =
-    await supabase.auth.mfa.getAuthenticatorAssuranceLevel();
   const mfaRequired = isPrivileged && (Boolean(aalError) || aal?.currentLevel !== 'aal2');
 
   return respond({

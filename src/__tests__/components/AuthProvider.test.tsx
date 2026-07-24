@@ -1,5 +1,5 @@
 import { describe, expect, it, vi, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
+import { act, render, screen, waitFor } from '@testing-library/react';
 import { AuthProvider, useAuth } from '@/components/portal/AuthProvider';
 
 const getAuthClientMock = vi.hoisted(() => vi.fn());
@@ -8,25 +8,34 @@ vi.mock('@/lib/supabase-browser', () => ({
   getAuthClient: getAuthClientMock,
 }));
 
-function makeSupabaseClient({
-  setSession = vi.fn().mockResolvedValue({ data: {}, error: null }),
-} = {}) {
-  const user = {
+function makeUser() {
+  return {
     id: 'user-1',
     app_metadata: { role: 'client' },
     user_metadata: {},
   };
+}
 
+type AuthStateCallback = (
+  event: string,
+  session: { user: ReturnType<typeof makeUser> } | null,
+) => unknown;
+
+function makeSupabaseClient({
+  setSession = vi.fn().mockResolvedValue({ data: {}, error: null }),
+  session = { user: makeUser() } as { user: ReturnType<typeof makeUser> } | null,
+  onAuthStateChange = vi.fn((_next: AuthStateCallback) => ({
+    data: { subscription: { unsubscribe: vi.fn() } },
+  })),
+} = {}) {
   return {
     auth: {
       setSession,
       getSession: vi.fn().mockResolvedValue({
-        data: { session: { user } },
+        data: { session },
         error: null,
       }),
-      onAuthStateChange: vi.fn(() => ({
-        data: { subscription: { unsubscribe: vi.fn() } },
-      })),
+      onAuthStateChange,
       signOut: vi.fn(),
     },
     from: vi.fn((table: string) => ({
@@ -54,6 +63,42 @@ function AuthProbe() {
     </div>
   );
 }
+
+describe('AuthProvider auth event handling', () => {
+  afterEach(() => {
+    getAuthClientMock.mockReset();
+  });
+
+  it('returns from auth callbacks synchronously before loading the profile', async () => {
+    let callback: AuthStateCallback | undefined;
+    const onAuthStateChange = vi.fn((next: AuthStateCallback) => {
+      callback = next;
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+    const supabase = makeSupabaseClient({
+      session: null,
+      onAuthStateChange,
+    });
+    getAuthClientMock.mockReturnValue(supabase);
+
+    render(
+      <AuthProvider>
+        <AuthProbe />
+      </AuthProvider>,
+    );
+
+    await waitFor(() => expect(screen.getByText('loaded')).toBeInTheDocument());
+    expect(callback).toBeDefined();
+
+    let callbackResult: unknown;
+    act(() => {
+      callbackResult = callback?.('SIGNED_IN', { user: makeUser() });
+    });
+
+    expect(callbackResult).toBeUndefined();
+    await waitFor(() => expect(screen.getByText('client-1')).toBeInTheDocument());
+  });
+});
 
 describe('AuthProvider magic-link URL handling', () => {
   afterEach(() => {
